@@ -102,8 +102,7 @@ void broadcast_log(char *msg){
 void intHandler(int dummy) {
   _keepRunning = false;
   LOG(SLOG_LOG, LOG_NOTICE, "Stopping!\n");
-  if (_playback_file)  // If we are reading file, loop is irevelent
-    exit(0);
+  exit(0);
 }
 bool isAqualinkDStopping() {
   return !_keepRunning;
