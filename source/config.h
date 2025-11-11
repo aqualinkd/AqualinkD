@@ -98,6 +98,7 @@ struct aqconfig
   bool override_freeze_protect;
 #ifdef AQ_PDA
   bool pda_sleep_mode;
+  bool pda_force_home_onprogram;
 #endif
   bool convert_mqtt_temp;
  
@@ -297,6 +298,7 @@ int _numCfgParams;
 #define CFG_N_pda_sleep_mode                    "pda_sleep_mode"
 #define CFG_N_convert_mqtt_temp                 "mqtt_convert_temp_to_c"
 #define CFG_N_light_programming_interface       "light_programming_interface"
+#define CFG_N_pda_force_home_onprogram          "pda_force_home_onprogram"
 
 #define CFG_N_report_zero_spa_temp              "report_zero_spa_temp"
 #define CFG_N_report_zero_pool_temp             "report_zero_pool_temp"
