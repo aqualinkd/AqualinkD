@@ -235,6 +235,16 @@ const char *get_aqualinkd_light_mode_name(int index, bool *isShow)
   return _color_light_options[0][index];
 }
 
+int get_currentlight_mode_name_count(clight_detail light, emulation_type protocol)
+{
+  int i = 0;
+  for (; i < LIGHT_COLOR_OPTIONS; i++)
+    if (_color_light_options[light.lightType][i] == NULL)
+      break;
+
+  return i;      
+}
+
 const char *get_currentlight_mode_name(clight_detail light, emulation_type protocol) 
 {
   /*

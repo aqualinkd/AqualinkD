@@ -299,6 +299,7 @@ bool find_pda_menu_item(struct aqualinkdata *aqdata, char *menuText, int charlim
         //delay(500);
         //wait_for_empty_cmd_buffer();
         //waitForPDAMessageType(aqdata,CMD_PDA_HIGHLIGHT,2);
+	aqdata->last_packet_type = CMD_STATUS; // Force new CMD_PDA_HIGHLIGHT/CMD_MSG_LONG
         waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_MSG_LONG,8);
         //waitForMessage(aqdata, NULL, 1);
         index = (charlimit == 0)?pda_find_m_index(menuText):pda_find_m_index_case(menuText, charlimit);
@@ -679,14 +680,19 @@ void *set_aqualink_PDA_device_on_off( void *ptr )
         // PDA Menu Line 0 =    Set Color   // for color light
         // PDA Menu Line 0 =       Set      // for dimmer light
         if ( state == ON ) {
-          waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS,5);
-          if (strncasecmp(pda_m_line(0),"Set", 3) == 0) {
+          waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS,15);
+          if (strcasestr(pda_m_line(0),"Set") != NULL) {
             LOG(PDA_LOG,LOG_DEBUG, "PDA Device On/Off, '%s' is programmable light, but no mode using default\n",button->label);
             send_pda_cmd(KEY_PDA_SELECT);
+            waitForPDAnextMenu(aqdata);
           } else {
             LOG(PDA_LOG,LOG_ERR, "PDA Device On/Off: expected Set menu for programmable light '%s', not found\n",button->label);
           }
-        }
+	} else {
+          // Wait for completion of 5 seconds prompt and return to next menu
+          waitForPDAMessageType(aqdata,CMD_PDA_CLEAR,10);
+          waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS,55);
+	}
       } else { // not turning on heater wait for line update
           // worst case spa when pool is running
           if (!waitForPDAMessageType(aqdata,CMD_MSG_LONG,2)) {
@@ -885,12 +891,17 @@ void *set_aqualink_PDA_light_mode( void *ptr )
 
     } else {
       if (strncasecmp(pda_m_line(3),"Light will turn", 15) == 0) {
-        send_pda_cmd(KEY_PDA_SELECT);
+        // Need to write a bit longer before send SELECT key	    
         waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS,5);
+        send_pda_cmd(KEY_PDA_SELECT);
+        waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS,16);
       }
-      if (use_current_mode && mode_name != NULL) {
+      if (!use_current_mode && mode_name != NULL) {
         if (find_pda_menu_item(aqdata,(char *)mode_name,strlen(mode_name))) {
           send_pda_cmd(KEY_PDA_SELECT);
+	  // Wait for cycle time of 5 seconds
+          waitForPDAMessageType(aqdata,CMD_PDA_CLEAR,15);
+          waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS,55);
         } else {
           LOG(PDA_LOG,LOG_ERR, "PDA Light Programming, could find mode '%s' for device '%s'\n",mode_name,button->label);
         }

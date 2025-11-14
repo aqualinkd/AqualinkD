@@ -28,6 +28,7 @@
 #include "allbutton_aq_programmer.h"
 #include "rs_msg_utils.h"
 #include "iaqualink.h"
+#include "color_lights.h"
 
 void initPanelButtons(struct aqualinkdata *aqdata, bool rspda, int size, bool combo, bool dual);
 void programDeviceLightMode(struct aqualinkdata *aqdata, int value, int button);
@@ -1628,8 +1629,10 @@ void programDeviceLightBrightness(struct aqualinkdata *aqdata, int value, int de
   
 
   if (!isRSSA_ENABLED) {
-    LOG(PANL_LOG,LOG_ERR, "Light mode brightness is only supported with `rssa_device_id` set\n");
-    return;
+    if (!(isPDA_PANEL && light->lightType == LC_INTELLIB)) {
+      LOG(PANL_LOG,LOG_ERR, "Light mode brightness is only supported with `rssa_device_id` set\n");
+      return;
+    }
   }
 
   if (light == NULL) {
@@ -1642,8 +1645,9 @@ void programDeviceLightBrightness(struct aqualinkdata *aqdata, int value, int de
     value = round(value / 25);
     if (value > 4 ) {value=4;}
     LOG(PANL_LOG,LOG_INFO, "Rounded dimmer value to %d\n",value * 25);
-  } else {
-
+  } else if (light->lightType == LC_INTELLIB) {
+    value /= 100 / (get_currentlight_mode_name_count(*light, ALLBUTTON) - 1);
+    LOG(PANL_LOG,LOG_INFO, "Scaled dimmer value to %d\n",value);
   }
 
   if (!expectMultiple) {
@@ -1670,12 +1674,12 @@ void programDeviceLightBrightness(struct aqualinkdata *aqdata, int value, int de
 void programDeviceLightMode(struct aqualinkdata *aqdata, int value, int deviceIndex) 
 {
   
-#ifdef AQ_PDA
-  if (isPDA_PANEL && !isPDA_IAQT) {
-    LOG(PANL_LOG,LOG_ERR, "Light mode control not supported in PDA mode\n");
-    return;
-  }
-#endif
+//#ifdef AQ_PDA
+//  if (isPDA_PANEL && !isPDA_IAQT) {
+//    LOG(PANL_LOG,LOG_ERR, "Light mode control not supported in PDA mode\n");
+//    return;
+//  }
+//#endif
 
 
   /*
