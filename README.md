@@ -139,9 +139,12 @@ NEED TO FIX FOR THIS RELEASE.
 # Updates in 3.0.0 (dev)
 * WARNING V3.0 has undergone a significant amount code changes and refactoring, there may be issues.
 * Serial optimization for AqualinkD HAT.
-* upgraded network library ( HTTP(S), MQTT(S), WS )
+* Can now edit webconfig in aqmanager, added many UI customization options.
+  * web/config.js is now web/config.json any custom settings will need to be migrated.
+  * Added example plugin of how to get HomeAssistant devices to show up in AqualinkD UI.
+* upgraded network library ( HTTP(S), MQTT(S), WS ) 
 * Added support for HTTPS and MQTTS
-* Optimized updates to MQTT and WebUI (only update when absolutely necessary)
+* Optimized updates to MQTT, web sockets & WebUI (only update when absolutely necessary)
 * Added options to force upgrades in aqmanager. (add ?upgrade or ?devupgrade to url to enable upgrade button)
 * MQTT Discovery for all supporting hubs (HomeAssistant Domoticz Hubitat OpenHAB etc)
 * Moved Domoticz support over to MQTT autodiscovery.
@@ -159,7 +162,6 @@ NEED TO FIX FOR THIS RELEASE.
 * Added preliminary support for Jandy Infinite water color lights
 - Need to finish off :-
   * HAT serial optimizations broke some USB serial adapters
-  * WebUI Config in aqmanager.
 
   
 # Updates in 2.6.11 (Sept 14 2025)

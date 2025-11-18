@@ -1,1 +1,3623 @@
-controller.html
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+  <meta http-equiv='Content-Type' content='text/html; charset=windows-1252'>
+  <title>AqualinkD</title>
+  <meta name='viewport' content='width=device-width'>
+  <meta name='mobile-web-app-capable' content='yes'>
+  <meta name='apple-mobile-web-app-capable' content='yes'>
+  <meta name='apple-mobile-web-app-status-bar-style' content='black'>
+  <link href='aqualinkd.png' rel='apple-touch-icon'>
+  <link href='aqualinkd.png' rel='icon'>
+  <!--<script src='config.js'></script>-->
+  <!--<script src='?command=dynamic_config'></script>-->
+  <script src='/api/dynamicconfig'></script>
+  <style>
+    :root {
+      --fonts: 'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;
+      --tile-width: 100px;
+      --tile_icon-height: 35px;
+      --tile_name-height: 32px;
+      --tile_name-charlimit: 12;
+      --tile_name-height1line: 17px;
+      --tile_status-height: 15px;
+      --tile_grid-gap: 10px;
+      --tile_name-lineheight: 1.2;
+      /*
+      // Large display will use the below values, just here for testing.
+      --tile-width: 125px;
+      --tile_icon-height: 45px;
+      --tile_name-height: 42px;
+      --tile_status-height: 15px;
+      --tile_grid-gap: 20px;
+      --tile_name-lineheight: 1.4;
+      */
+      /* These get overiden from config.js, don't edit */
+      --body_background: rgb(235, 235, 235);
+      --body_text: black;
+      --options_pane_background: rgb(245, 245, 245);
+      --options_pane_bordercolor: rgb(124, 124, 124);
+      --options_slider_ball: 30;
+      --options_slider_highlight: #2196F3;
+      --options_slider_lowlight: #d3d3d3;
+      --options_slider_height: 20px;
+      --head_background: rgb(43, 106, 143);
+      --head_text: #fff;
+      --error_background: rgb(143, 43, 43);
+      --tile_background: rgb(220, 220, 220);
+      --tile_text: rgb(110, 110, 110);
+      --tile_on_background: #fff;
+      --tile_on_text: #000;
+      --tile_status_text: rgb(87, 87, 87);
+
+      --value_tile_normal_color: rgb(4, 159, 248);
+      /*--value_tile_attention_color:  rgb(255, 187, 0);*/
+      --value_tile_attention_color:  rgb(255, 160, 0);
+      --value_tile_outofrange_color:  rgb(255, 100, 0);
+
+      --options_radio_ball: 20px;
+      --options_radio_highlight: #2196F3;
+      --options_radio_lowlight: #d3d3d3;
+
+      --cronhelp_background: rgb(193, 193, 193);
+      --csinputcell_background: rgb(255, 255, 255);
+
+      --tile_icon_background_color_heat: rgb(255, 123, 0);
+      --tile_icon_background_color_cool: rgb(4, 159, 248);
+      --tile_icon_background_color_enabled: rgb(78, 196, 0);
+      --tile_icon_background_color_disabled: rgb(110, 110, 110);
+    }
+
+    div {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    div::-moz-selection {
+      background: transparent;
+    }
+
+    div::selection {
+      background: transparent;
+    }
+
+    html {}
+
+    body {
+      background-color: var(--body_background);
+      font-family: var(--fonts);
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--body_text);
+      /*margin: 0 !important;*/
+      /*padding: 0 !important;*/
+      /*margin: 10px !important;*/
+      /* Font rendering (mainly for firefox) */
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .body_wrap {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0px;
+      left: 0px;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      height: 100%;
+    }
+
+    .opaque {
+      top: 0px;
+      left: 0px;
+      filter: alpha(opacity=60);
+      opacity: 0.6;
+    }
+
+    .vopaque {
+      top: 0px;
+      left: 0px;
+      filter: alpha(opacity=40);
+      opacity: 0.4;
+    }
+
+    .options_pane {
+      background-color: var(--options_pane_background);
+      border: 2px solid var(--options_pane_bordercolor);
+      border-radius: 20px;
+      justify-content: center;
+      align-items: center;
+      width: 345px;
+      /*height:245px;*/
+    }
+
+    .scheduler_pane {
+      background-color: var(--options_pane_background);
+      border: 2px solid var(--options_pane_bordercolor);
+      border-radius: 20px;
+      justify-content: center;
+      align-items: center;
+      width: 650px;
+      padding: 10px;
+      /*overflow-y: scroll; didn't work*/
+      /*height: 100%;*/
+      /*flex-basis: content;*/
+      /*flex-direction: column;*/
+    }
+
+    .simulator_pane {
+      background-color: var(--options_pane_background);
+      border: 2px solid var(--options_pane_bordercolor);
+      border-radius: 20px;
+      justify-content: center;
+      align-items: center;
+      /* Actual size of sim 305 by 385 */
+      width: 325px;
+      height: 405px;
+      padding: 10px;
+      /*overflow-y: scroll; didn't work*/
+      /*height: 100%;*/
+      /*flex-basis: content;*/
+      /*flex-direction: column;*/
+    }
+
+    .simiframe {
+      width: 305px;
+      height: 385px;
+    }
+
+    .options {
+      top: 10px;
+      /*left: 10px;*/
+      position: fixed;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100vw;
+      /*
+      height: 100%;
+      */
+    }
+
+    /*
+    .show {
+      top: 0px;
+      left: 0px;
+    }
+*/
+
+    .wrapper {
+      display: grid;
+      /*grid-template-columns: repeat(auto-fill, minmax(var(--tile-width), var(--tile-width)));
+      grid-auto-rows: 1fr, repeat(auto-fill, minmax(var(--tile-width), var(--tile-width)));*/
+      grid-template-columns: repeat(auto-fit, minmax(var(--tile-width), auto));
+      grid-auto-rows: 1fr, repeat(auto-fit, minmax(var(--tile-width), auto));
+      grid-gap: var(--tile_grid-gap);
+      padding: 0 !important;
+      margin: 10px !important;
+    }
+
+    .head {
+      /*background-color: rgb(124, 124, 124);*/
+      background-color: var(--head_background);
+      color: var(--head_text);
+      border-radius: 5px;
+      padding: 5px;
+      grid-column: 1 / -1;
+    }
+
+    .error {
+      background-color: var(--error_background) !important;
+    }
+
+    .hide {
+      display: none;
+      filter: alpha(opacity=0);
+      opacity: 0.0;
+    }
+
+    .tile {
+      background-color: var(--tile_background);
+      color: var(--tile_text);
+      border-radius: 10px;
+      padding: 0px;
+      /*font-size: 100%;*/
+      box-sizing: border-box;
+      padding: 5px;
+      height: var(--tile-width);
+      width: var(--tile-width);
+      filter: alpha(opacity=90);
+      opacity: 0.9;
+    }
+
+    .on {
+      background-color: var(--tile_on_background);
+      color: var(--tile_on_text);
+      filter: alpha(opacity=100);
+      opacity: 1.0;
+    }
+
+    .flash {
+      color: var(--tile_on_text);
+      filter: alpha(opacity=100);
+      opacity: 0.9;
+      -webkit-animation-name: tile-flash;
+      /* Safari 4.0 - 8.0 */
+      -webkit-animation-duration: 2s;
+      /* Safari 4.0 - 8.0 */
+      animation-name: tile-flash;
+      animation-duration: 2s;
+      animation-iteration-count: infinite;
+    }
+
+    /* Safari 4.0 - 8.0 */
+
+    @-webkit-keyframes tile-flash {
+      0% {
+        background-color: var(--tile_on_background);
+        opacity: 1.0;
+      }
+      50% {
+        background-color: var(--tile_background);
+        opacity: 0.9;
+      }
+      100% {
+        background-color: var(--tile_on_background);
+        opacity: 1.0;
+      }
+    }
+
+    /* Standard syntax */
+
+    @keyframes tile-flash {
+      0% {
+        background-color: var(--tile_on_background);
+        opacity: 1.0;
+      }
+      50% {
+        background-color: var(--tile_background);
+        opacity: 0.9;
+      }
+      100% {
+        background-color: var(--tile_on_background);
+        opacity: 1.0;
+      }
+    }
+
+    /*
+    .off {
+      background-color: #ccc;
+      color: rgb(133, 133, 133);
+    }
+*/
+
+    .tile_icon {
+      height: var(--tile_icon-height);
+      display: table;
+      margin: 0 auto;
+      /*background-color: red;*/
+    }
+
+    .tile_name {
+      height: var(--tile_name-height);
+      /*background-color: green;*/
+      line-height: var(--tile_name-lineheight);
+    }
+    .tile_name_1line {
+      height: var(--tile_name-height1line);
+      /*background-color: green;*/
+      line-height: var(--tile_name-lineheight);
+    }
+
+    .tile_status {
+      color: var(--tile_status_text);
+      height: var(--tile_status-height);
+      /*background-color: blue;*/
+    }
+
+    .tile_icon_value {
+      border-radius: calc(var(--tile_icon-height) / 2);
+      font-weight: 600;
+      /*border-radius: 27px;*/
+      height: var(--tile_icon-height);
+      min-width: var(--tile_icon-height);
+      text-align: center;
+      vertical-align: middle;
+      line-height: var(--tile_icon-height);
+      filter: alpha(opacity=100);
+      opacity: 1.0;
+    }
+
+    .heat {
+      /*background-color: rgb(255, 123, 0);*/
+      background-color: var(--tile_icon_background_color_heat);
+      color: rgb(255, 255, 255);
+    }
+
+    .cool {
+      /*background-color: rgb(4, 159, 248);*/
+      background-color: var(--tile_icon_background_color_cool);
+      color: rgb(255, 255, 255);
+    }
+
+    .enabled {
+      /*background-color: rgb(78, 196, 0);*/
+      background-color: var(--tile_icon_background_color_enabled);
+      color: rgb(255, 255, 255);
+    }
+
+    .disabled {
+      /*background-color: rgb(110, 110, 110);*/
+      background-color: var(--tile_icon_background_color_disabled);
+      color: rgb(220, 220, 220);
+    }
+
+    .rangeoptimal {
+     /*background-color: rgb(255, 123, 0);*/
+      background-color: var(--value_tile_normal_color);
+      color: rgb(255, 255, 255);
+    }
+
+    .rangewarning {
+     /*background-color: rgb(255, 187, 0);*/
+      background-color: var(--value_tile_attention_color);
+      color: rgb(255, 255, 255);
+    }
+
+    .rangecritical {
+      /*background-color: rgb(255, 123, 0);*/
+      background-color: var(--value_tile_outofrange_color);   
+      color: rgb(255, 255, 255);
+    }
+
+    .uom_text {
+      font-size: 75%;
+    }
+
+    /* All for options panel */
+
+    .option_switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px
+    }
+
+    .option_switch input {
+      display: none;
+    }
+
+    .option_switch_slide {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--options_slider_lowlight);
+      -webkit-transition: .4s;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .option_switch_slide:before {
+      position: absolute;
+      content: "";
+      height: calc(var(--options_slider_ball)*1px);
+      width: calc(var(--options_slider_ball)*1px);
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked+.option_switch_slide {
+      background-color: var(--options_slider_highlight);
+    }
+
+    input:focus+.option_switch_slide {
+      box-shadow: 0 0 1px var(--options_slider_highlight);
+    }
+
+    input:checked+.option_switch_slide:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+
+    .option_slider {
+      -webkit-appearance: none;
+      width: 300px;
+      height: var(--options_slider_height);
+      background: var(--options_slider_lowlight);
+      outline: none;
+      -webkit-transition: .2s;
+      transition: opacity .2s;
+      border-radius: var(--options_slider_height);
+    }
+
+    .option_slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: calc(var(--options_slider_ball)*1px);
+      height: calc(var(--options_slider_ball)*1px);
+      background: var(--options_slider_highlight);
+      cursor: pointer;
+      border-radius: calc(var(--options_slider_ball)*1px);
+    }
+
+    .option_slider::-moz-range-thumb {
+      width: calc(var(--options_slider_ball)*1px);
+      height: calc(var(--options_slider_ball)*1px);
+      background: var(--options_slider_highlight);
+      cursor: pointer;
+      border-radius: var(--options_slider_height);
+    }
+
+    .options_title {
+      /*background-color: rgb(124, 124, 124);
+      color: #fff;
+      font-weight: 200;*/
+      font-size: 18px;
+      overflow: hidden;
+    }
+
+    .options_selector {
+      font-family: var(--fonts);
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .options_button {
+      color: var(--body_text);
+      font-family: var(--fonts);
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .option_text {
+      font-family: var(--fonts);
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .option_radiocontainer {
+      padding: 0.2em 0;
+      /*font-family: 'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;*/
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    /* hide the "real" radios visually */
+
+    .radio input {
+      border: 0;
+      clip: rect(0 0 0 0);
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      width: 1px;
+    }
+
+    /* style the "fake" radios */
+
+    .option_radio-value {
+      background-color: var(--options_radio_lowlight);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 95% auto;
+      border-radius: 50%;
+      display: inline-block;
+      height: var(--options_radio_ball);
+      width: var(--options_radio_ball);
+      margin-right: 0.2em;
+      margin-left: 0.5em;
+      position: relative;
+      vertical-align: -0.3em;
+      /*  Beautify
+  border: 0.0625em solid #bbb;
+  box-shadow: inset 0 0.0625em 0 0.0625em rgba(0,0,0,0.075);*/
+    }
+
+    input:checked+.option_radio-value {
+      background-color: var(--options_radio_highlight);
+      /* Beautify
+  border-color: #169a9a;
+  box-shadow: 0 0.0625em 0 0.0625em rgba(0,0,0,0.075);*/
+    }
+
+    .sc_tablehead {
+  vertical-align: top;
+  text-align: center;
+}
+
+.cs_commandcell {
+    background-color: var(--csinputcell_background);
+    width:60px !important;
+    overflow: hidden;
+    overflow: -moz-hidden-unscrollable;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 0;
+}
+.cs_devicecell {
+    background-color: var(--csinputcell_background);
+    width:150px !important;
+    overflow: hidden;
+    overflow: -moz-hidden-unscrollable;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 0;
+}
+
+.cs_valuecell {
+    width:40px !important;
+}
+
+.cs_inputcell {
+    background-color: var(--csinputcell_background);
+    text-align: left;
+    width:50px;
+    padding: 2px; 
+    /*background-color:#f0f0f0 ;*/
+    border:none;
+    /*-webkit-appearance: textfield;*/
+    /*-webkit-appearance: none;*/
+    /*-moz-appearance: textfield;*/
+    font-size: 14px;
+    color: var(--body_text);
+}
+
+.cs_deletebutton {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--body_text);
+}
+
+.cs_crontext {
+    font-size: 18px;
+    background-color: var(--cronhelp_background);
+}
+
+.cs_helpright {
+    background-color: var(--cronhelp_background);
+    font-size: 12px;
+    padding-top: 0px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+    padding-left: 5px;
+    font-weight: 500;
+    text-align:left;
+}
+.cs_helpleft {
+    background-color: var(--cronhelp_background);
+    font-size: 12px;
+    padding-top: 0px;
+    padding-right: 5px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+    font-weight: 600;
+    text-align:right;
+}
+.cs_error {
+  background-color: red;
+}
+/*
+.switch-on-NOT_USED {
+  width: 45px;
+  height: 45px;
+  background-image: url('hk/switch-on.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.switch-off-NOT_USED {
+  width: 45px;
+  height: 45px;
+  background-image: url('hk/switch-off.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+*/
+.switch-icon {
+  /*
+  width: 45px;
+  height: 45px;*/
+  width: var(--tile_icon-height);
+  height: var(--tile_icon-height);
+  /*background-size: cover;*/
+  /*background-size:  var(--tile_icon-height)  var(--tile_icon-height);*/
+  background-position: center center;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+    /*
+    .timedate {
+      font-size: 10px;
+    }*/
+  </style>
+
+  <script type='text/javascript'>
+    //'use strict';
+    
+    var _config = {};
+   
+
+    var _lightProgramDropdown = false;
+    var _pressEvent;
+    var _ignoreMouseEvent = false;
+    var _temperature_units;
+    var _aqualink_data;
+    var _landscape = false;
+    var _displayNames = [];
+    var _scheduler_devices_json= [];
+    var _tile_line_char_limit = 0;
+    var _devices = [];
+
+    var _switchOnUri;
+    var _switchOffUri;
+    //var _targetClearErrorMsg = new Date();
+
+    var _DisableOffIconCircle = true;
+
+    //_switchOnUri = createSwitchIcon("rgb(255, 255, 255)", false);
+    //_switchOffUri = createSwitchIcon(_DisableOffIconCircle?"rgb(110, 110, 110)":"rgb(220, 220, 220)", _DisableOffIconCircle);
+
+    async function loadConfig() {
+      try {
+        // Fetch the configuration file
+        const response = await fetch('/config.json', {cache: 'no-store'});
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // Parse the JSON data
+        _config = await response.json();
+
+      } catch (error) {
+        console.error("Loading config failed:", error);
+        displayErrorMessagee("Error Loading web config!", 5);
+        //document.getElementById("header").classList.add("error");
+        //_targetClearErrorMsg = new Date(Date.now() + 5000);  // Set 5 sec from now.
+      }
+
+      // Set defaults.
+   
+      if (typeof _config.background_image?.url === 'undefined') {
+        _config.background_image = {};
+        _config.background_image.url = "hk/background.jpg";
+        _config.background_image.url_reload = 0;
+      }
+
+      if (_config?.colors?.tile_on_background) {
+         _switchOnUri = createSwitchIcon(_config.colors.tile_on_background, false);
+      } else {
+        _switchOnUri = createSwitchIcon("rgb(255, 255, 255)", false);
+      }
+
+      if (_config?.tile_settings?.disable_off_icon_background && ! isConfigEnabled(_config.tile_settings.disable_off_icon_background)) {
+        _DisableOffIconCircle = false;
+      } else { 
+        _DisableOffIconCircle = true;  // This is the default
+      }
+
+      if (_DisableOffIconCircle) {
+        if (_config?.colors?.tile_icon_background_color_disabled) {
+          _switchOffUri = createSwitchIcon(_config.colors.tile_icon_background_color_disabled, _DisableOffIconCircle);
+        } else {
+          _switchOffUri = createSwitchIcon("rgb(110, 110, 110)", _DisableOffIconCircle);
+        }
+      } else {
+        if (_config?.colors?.tile_background) {
+          _switchOffUri = createSwitchIcon(_config.colors.tile_background, _DisableOffIconCircle);
+        } else {
+          _switchOffUri = createSwitchIcon("rgb(220, 220, 220)", _DisableOffIconCircle);
+        }
+      }
+
+      if (_config?.devices) {
+        Object.entries(_config.devices).forEach(([deviceName, deviceObj]) => {
+          if ( deviceObj?.display && isConfigEnabled(deviceObj.display)) {
+            _devices.push(deviceName);  // Un comment
+          } else {
+            //console.log(deviceName+" hide");
+          }
+        });
+      }
+
+      if (!_config?.swg_status) {
+        _config.swg_status = {
+                               "0": "On",
+                               "1": "No flow",
+                               "2": "Low salt",
+                               "4": "High salt",
+                               "8": "Clean cell",
+                               "9": "Turning off",
+                               "16": "High current",
+                               "32": "Low volts",
+                               "64": "Low temp",
+                               "128": "Check PCB",
+                               "253": "General Fault",
+                               "254": "Unknown",
+                               "255": "Off"
+                              };
+      }
+
+      if (! _config?.tile_thresholds) {
+        _config.tile_thresholds = { "SWG/PPM": {
+                                      outofrange: {min: 2600, max: 3500},
+                                      attention: {min: 2700, max: 3400}
+                                    },
+                                    "CHEM/pH": {
+                                      outofrange: {min: 7, max: 8},
+                                      attention: {min: 7.2, max: 7.8}
+                                    },
+                                    "CHEM/ORP": {
+                                      outofrange: {min: 560, max: 900},
+                                      attention: {min: 650, max: 850}
+                                    }
+                                  };
+      }
+
+      if (! _config?.tile_settings) {
+        _config.tile_settings = {};
+      }
+
+      if (! _config?.tile_settings?.turn_off_sensortiles) {
+        _config.tile_settings.turn_off_sensortiles = "true";
+      }
+
+      if (! _config?.tile_settings?.show_vsp_gpm) {
+        _config.tile_settings.show_vsp_gpm = "true";
+      }
+
+      // NSF Not used at present
+      if (! _config?.tile_settings?.link_spa_and_spa_heater) {
+        _config.tile_settings.link_spa_and_spa_heater = "false";
+      }
+    }
+
+    function isConfigEnabled(value) {
+      if (value === null || typeof value === 'undefined') {
+        return false;
+      }
+      const lowerCaseValue = String(value).toLowerCase();
+      if (lowerCaseValue === "true" || lowerCaseValue === "yes") {
+        return true;
+      }
+      return false;
+    }
+
+    function createSwitchIcon(color, largeSize) {
+      var switchContent;
+      if (!largeSize) {
+        switchContent = `<svg xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 45 45"
+                          stroke="`+color+`" fill="none"
+                          stroke-width="5.5" stroke-linecap="round">
+                          <line x1="22.05" y1="8" x2="22.05" y2="19" />
+                          <path d="M15.3 13.25 A11.25 11.25 0 1 0 28.8 13.25"/>
+                        </svg>`;
+      } else {
+         /* Circle is larger / Line is higher */
+        switchContent = `<svg xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 45 45"
+                          stroke="`+color+`" fill="none"
+                          stroke-width="5.5" stroke-linecap="round">
+                          <line x1="22.05" y1="7" x2="22.05" y2="18" />
+                          <path d="M15.3 12.75 A11.75 11.75 0 1 0 28.8 12.75"/>
+                        </svg>`;
+      }
+      const encodedswitchContent = encodeURIComponent(switchContent);
+      return `url("data:image/svg+xml;charset=utf-8,${encodedswitchContent}")`;
+    }
+
+    async function init() {
+      await loadConfig();
+
+      setSizeSpecifics();
+      populateLightProgram(-1);
+      //populateLightProgram(0);
+      document.getElementById('thermostat_options').classList.remove("hide");
+      document.getElementById('swg_options').classList.remove("hide");
+      document.getElementById('pswitch_options').classList.remove("hide");
+      document.getElementById('vspswitch_options').classList.remove("hide");
+      document.getElementById('timer_options').classList.remove("hide");
+      document.getElementById('scheduler_options').classList.remove("hide");
+      document.getElementById('dimmerlight_options').classList.remove("hide");
+      //document.getElementById('simulator_iframe').classList.remove("hide");
+      setColors();
+      load_background();
+      showTileOptions(false);
+      startWebsockets();
+      resetBackgroundSize();
+
+      // Test for mobile-app mode
+      
+      if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) {
+        //console.log("Running in standalone mode");
+        //alert("Standalone");
+        // in webapp mode, remove the aqmanager link
+        try{
+          document.getElementById('td_cog').classList.add("hide");
+        } catch (e){}
+      } else {
+        //console.log("Not running in standalone mode");
+        //alert("NOT Standalone");
+      }
+
+      if (_config?.external_script) {
+        loadScriptIfAvailable(_config.external_script);
+      }
+            
+      // Test for iframe
+      if (window.self !== window.top) {
+        //console.log("The code is running inside an iframe.");
+        // Change the link under the cog/hamburger icon
+        ele = document.getElementById('cog_link');
+        ele.setAttribute("href", "/");
+        ele.setAttribute("target", "_parent");
+      } else {
+        //console.log("The code is not running inside an iframe.");
+      }
+
+      //console.log("Tile width "+window.getComputedStyle(document.documentElement).getPropertyValue('--tile-width'));
+    }
+
+    function populateLightProgram(type=0, current_mode="") {
+      var light_program = _light_program[type];
+      
+      if (_lightProgramDropdown) {
+        option = document.getElementById('pswitch_option_list');
+        try {
+          fLen = light_program.length;
+          for (i = 0; i < fLen; i++) {
+            var opt = document.createElement('option');
+            opt.value = i + 1;
+            opt.innerHTML = light_program[i];
+            option.appendChild(opt);
+          }
+        } catch (e) {}
+      } else {
+        var tbody = document.getElementById('pswitch_table').getElementsByTagName('tbody')[0];
+        if (type == -1) {
+          // -1 is Just init, so create another row, just to delete later.
+          row = tbody.insertRow(2);
+          row.innerHTML = "<td align='center'>Solid Color</td><td align='center'>Light Show</td>";
+          light_program = _light_program[0]; // Use aqualinkd light modes to set size below
+        }
+        var html1 = '';
+        var html2 = '';
+        var fLen = light_program.length;
+        var i;
+        var selected = "";
+        for (i = 0; i < fLen; i++) {
+          selected = "";
+          if (current_mode != "" && light_program[i].startsWith(current_mode)) {
+            selected = "checked";
+          } 
+          if (light_program[i].endsWith(" - Show"))
+            html2 = html2 + "<div class='option_radiocontainer'><label><span class='radio'><input type='radio' name='light_program' value='" + (i+1) + "' "+selected+" onchange='updatePwsitchOptions(this, "+type+");'><span class='option_radio-value' aria-hidden='true'></span></span>" + light_program[i].substr(0, (light_program[i].length - 7)) + "</label></div>";
+          else
+            html1 = html1 + "<div class='option_radiocontainer'><label><span class='radio'><input type='radio' name='light_program' value='" + (i+1) + "' "+selected+" onchange='updatePwsitchOptions(this, "+type+");'><span class='option_radio-value' aria-hidden='true'></span></span>" + light_program[i] + "</label></div>";
+        }
+        var row;
+        row = tbody.deleteRow(2);
+        row = tbody.insertRow(2);
+        if (type == 10) {
+          row.innerHTML = "<td align='center'>Dimmer</td><td align='center'></td>";
+        } else {
+          row.innerHTML = "<td align='center'>Solid Color</td><td align='center'>Light Show</td>";
+        }
+        tbody.deleteRow(3);
+        row = tbody.insertRow(3);
+        row.innerHTML = "<td align='left' valign='top'>" + html1 + "</td><td align='left' valign='top'>" + html2 + "</td>";
+      }
+    }
+
+    function setProp(name) {
+      //if ( _config?.colors[name] !== undefined ) {
+      if ( _config?.colors && _config?.colors[name] ) {
+        //console.log("Color "+name+" = "+_config.colors[name]);
+        document.documentElement.style.setProperty('--' + name, _config.colors[name]);
+      } else {
+        //console.log("Missing Color "+name);
+      }
+    }
+
+    function setColors() {
+      //return;
+
+      setProp("body_background");
+      setProp("body_text");
+      setProp("options_pane_background");
+      setProp("options_pane_bordercolor");
+      setProp("options_slider_highlight");
+      setProp("options_slider_lowlight");
+      setProp("head_background");
+      setProp("head_text");
+      setProp("error_background");
+
+      setProp("value_tile_normal_color");
+      setProp("value_tile_outofrange_color");
+      setProp("value_tile_attention_color");
+      
+      setProp("tile_on_text");
+      setProp("tile_status_text");
+      setProp("tile_text");
+      setProp("tile_background");
+      setProp("tile_on_background");
+      
+    }
+
+    function setSizeSpecifics() {
+      var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+      var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+      //alert(w+"x"+h+" = "+(w*h));
+
+      // 375x724 = 271500
+      if ((w * h) > 370000) { // 370000 is kind-a just guess
+        document.documentElement.style.setProperty('--tile-width', '125px');
+        document.documentElement.style.setProperty('--tile_icon-height', '45px');
+        document.documentElement.style.setProperty('--tile_name-height', '42px');
+        document.documentElement.style.setProperty('--tile_name-height1line', '27px');
+        document.documentElement.style.setProperty('--tile_name-charlimit', '15');
+        document.documentElement.style.setProperty('--tile_status-height', '15px');
+        document.documentElement.style.setProperty('--tile_grid-gap', '20px');
+        document.documentElement.style.setProperty('--tile_name-lineheight', '1.4');
+      }
+      if (w > h)
+        _landscape = true;
+      else
+        _landscape = false;
+      setOrientation(_landscape);
+      /*
+        Future change element sizes here if needed
+      */
+      _tile_line_char_limit = getComputedStyle(document.documentElement).getPropertyValue('--tile_name-charlimit');
+
+
+      window.addEventListener("orientationchange", function() {
+        var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+        var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+        // Have no idea why this is reversed, but w is less then h in landscape when captured here.
+        if (w < h)
+          _landscape = true;
+        else
+          _landscape = false;
+        setOrientation(_landscape);
+        // Need to finish rendering before calling this, so wait a small time
+        setTimeout(resetBackgroundSize, 100);
+      }, false);
+    }
+
+    function setOrientation(isLandscape) {
+      if (isLandscape) {
+        //alert('lll')
+        document.getElementById("td_name").width = '72px';
+        document.getElementById("td_timedate").width = '72px';
+      } else {
+        document.getElementById("td_name").width = '72px';
+        document.getElementById("td_timedate").width = '102px';
+      }
+    }
+
+    function load_background() {
+      // check for undevined AND defined but empty
+      //if (typeof background_url === 'undefined' || background_url === undefined)
+      if (!_config.background_image?.url) {
+        return;
+      }
+      //alert("load");
+      // call the notify_complete function when the image has loaded
+   
+      var image = new Image();
+      image.onload = function() {
+        document.getElementById("body_wrap").style.backgroundImage = "url('" + this.src + "')";
+      };
+      image.onerror = function() {
+        image.src = "hk/background.jpg"; // Use default if image fails.
+      };
+      //if (typeof background_reload !== 'undefined' && background_reload > 0) {
+      if ( _config.background_image?.url_reload > 0) {
+        if (_config.background_image.url.indexOf('?') > 0 )
+          image.src = _config.background_image.url + '&aqrnd=' + new Date().getTime();
+        else
+          image.src = _config.background_image.url + '?' + new Date().getTime();
+
+        setTimeout(load_background, (_config.background_image.url_reload * 1000));
+      } else {
+        image.src = _config.background_image.url;
+      }
+    }
+    // If the grid continer is larger than the page container, increase page so background looks nice
+    // also reduce size if needed on page rotate.
+    function resetBackgroundSize() {
+      if (!_config.background_image?.url) {
+        return;
+      }
+
+      try {
+        //inside = document.getElementById('wrapper');
+        outside = document.getElementById('body_wrap');
+        insideH = parseInt(window.getComputedStyle(document.getElementById('wrapper')).height);
+        outsideH = parseInt(window.getComputedStyle(outside).height);
+        var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+        var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+        if (insideH > outsideH || outsideH > h) {
+          //outside.style.height = ((insideH > h)?(insideH + 40)+'px':(h + 40)+'px');
+          outside.style.height = ((insideH > h) ? (insideH + 40) + 'px' : h + 'px');
+          //alert("w:"+w+" h:"+h+" inH:"+insideH+" outH:"+outsideH+"\nUsed:"+outside.style.height);
+        }
+      } catch (e) {}
+    }
+
+    function endPress(id) {
+      //pressEvent = 0;
+      //alert ("Long press "+id);
+      //switchTileState(id, true);
+      showTileOptions(true, id);
+    }
+
+    function add_clickEvent(tile, id) {
+      tile.addEventListener('touchstart', function() {
+        _ignoreMouseEvent = true;
+        _pressEvent = window.setTimeout(function() {
+          _pressEvent = 0;
+          endPress(id);
+        }, 1000);
+      });
+      tile.addEventListener('touchend', function() {
+        if (_pressEvent != 0) {
+          clearTimeout(_pressEvent);
+          switchTileState(id, false);
+        }
+      });
+      tile.addEventListener("mousedown", function() {
+        if (_ignoreMouseEvent == false) {
+          _pressEvent = window.setTimeout(function() {
+            _pressEvent = 0;
+            endPress(id);
+          }, 1000);
+        }
+      });
+      tile.addEventListener("mouseup", function() {
+        if (_pressEvent != 0 && _ignoreMouseEvent == false) {
+          clearTimeout(_pressEvent);
+          switchTileState(id, false);
+        }
+      });
+    }
+
+    function add_tile(id, name, status, type, subtype, off_imgurl, on_imgurl) {
+    //function add_tile(id, name, status, type, subtype) {
+      var height = getComputedStyle(document.documentElement).getPropertyValue('--tile_icon-height');
+      
+      var div = document.createElement('div');
+      div.setAttribute('class', 'tile');
+      div.setAttribute('id', id);
+      div.setAttribute('type', subtype);
+      //div.setAttribute('onclick', "switchTileState('" + id + "')");
+      var subdiv = document.createElement('div');
+      subdiv.setAttribute('class', 'tile_icon');
+      subdiv.setAttribute('id', id + '_icon');
+      
+      //console.log(name+" = "+type+" "+subtype);
+
+      if (type.startsWith("switch")) { // Use default SVG for icon images
+        if (off_imgurl == null) {
+            var valdiv = document.createElement('div');
+          if (_DisableOffIconCircle) {
+            valdiv.setAttribute('class', 'switch-off tile_icon_value');
+          } else {
+            valdiv.setAttribute('class', 'switch-off tile_icon_value disabled');
+          }
+          valdiv.setAttribute('id', id + '_tile_icon_value');
+          subdiv.appendChild(valdiv);
+          div.appendChild(subdiv);
+        } else {     // Use URL for icon image
+          var imgdiv = document.createElement('img');
+          imgdiv.setAttribute('height', height + 'px');
+          imgdiv.setAttribute('src', off_imgurl);
+          subdiv.appendChild(imgdiv);
+          div.appendChild(subdiv);
+          if (on_imgurl != null) {
+            subdiv = document.createElement('div');
+            subdiv.setAttribute('class', 'tile_icon');
+            subdiv.setAttribute('id', id + '_icon_on');
+            imgdiv = document.createElement('img');
+            imgdiv.setAttribute('height', height + 'px');
+            imgdiv.setAttribute('src', on_imgurl);
+            subdiv.style.display = 'none';
+            subdiv.appendChild(imgdiv);
+            div.appendChild(subdiv);
+          }
+        }
+
+        //console.log("SWITCH "+name+" = "+type+" "+subtype);
+      } else if (type == "value" || type == "thermostat") {
+        var valdiv = document.createElement('div');
+        valdiv.setAttribute('class', 'tile_icon_value disabled');
+        valdiv.setAttribute('id', id + '_tile_icon_value');
+        valdiv.textContent = '--';
+        subdiv.appendChild(valdiv);
+        div.appendChild(subdiv);
+      }
+      /*else if (type == "thermostat") {
+             valdiv = document.createElement('div');
+             valdiv.setAttribute('class', 'tile_icon_value disabled');
+             valdiv.setAttribute('id', id + '_tile_icon_value');
+             valdiv.textContent = '--';
+             subdiv.appendChild(valdiv);
+           } */
+      var title_subdiv = document.createElement('div');
+      title_subdiv.setAttribute('class', 'tile_name');
+      title_subdiv.setAttribute('id', id + '_name');
+      title_subdiv.textContent = cutContentTextLength(name, 2);
+      div.appendChild(title_subdiv);
+      // Value and Thermostat are the same, but value is read only and no state
+      //if (type != "value") {
+      {
+        // Add extra status line to VSP if we can
+        if (subtype == "switch_vsp") {
+          //var title1linechatlimit = getComputedStyle(document.documentElement).getPropertyValue('--tile_name-charlimit');
+          if ( name.length <= _tile_line_char_limit ) {
+            subdiv = document.createElement('div');
+            subdiv.setAttribute('class', 'tile_status');
+            subdiv.setAttribute('id', id + '_status_line2');
+            div.appendChild(subdiv);
+            title_subdiv.classList.add("tile_name_1line");
+            title_subdiv.classList.remove("tile_name");
+          }
+        }
+        subdiv = document.createElement('div');
+        subdiv.setAttribute('class', 'tile_status');
+        subdiv.setAttribute('id', id + '_status');
+        if (type != 'value') {
+          subdiv.textContent = formatSatus(status);
+        }
+        div.appendChild(subdiv);
+        if (type == "switch" && (subtype != "switch_program" && subtype != "switch_vsp" && 
+                                subtype != "switch_timer" && subtype != "light_dimmer") ) {
+        //if (type == "switch" && subtype != "switch_program" ) {
+          div.setAttribute('onclick', "switchTileState('" + id + "')");
+          //console.log("add onclick switchtilestate to "+id);
+        } else /*if (id != "SWG/Percent")*/ {
+          add_clickEvent(div, id);
+          //console.log("add click Event to "+id);
+        }
+      }
+      document.getElementById('wrapper').appendChild(div);
+    }
+
+    function cutContentTextLength(text, lines) {
+      //var title1linechatlimit = getComputedStyle(document.documentElement).getPropertyValue('--tile_name-charlimit');
+      // 12 or 15.
+      if ( countLines(text, _tile_line_char_limit-1 ) > lines ) {
+        //console.log ("Text '"+text+"' will take 3+ lines");
+        text = text.replace(/\bChemistry\b/, "Chem");
+        //console.log ("new Text '"+text+"'");
+      }
+      return text
+    }
+
+    function countLines(text, limit = 15) {
+      const words = text.split(/\s+/);  // split on spaces (multiple OK)
+      let lines = 1;
+      let currentLen = 0;
+
+      for (const word of words) {
+        if (word.length === 0) continue; // skip empty strings
+
+        if (currentLen === 0) {
+      // first word on the line
+          currentLen = word.length;
+        } else if (currentLen + 1 + word.length <= limit) {
+      // add word + 1 space
+          currentLen += 1 + word.length;
+        } else {
+      // new line
+          lines++;
+          currentLen = word.length;
+        }
+      }
+      return lines;
+    }
+
+    function switchTileState(id, details) {
+      if (details) {
+        console.log("TILE DETAILS WHY ARE WE HERE??? '" + id + "'");
+      } else {
+        setTileState(id, (document.getElementById(id).getAttribute('status') == 'off'))
+      }
+    }
+
+    function setTileState(id, state) {
+      try {
+        if (state == (document.getElementById(id).getAttribute('status') == 'off')) {
+          send_command(id, (state==true?1:0) );
+          //console.log("Switch state "+id+" to "+(state)?"on":"off");
+        } else {
+          //console.log("state "+id+" to "+(state)?"on":"off")
+        }
+        
+        setTileOn(id, ((state) ? "on" : "off"));
+      } catch(exception) {}
+    }
+
+    function setThermostatSetpoint(id, sp_value) {
+      var tile;
+      if ((tile = document.getElementById(id)) == null) {
+        return;
+      }
+      tile.setAttribute('setpoint', sp_value);
+      send_setpoint(id);
+    }
+
+
+/*
+    function setTileValue(id, value) {
+      var ext = '';
+      var type;
+      if (value == undefined || value.startsWith("-999") || value.startsWith(" "))
+        value = '--';
+      else {
+        try {
+          if ((type = document.getElementById(id).getAttribute('type')) != null) { 
+            if (type == 'temperature' || type == 'setpoint_thermo' || type == 'setpoint_freeze')
+              ext = '&deg;';
+            else if (type == 'setpoint_swg')
+              ext = '%';
+
+            if ((type == 'temperature' || type == 'value') && turn_on_sensortiles == true) {
+              if (value == 0 || value == '--')
+                setTileOn(id, 'off');
+              else
+                setTileOn(id, 'on');
+            }
+          }
+        } catch (e) {
+          //console.log('ERROR id=' + id + ' Line 764 | element = '+document.getElementById(id));
+        }
+      }
+      //document.getElementById(id + '_tile_icon_value').textContent = value;
+      var tile;
+      if ((tile = document.getElementById(id + '_tile_icon_value')) != null)
+        tile.innerHTML = value + ext;
+    }
+*/
+    function setTileValue(id, value) {
+      var ext = '';
+      var type = null;
+//console.log("setTileValue "+id+" "+value);
+      try {
+        type = document.getElementById(id).getAttribute('type');
+
+        if (value == undefined || value.startsWith("-999") || value.startsWith(" ")) {
+          value = '--';
+        } else {
+          if ((uom = document.getElementById(id).getAttribute('UOM')) != null) {
+            ext = uom;
+          } else if ((type = document.getElementById(id).getAttribute('type')) != null) { 
+            if (type == 'temperature' || type == 'setpoint_thermo' || type == 'setpoint_freeze' || type == 'setpoint_chiller')
+              ext = '&deg;';
+            else if (type == 'setpoint_swg')
+              ext = '%';
+            else if (type == 'value' && id == 'CHEM/ORP')
+              ext = '<span class="uom_text">mV</span>';
+            //else if (type == 'value' && id == 'CHEM/pH')
+            //  ext = '<span class="uom_text">pH</span>';
+          }
+        }
+
+        if ((type == 'temperature' || type == 'value') /*&& _turn_off_sensortiles == false*/) {
+          // Anything specific (SWG PPM should be off if SWG is off)
+          // This needs a try catch, or is above try block good enough?
+          if (id == 'SWG/PPM' && document.getElementById('SWG').getAttribute('status') != 'on' && isConfigEnabled(_config.tile_settings.turn_off_sensortiles)) {
+            setTileOn(id, 'off');
+            setTileOnText(id, "");
+          } else if ( (id == 'CHEM/ORP' || id == 'CHEM/pH' ) && document.getElementById('Filter_Pump').getAttribute('status') == 'off' && isConfigEnabled(_config.tile_settings.turn_off_sensortiles)) {
+            setTileOn(id, 'off');
+            setTileOnText(id, "");
+          // Generic for all.
+           } else if ((value == 0 || value == '--') && isConfigEnabled(_config.tile_settings.turn_off_sensortiles)) {
+            setTileOn(id, 'off');
+            setTileOnText(id, "");
+          } else {
+            setTileThresholds(id, value)
+          }
+        }
+      } catch (e) {
+          // Devices that are hidden are not found
+          //console.log('ERROR id=' + id + ' Line '+new Error().lineNumber+' | element = '+document.getElementById(id));
+      }
+      //document.getElementById(id + '_tile_icon_value').textContent = value;
+      var tile;
+      if ((tile = document.getElementById(id + '_tile_icon_value')) != null)
+        tile.innerHTML = value + ext;
+    }
+
+    function setTileThresholds(id, value) {
+      //const thresholds = _tile_thresholds[id];
+      const thresholds = _config?.tile_thresholds?.[id] ?? null;
+      
+      if (thresholds == null || !thresholds) {
+        // No thresholds defined for this tile
+        setTileOn(id, 'on');
+        setTileOnText(id, '');
+        return;
+      }
+
+      let status = 'on';
+      let text = '';
+
+      if (value <= thresholds.outofrange.min || value >= thresholds.outofrange.max) {
+        status = 'rangecritical';
+        if ( value <= thresholds.outofrange.min && thresholds.outofrange.mintext != null)
+          text = thresholds.outofrange.mintext;
+        else if ( value >= thresholds.outofrange.max && thresholds.outofrange.maxtext != null)
+          text = thresholds.outofrange.maxtext;
+        else
+          text = 'Out of range';
+      } else if (value <= thresholds.attention.min || value >= thresholds.attention.max) {
+        status = 'rangewarning';
+        if ( value <= thresholds.attention.min && thresholds.attention.mintext != null)
+          text = thresholds.attention.mintext;
+        else if ( value >= thresholds.attention.max && thresholds.attention.maxtext != null)
+          text = thresholds.attention.maxtext;
+        else if (_tile_line_char_limit < 15)
+          text = 'Attention';
+        else
+          text = 'Needs attention';
+      }
+
+      setTileOn(id, status);
+      setTileOnText(id, text);
+    }
+
+    function setTileUOM(id, uom) {
+      try {
+        type = document.getElementById(id).setAttribute('UOM', uom);
+        //console.log("Set UOM to "+uom+" for "+id);
+      } catch (e) {}
+    }
+
+    function setTileOnText(id, text) {
+      //console.log("setTileOnText() "+id+" "+text);
+      try {
+        var tile = document.getElementById(id);
+        if (tile.getAttribute('status') == 'on' || tile.getAttribute('status') == 'enabled') {
+          document.getElementById(id + '_status').innerHTML = text;
+        } else if (tile.getAttribute('status') == 'rangeoptimal' || tile.getAttribute('status') == 'rangewarning' || tile.getAttribute('status') == 'rangecritical') {
+          document.getElementById(id + '_status').innerHTML = text;
+        } else {
+          //document.getElementById(id + '_status').innerHTML = text;
+          //console.log("Tile "+id+" status is '"+document.getElementById(id).getAttribute('status')+"' not setting text to '"+text+"'");
+        }
+      } catch(exception) {}
+    }
+    function setTileOnTextLine2(id, text) {
+      try {
+        if (document.getElementById(id).getAttribute('status') == 'on') {
+          document.getElementById(id + '_status_line2').innerHTML = text;
+          return true;
+        } else {
+          //console.log("Tile "+id+" status is '"+document.getElementById(id).getAttribute('status')+"' not setting text to '"+text+"'");
+        }
+      } catch(exception) { console.log(exception); }
+      return false;
+    }
+    function getTileOnText(id) {
+      try {
+        var tile = document.getElementById(id);
+        if (tile.getAttribute('status') == 'on' || tile.getAttribute('status') == 'enabled') {
+          return document.getElementById(id + '_status').innerHTML;
+        } else {
+          //console.log("Tile "+id+" status is '"+document.getElementById(id).getAttribute('status')+"' not setting text to '"+text+"'");
+        }
+      } catch(exception) {}
+
+      return "";
+    }
+    function getTileSPvalue(id) {
+      try {
+        return parseInt(document.getElementById(id).getAttribute('spvalue'));
+      } catch(exception) {}
+      return -1;
+    }
+
+    function setThermostatTile(id, value, sp_value) {
+      setTileValue(id, value);
+      var tile;
+      if ((tile = document.getElementById(id)) != null) {
+        tile.setAttribute('setpoint', sp_value);
+      }
+    }
+
+    function setTileAttribute(id, attribute, value) {
+      var tile;
+      if ((tile = document.getElementById(id)) != null) {
+    //console.log("Set Attribute "+attribute+ " to "+value+" for "+id);
+        tile.setAttribute(attribute, value);
+      }
+    }
+
+    function getTileAttribute(id, attribute) {
+      var tile;
+      if ((tile = document.getElementById(id)) != null) {
+  //console.log("get Attribute "+attribute+ " to "+tile.getAttribute(attribute)+" for "+id);
+        return tile.getAttribute(attribute);
+      }
+      return null;
+    }
+
+    function capitalizeFirstLetter(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function formatSatus(status) {
+      var index;
+      var aux;
+      var status;
+
+      if ((index = status.indexOf("AUX")) >= 0) {
+        aux = status.substr(index, 4);
+        status = status.charAt(0).toUpperCase() + status.substr(1).toLowerCase();
+        if ((name = _displayNames[aux]) != undefined) {
+          status = status.substr(0, index) + name + status.substr(index + 4);
+        }
+      } else if ((index = status.indexOf("ERROR")) >= 0) {
+        status = status;
+      } else {
+        status = status.charAt(0).toUpperCase() + status.substr(1).toLowerCase();
+      } 
+      return status;
+    }
+
+
+    function setTileOn(id, status) {
+  //console.log("setTileOn "+id+ " "+status);
+      var tile;
+      var text;
+      if ((tile = document.getElementById(id)) == null) {
+        //console.log("Error unknown ID '"+id+"' can't set to '"+status+"'");
+        return;
+      }
+
+      // Display is a special status to "brighten up" sensor values. 
+      if (status != "on" && status != "off" && status != "enabled" && status != "flash" 
+                         && status != "rangecritical" && status != "rangewarning" && status != "rangeoptimal") {
+        if (status == "unknown") {
+          status = "off"; // Just set it off for the moment
+        } else {
+          console.log("Error unknown status '" + status + "' for '" + id + "'");
+          return;
+        }
+      }
+      tile.setAttribute('status', status);
+      if (status != 'off') {
+        if (status == 'flash') {
+          tile.classList.add("flash");
+          tile.classList.remove("on");
+          text = "Delay";
+        } else {
+          tile.classList.add("on");
+          tile.classList.remove("flash");
+          text = "On";
+        }
+        try{
+          if (tile.getAttribute('type').startsWith("switch")) {
+            var el = document.getElementById(id + '_tile_icon_value');
+            if (el) { // standard SVG icon
+              el.classList.add('switch-on');
+              el.classList.remove('switch-off');
+              el.style.backgroundImage = _switchOnUri;
+            } else { // URL Icon
+              var offimg;
+              var onimg;
+              if ((offimg = document.getElementById(id + '_icon')) != null &&
+                  (onimg = document.getElementById(id + '_icon_on')) != null) {
+                offimg.style.display = 'none';
+                onimg.style.display = 'table';
+              }
+            }
+          }
+        } catch (e){console.log(e)}
+          /*
+        */
+        var type;
+        if ((type = tile.getAttribute('type')) != null) {
+          if (type == 'setpoint_swg') {
+            var exstatus = parseInt(tile.getAttribute('fullstatus'))
+            // Could also ignore "Enabled" in below, that way we don't jump different stats on startup
+            if (exstatus > 0 && exstatus < 255) {// Not off or on
+              //text = swgFullstatus2String(exstatus);
+              text = _config.swg_status[exstatus];
+              if (typeof text == 'undefined') {
+                text = _swgALLStatus[exstatus];
+              }
+            } else if (tile.getAttribute('Boost') == 'on')
+              text = "Boost";
+            else if (status == 'enabled')
+              text = 'Enabled';
+            else
+              text = 'Generating';
+          }
+          else if (type == 'setpoint_thermo') {
+            //if (status == 'enabled')
+              text = 'Heat to ' + tile.getAttribute('setpoint');
+            //else
+            //  text = 'Heating to ' + tile.getAttribute('setpoint'); // too large for phone
+          }
+          else if (type == 'setpoint_chiller') {
+            try{
+            text = capitalizeFirstLetter(tile.getAttribute("mode"))+' to ' + tile.getAttribute('setpoint');
+            } catch (except){}
+            //text = 'Cool to ' + tile.getAttribute('setpoint');
+          }
+          else if (type == 'setpoint_freeze') {
+            text = 'Turn on ' + tile.getAttribute('setpoint') + "&deg;";
+          //else
+          //  text = "On";
+          }
+        }
+        //document.getElementById(id + '_status').innerHTML = "On";
+      } else {
+        tile.classList.remove("on");
+        tile.classList.remove("flash");
+        /*
+        */
+        try {
+          if (tile.getAttribute('type').startsWith("switch")) {
+            var el = document.getElementById(id + '_tile_icon_value');
+            if (el) { // standard SVG icon
+              el.classList.add('switch-off');
+              el.classList.remove('switch-on');
+              el.style.backgroundImage = _switchOffUri;
+            } else { // URL Icon
+              var offimg;
+              var onimg;
+              if ((offimg = document.getElementById(id + '_icon')) != null &&
+                  (onimg = document.getElementById(id + '_icon_on')) != null) {
+                onimg.style.display = 'none';
+                offimg.style.display = 'table';
+              }
+            }
+          }
+        } catch (e){}
+        text = "Off";
+      }
+
+      type = tile.getAttribute('type');
+      try {
+        if (type != "value" && type != "temperature") {
+          //console.log("Set Text "+id+" "+" - "+type+" "+text);
+          document.getElementById(id + '_status').innerHTML = text;
+          // Clear line 2 status if we have it.
+          document.getElementById(id + '_status_line2').innerHTML = "";
+        } else if ( status == "off" (type == "value" || type == "temperature") ) {
+          document.getElementById(id + '_status').innerHTML = "";
+          document.getElementById(id + '_status_line2').innerHTML = "";
+        }
+      } catch (e) {}
+
+      if (status != null) {
+        if (status == 'enabled' || status == 'flash') {
+          setTileIconClassList(id, "enabled");
+        } else if (status == 'off') {
+          setTileIconClassList(id, "disabled");
+        } else if (status == 'on' && type == 'setpoint_thermo') {
+          setTileIconClassList(id, "heat");
+        } else if (status == 'on' && type == 'setpoint_chiller') {
+          var tile_icon = document.getElementById(id + '_tile_icon_value');
+          if ( tile_icon.parentElement.parentElement.getAttribute("mode") == "heat" ) {
+            setTileIconClassList(id, "heat");
+          } else {
+            setTileIconClassList(id, "cool");
+          }
+        } else if (status == 'on') {
+          if (type == 'value') {
+            setTileIconClassList(id, "rangeoptimal");
+          }else{
+            setTileIconClassList(id, "cool");
+          }
+        } else if (status == 'rangecritical') {
+          setTileIconClassList(id, "rangecritical");
+        } else if (status == 'rangewarning') {
+          setTileIconClassList(id, "rangewarning");
+        }
+      }
+/*
+      var tile_icon = document.getElementById(id + '_tile_icon_value');
+      
+      if (status != null && tile_icon != null) {
+        if (status == 'enabled' || status == 'flash') {
+          tile_icon.classList.add("enabled");
+          tile_icon.classList.remove("disabled");
+          tile_icon.classList.remove("cool");
+          tile_icon.classList.remove("heat");
+        } else if (status == 'off') {
+          tile_icon.classList.remove("enabled");
+          tile_icon.classList.add("disabled");
+          tile_icon.classList.remove("cool");
+          tile_icon.classList.remove("heat");
+          tile_icon.classList.remove("outofrange");
+          tile_icon.classList.remove("attention");
+        //} else if (status == 'on' && type != 'setpoint_swg' && type != 'setpoint_freeze' && type != 'temperature' && type != 'value') {
+        } else if (status == 'on' && type == 'setpoint_thermo') {
+          tile_icon.classList.remove("enabled");
+          tile_icon.classList.remove("disabled");
+          tile_icon.classList.remove("cool");
+          tile_icon.classList.add("heat");
+        } else if (status == 'on' && type == 'setpoint_chiller') {
+          tile_icon.classList.remove("enabled");
+          tile_icon.classList.remove("disabled");
+          //console.log("mode="+tile_icon.parentElement.parentElement.getAttribute("mode"));
+          if ( tile_icon.parentElement.parentElement.getAttribute("mode") == "heat" ) {
+            tile_icon.classList.remove("cool");
+            tile_icon.classList.add("heat");
+          } else {
+            tile_icon.classList.remove("heat");
+            tile_icon.classList.add("cool");
+          }
+        } else if (status == 'on') {
+          tile_icon.classList.remove("enabled");
+          tile_icon.classList.remove("disabled");
+          tile_icon.classList.remove("attention");
+          tile_icon.classList.add("cool");
+          tile_icon.classList.remove("heat");
+          tile_icon.classList.remove("outofrange");
+        } else if (status == 'outofrange') {
+          tile_icon.classList.remove("enabled");
+          tile_icon.classList.remove("disabled");
+          tile_icon.classList.remove("attention");
+          tile_icon.classList.add("outofrange");
+          tile_icon.classList.remove("cool");
+        } else if (status == 'attention') {
+          tile_icon.classList.remove("enabled");
+          tile_icon.classList.remove("disabled");
+          tile_icon.classList.remove("outofrange");
+          tile_icon.classList.add("attention");
+          tile_icon.classList.remove("cool");
+        }
+      }
+  */
+    }
+
+    function setTileIconClassList(id, ...classes) {
+      const tile_icon_classes = [
+        "enabled",
+        //"flash",
+        "disabled",
+        "cool",
+        "heat",
+        "rangeoptimal",
+        "rangewarning",
+        "rangecritical"
+      ];
+
+      const tile_icon = document.getElementById(id + "_tile_icon_value");
+      if (!tile_icon) return; // exit early if element not found
+
+      const allowed = new Set(classes.filter(Boolean)); // keep only non-null/undefined
+
+      // If type is a switch, remove the class disabled as we don;t want the round background icon
+      
+      if (_DisableOffIconCircle) {
+       try{
+        if (document.getElementById(id).getAttribute('type').startsWith("switch")) {
+          allowed.delete("disabled");
+        }
+       } catch (e){console.log(e)}
+      }
+      
+      for (const cls of tile_icon_classes) {
+        if (allowed.has(cls)) {
+          tile_icon.classList.add(cls);
+        } else {
+          tile_icon.classList.remove(cls);
+        }
+      }
+    }
+
+    function toHoursAndMinutes(totalMinutes) {
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return `${padToTwoDigits(hours)}:${padToTwoDigits(minutes)}`;
+    }
+    function padToTwoDigits(num) {
+      return num.toString().padStart(2, "0");
+    }
+
+    function caseInsensitiveIndexOf(array, searchString) {
+      const lowerCaseArray = array.map(element => String(element).toLowerCase());
+      return lowerCaseArray.indexOf(searchString.toLowerCase());
+    }
+
+    function createTile(object) {
+      //console.log("Create tile "+object.id);
+      if (object.name == 'NONE') {
+        //console.log("Create tile <exclude name> "+object);
+        return;
+      }
+      //if (typeof devices !== 'undefined' && devices.indexOf(object.id) < 0) {
+      //if (typeof _devices !== 'undefined' && caseInsensitiveIndexOf(_devices, object.id) < 0) {
+      if (_devices.length > 0 && caseInsensitiveIndexOf(_devices, object.id) < 0 && ( !object?.display || object.display == "false")) {
+        //console.log("Create tile <exclude list> "+object);
+        //console.log(object);
+        return;
+      }
+      //if (object.type == 'switch' || object.type == 'switch_program') {
+      if (object.type == 'switch') {
+        var img = object.id.replace('/', '_');
+        var ext_type;
+        if (typeof object.type_ext !== 'undefined')
+          ext_type = object.type_ext;
+        else
+          ext_type = object.type;
+
+        if ( _config?.devices && _config?.devices[object.id] && _config?.devices[object.id]?.on_icon && _config?.devices[object.id]?.off_icon) {
+          add_tile(object.id, object.name, object.state, 'switch', ext_type, _config?.devices[object.id]?.off_icon, _config?.devices[object.id]?.on_icon);
+        } else {
+          add_tile(object.id, object.name, object.state, 'switch', ext_type);
+        }
+        setTileOn(object.id, object.status, null);
+        if (typeof object.type_ext !== 'undefined' && (object.type_ext == 'switch_program' || object.type_ext == 'light_dimmer')) {
+          if (typeof object.Light_Type !== 'undefined') {
+            document.getElementById(object.id).setAttribute('lighttype', object.Light_Type);
+          
+            if (typeof object.Light_Program !== 'undefined') {
+              var light_mode = parseInt(object.Light_Program);
+              if ( object.Light_Type != "10" && object.type_ext != 'light_dimmer' ) {
+                document.getElementById(object.id).setAttribute('spvalue', light_mode-1);
+                //console.log("Light_Program spvalue = "+document.getElementById(object.id).getAttribute('spvalue'));
+              }
+            }
+          }
+          // Other switch_program types (other than light_type) GO HERE 
+        } else if (typeof object.type_ext !== 'undefined' && object.type_ext == 'switch_timer') {
+          if (typeof object.timer_active !== 'undefined' && object.timer_active) {
+            //console.log("Timer for "+object.name+" = "+object.timer_active);
+            if (object.timer_active == 'on') {
+              if (typeof object.timer_duration !== 'undefined') {
+                setTileOnText(object.id, 'On (timer '+toHoursAndMinutes(object.timer_duration)+')');
+              } else {
+                setTileOnText(object.id, 'On (timer)');
+              }
+            }
+          }
+        } else if (typeof object.type_ext !== 'undefined' && object.type_ext == 'switch_vsp') {
+          if (typeof object.Pump_RPM !== 'undefined' && object.Pump_RPM &&
+              typeof object.Pump_Status !== 'undefined' && object.Pump_Status ) {
+            updatePumpTile(object.id, object.Pump_Status, object.Pump_Type, object.Pump_RPM, object.Pump_GPM, object.Pump_Watts);
+          }
+          if (typeof object.Pump_Type !== 'undefined') {
+            document.getElementById(object.id).setAttribute('pumptype', object.Pump_Type);
+          }
+        }
+      } else if (object.type == 'value' || object.type == 'temperature') {
+        add_tile(object.id, object.name, object.state, 'value', object.type);
+
+        if (object.uom !== undefined) {
+          setTileUOM(object.id, object.uom);
+        }
+        setTileValue(object.id, object.value);
+      } else if (object.type == 'setpoint_thermo' || object.type == 'setpoint_swg' || object.type == 'setpoint_freeze' || object.type == 'setpoint_chiller') {
+        add_tile(object.id, object.name, object.state, 'thermostat', object.type);
+        document.getElementById(object.id).setAttribute('setpoint', object.spvalue);
+        setTileValue(object.id, object.value);
+        setTileOn(object.id, object.status);
+      } else {
+        //console.log("Unknown Device");   
+      }
+
+      // Set Alternate name
+      
+      if (object.alt_label !== undefined) {
+        //console.log("Set "+object.id+" label "+object.name+" alt_label "+object.alt_label);
+        document.getElementById(object.id).setAttribute('alt_label', object.alt_label);
+        document.getElementById(object.id).setAttribute('label', object.name);
+        //document.getElementById(object.id).setAttribute('id', object.id + '_status_line2');
+      }
+      
+    }
+
+    function showTileOptions(show, id, contex) {
+      var active_option;
+      if (show == true) {
+        var wrapH = document.getElementById('wrapper').clientHeight + 'px';
+        if (id != null && (document.getElementById(id).getAttribute('type') == 'setpoint_thermo' ||
+                           document.getElementById(id).getAttribute('type') == 'setpoint_chiller')) {
+          active_option = document.getElementById('thermostat_options');
+          document.getElementById('swg_options').style.display = 'none';
+          document.getElementById('pswitch_options').style.display = 'none';
+          document.getElementById('vspswitch_options').style.display = 'none';
+          document.getElementById('timer_options').style.display = 'none';
+          document.getElementById('scheduler_options').style.display = 'none';
+          document.getElementById('dimmerlight_options').style.display = 'none';
+          //document.getElementById('simulator_iframe').style.display = 'none';
+        } else if (id != null && document.getElementById(id).getAttribute('type') == 'switch_program') {
+          active_option = document.getElementById('pswitch_options');
+          document.getElementById('thermostat_options').style.display = 'none';
+          document.getElementById('swg_options').style.display = 'none';
+          document.getElementById('vspswitch_options').style.display = 'none';
+          document.getElementById('timer_options').style.display = 'none';
+          document.getElementById('scheduler_options').style.display = 'none';
+          document.getElementById('dimmerlight_options').style.display = 'none';
+          //document.getElementById('simulator_iframe').style.display = 'none';
+        } else if (id != null && document.getElementById(id).getAttribute('type') == 'light_dimmer') {
+          active_option = document.getElementById('dimmerlight_options');
+          document.getElementById('thermostat_options').style.display = 'none';
+          document.getElementById('swg_options').style.display = 'none';
+          document.getElementById('vspswitch_options').style.display = 'none';
+          document.getElementById('timer_options').style.display = 'none';
+          document.getElementById('scheduler_options').style.display = 'none';
+          document.getElementById('dimmerlight_options').style.display = 'none';
+          //document.getElementById('simulator_iframe').style.display = 'none';
+        } else if (id != null && document.getElementById(id).getAttribute('type') == 'setpoint_swg') {
+          active_option = document.getElementById('swg_options');
+          document.getElementById('thermostat_options').style.display = 'none';
+          document.getElementById('pswitch_options').style.display = 'none';
+          document.getElementById('vspswitch_options').style.display = 'none';
+          document.getElementById('timer_options').style.display = 'none';
+          document.getElementById('scheduler_options').style.display = 'none';
+          document.getElementById('dimmerlight_options').style.display = 'none';
+          //document.getElementById('simulator_iframe').style.display = 'none';
+        } else if (id != null && document.getElementById(id).getAttribute('type') == 'setpoint_freeze') {
+          active_option = document.getElementById('swg_options');
+          document.getElementById('thermostat_options').style.display = 'none';
+          document.getElementById('pswitch_options').style.display = 'none';
+          document.getElementById('vspswitch_options').style.display = 'none';
+          document.getElementById('timer_options').style.display = 'none';
+          document.getElementById('scheduler_options').style.display = 'none';
+          document.getElementById('dimmerlight_options').style.display = 'none';
+          //document.getElementById('simulator_iframe').style.display = 'none';
+        } else if (id != null && document.getElementById(id).getAttribute('type') == 'switch_vsp') {
+          active_option = document.getElementById('vspswitch_options');
+          document.getElementById('thermostat_options').style.display = 'none';
+          document.getElementById('pswitch_options').style.display = 'none';
+          document.getElementById('swg_options').style.display = 'none';
+          document.getElementById('timer_options').style.display = 'none';
+          document.getElementById('scheduler_options').style.display = 'none';
+          document.getElementById('dimmerlight_options').style.display = 'none';
+          //document.getElementById('simulator_iframe').style.display = 'none';
+        } else if (id != null && document.getElementById(id).getAttribute('type') == 'switch_timer') {
+          active_option = document.getElementById('timer_options');
+          document.getElementById('thermostat_options').style.display = 'none';
+          document.getElementById('pswitch_options').style.display = 'none';
+          document.getElementById('swg_options').style.display = 'none';
+          document.getElementById('vspswitch_options').style.display = 'none';
+          document.getElementById('scheduler_options').style.display = 'none';
+          document.getElementById('dimmerlight_options').style.display = 'none';
+          //document.getElementById('simulator_iframe').style.display = 'none';
+        } else if (id != null && document.getElementById(id).getAttribute('type') == 'scheduler') {
+          active_option = document.getElementById('scheduler_options');
+          document.getElementById('thermostat_options').style.display = 'none';
+          document.getElementById('pswitch_options').style.display = 'none';
+          document.getElementById('swg_options').style.display = 'none';
+          document.getElementById('vspswitch_options').style.display = 'none';
+          document.getElementById('timer_options').style.display = 'none';
+          document.getElementById('dimmerlight_options').style.display = 'none';
+          //document.getElementById('simulator_iframe').style.display = 'none';
+        } /*else if (id != null && document.getElementById(id).getAttribute('type') == 'simulator') {
+          active_option = document.getElementById('simulator_iframe');
+          document.getElementById('thermostat_options').style.display = 'none';
+          document.getElementById('pswitch_options').style.display = 'none';
+          document.getElementById('swg_options').style.display = 'none';
+          document.getElementById('vspswitch_options').style.display = 'none';
+          document.getElementById('timer_options').style.display = 'none';
+          document.getElementById('scheduler_options').style.display = 'none';
+        }*/
+
+        if (active_option.style.display === undefined) {
+          console.log("ERROR showTileOptions( "+show+", "+id+", "+contex+" )" );
+        } else {
+          active_option.style.display = 'flex';
+        }
+        /*
+        Not sure why I added this, but it breakes scheduler pane growing, and setpoint (heater) panes
+        are located too high for some reason.
+        var optionH = window.getComputedStyle(active_option, null).getPropertyValue("height");
+        if (optionH <= wrapH)
+          active_option.style.height = wrapH;
+        */
+        //console.log("Option:"+optionH+" wrapH:"+wrapH);
+
+        document.getElementById('wrapper').classList.add("opaque");
+      } else {
+        // Fake onclick to close and save any values if open
+        if (contex == null) {
+          if (document.getElementById('thermostat_options').style.display == 'flex')
+            document.getElementById("options_close").click();
+          else if (document.getElementById('swg_options').style.display == 'flex')
+            document.getElementById("swg_options_close").click();
+          else if (document.getElementById('pswitch_options').style.display == 'flex')
+            document.getElementById("pswitch_options_close").click();
+          else if (document.getElementById('vspswitch_options').style.display == 'flex')
+            document.getElementById("vspswitch_options").click();
+          else if (document.getElementById('timer_options').style.display == 'flex')
+            document.getElementById("timer_options").click();
+          else if (document.getElementById('scheduler_options').style.display == 'flex')
+            document.getElementById("scheduler_options").click();
+          else if (document.getElementById('dimmerlight_options').style.display == 'flex')
+            document.getElementById("dimmerlight_options").click();
+        }
+        document.getElementById('thermostat_options').style.display = 'none';
+        document.getElementById('swg_options').style.display = 'none';
+        document.getElementById('pswitch_options').style.display = 'none';
+        document.getElementById('vspswitch_options').style.display = 'none';
+        document.getElementById('timer_options').style.display = 'none';
+        document.getElementById('scheduler_options').style.display = 'none';
+        document.getElementById('dimmerlight_options').style.display = 'none';
+        //document.getElementById('simulator_iframe').style.display = 'none';
+        document.getElementById('wrapper').classList.remove("opaque");
+        return;
+      }
+      if (show == true) {
+        var tile = document.getElementById(id);
+        var sp_value = tile.getAttribute('setpoint');
+        //tile_state = tile.classList.contains("on");
+        var tile_state = !(tile.getAttribute('status') == 'off');
+        var type = tile.getAttribute('type');
+        var slider;
+        var slider_output;
+        var tm_slider;
+        var tm_slider_output;
+        var title;
+        var close_button;
+        var ext;
+        var tm_ext;
+        var oswitch;
+        var vsp_slider_changed = false;
+        var dimmer_slider_changed = false;
+        if (type == 'setpoint_swg') {
+          slider = document.getElementById("swg_option_slider_range");
+          slider_output = document.getElementById("swg_option_slider_text_value");
+          title = document.getElementById("swg_option_title");
+          close_button = document.getElementById("swg_options_close");
+          ext = "%";
+        } else if (type == 'setpoint_freeze') {
+          slider = document.getElementById("swg_option_slider_range");
+          slider_output = document.getElementById("swg_option_slider_text_value");
+          title = document.getElementById("swg_option_title");
+          close_button = document.getElementById("swg_options_close");
+          ext = '&deg;' + _temperature_units;
+        } else if (type == 'switch_program') {
+          //var current_mode = "";
+          //try { current_mode = document.getElementById(id + '_status').innerHTML } catch(exception) {}
+          populateLightProgram(tile.getAttribute('lighttype'),getTileOnText(id));
+          title = document.getElementById("pswitch_option_title");
+          close_button = document.getElementById("pswitch_options_close");
+          tm_slider = document.getElementById("ps_timer_slider_range");
+          tm_slider_output = document.getElementById("ps_timer_slider_text_value");
+        } else if (type == 'switch_vsp') {
+          slider = document.getElementById("vspoption_slider_range");
+          slider_output = document.getElementById("vspoption_slider_text_value");
+          tm_slider = document.getElementById("vsp_timer_slider_range");
+          tm_slider_output = document.getElementById("vsp_timer_slider_text_value");
+          title = document.getElementById("vspswitch_option_title");
+          close_button = document.getElementById("vspswitch_option_close");
+        } else if (type == 'switch_timer') {
+          tm_slider = document.getElementById("timer_slider_range");
+          tm_slider_output = document.getElementById("timer_slider_text_value");
+          title = document.getElementById("timer_option_title");
+          close_button = document.getElementById("timer_options_close");
+          //tm_ext = ' runtime (min)';
+        } else if (type == 'scheduler') {
+          title = document.getElementById("scheduler_options_title");
+          close_button = document.getElementById("scheduler_options_close");
+        //} else if (type == 'simulator') {
+        //  close_button = document.getElementById("simulator_iframe_close");
+        } else if (type == 'light_dimmer') {
+          slider = document.getElementById("dimmeroption_slider_range");
+          slider_output = document.getElementById("dimmeroption_slider_text_value");
+          tm_slider = document.getElementById("dimmer_timer_slider_range");
+          tm_slider_output = document.getElementById("dimmer_timer_slider_text_value");
+          title = document.getElementById("dimmerswitch_option_title");
+          close_button = document.getElementById("dimmerswitch_option_close");
+          ext = "%";
+        } else {
+          slider = document.getElementById("option_slider_range");
+          slider_output = document.getElementById("option_slider_text_value");
+          tm_slider = document.getElementById("th_timer_slider_range");
+          tm_slider_output = document.getElementById("th_timer_slider_text_value");
+          title = document.getElementById("option_title");
+          close_button = document.getElementById("options_close");
+          ext = '&deg;' + _temperature_units;
+        }
+
+        if (type == 'setpoint_swg') {
+          slider.min = 0;
+          slider.max = 101;
+          slider.step = 5;
+        } else if (type == 'setpoint_freeze') {
+          if (_temperature_units != 'c') { // Change to DegF
+            slider.min = 34;
+            slider.max = 42;
+            slider.step = 1;
+          } else { // Change to DegF
+            slider.min = 1;
+            slider.max = 5;
+            slider.step = 1;
+          }
+        } else if (type == 'setpoint_thermo' || type == 'setpoint_chiller') {
+          if (_temperature_units != 'c') { // Change to DegF
+            //slider.min = 36;
+            //slider.max = 104;
+            slider.min = ((typeof heater_slider_min !== 'undefined')?heater_slider_min:36);
+            slider.max = ((typeof heater_slider_max !== 'undefined')?heater_slider_max:104);
+            slider.step = 1;
+          } else { // Change to DegF
+            slider.min = 0;
+            slider.max = 40;
+            slider.step = 1;
+          }
+        } else if (type == 'switch_vsp') {
+          if ( tile.getAttribute('pumptype') == "vfPump" ) { // RPM vs GPM
+            slider.min = 15;
+            slider.max = 130;
+            slider.step = 5;
+            ext = ' GPM';
+          } else { 
+            slider.min = 600;
+            slider.max = 3450;
+            slider.step = 5;
+            ext = ' RPM';
+          }
+        } else if (type == 'light_dimmer') {
+          slider.min = 0;
+          slider.max = 100;
+          slider.step = 1;
+          ext = ' %';
+        }
+        
+        if (type == 'scheduler') {
+          title.innerHTML = "Scheduler";
+        } else if (type == 'simulator') {
+        //  title.innerHTML = "Simulator";
+        } else {
+          //console.log("Set "+id+" to "+document.getElementById(id + '_name').innerHTML);
+          title.innerHTML = document.getElementById(id + '_name').innerHTML;
+        }
+
+        if (type == 'switch_program') {
+          var pswitch = document.getElementById("pswitch_option_list");
+          oswitch = document.getElementById("pswitch_option_switch");
+          var oswitch_output = document.getElementById("pswitch_option_switch_text_value");
+          oswitch.checked = tile_state;
+          oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+          oswitch.onclick = function() {
+            oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+          }
+        } else if (type == 'setpoint_swg') {
+          slider.value = sp_value;
+          oswitch = document.getElementById("swg_option_switch");
+          var oswitch_output = document.getElementById("swg_option_switch_text_value");
+          document.getElementById("swg_option_switch_row").style.display = "table-row";
+          oswitch.checked = getTileAttribute(id, "Boost")=='on'?true:false ;
+          slider_output.innerHTML = slider.value + ext;
+          oswitch_output.innerHTML = ((oswitch.checked) ? "Boost On" : "Boost Off");
+          slider.oninput = function() {
+            slider_output.innerHTML = this.value + ext;
+          }
+          oswitch.onclick = function() {
+            oswitch_output.innerHTML = ((oswitch.checked) ? "Boost On" : "Boost Off");
+          }
+        } else if (type == 'setpoint_freeze') {
+          slider.value = sp_value;
+          oswitch = document.getElementById("swg_option_switch");
+          document.getElementById("swg_option_switch_row").style.display = "none";
+          slider_output.innerHTML = slider.value + ext;
+          slider.oninput = function() {
+            slider_output.innerHTML = this.value + ext;
+          }
+        } else if (type == 'switch_vsp') {
+          slider.value = sp_value;
+          oswitch = document.getElementById("vspoption_switch");
+          oswitch.checked = tile_state;
+          var oswitch_output = document.getElementById("vspoption_switch_text_value");
+          slider_output.innerHTML = slider.value + ext;
+          oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+          
+          slider.oninput = function() {
+            slider_output.innerHTML = this.value + ext;
+            vsp_slider_changed = true;
+            if (oswitch.checked != true) {
+              oswitch.checked = true;
+              oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+            }
+          }
+          oswitch.onclick = function() {
+            oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+          }
+        } else if (type == 'light_dimmer') {
+          slider.value = sp_value;
+          oswitch = document.getElementById("dimmeroption_switch");
+          oswitch.checked = tile_state;
+          var oswitch_output = document.getElementById("dimmeroption_switch_text_value");
+          slider_output.innerHTML = slider.value + ext;
+          oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+          slider.oninput = function() {
+            dimmer_slider_changed = true;
+            slider_output.innerHTML = this.value + ext;
+            if (this.value <= 0 && oswitch.checked == true) {
+              oswitch.checked = false;
+              oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+            } else if (oswitch.checked != true) {
+              oswitch.checked = true;
+              oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+            }
+          }
+        } else if (type == 'switch_timer') {
+          oswitch = document.getElementById("timer_switch");
+          oswitch.checked = tile_state;
+          var oswitch_output = document.getElementById("timer_switch_text_value");
+          oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+          // All timer slider options are set below for everyone.
+        } else if (type == 'scheduler') {
+          // NSF BUILD SCHEDULER DEFAULTS HERE
+          cs_clearSchedules();
+          //cs_loadJSON("/api/schedules", cs_schedules,'jsonp');
+          get_schedules();
+        } else if (type == 'simulator') {
+          startSimulator();
+        } else {
+          slider.value = sp_value;
+          oswitch = document.getElementById("option_switch");
+          oswitch.checked = tile_state;
+          var oswitch_output = document.getElementById("option_switch_text_value");
+          slider_output.innerHTML = slider.value + ext;
+          oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+          slider.oninput = function() {
+            slider_output.innerHTML = this.value + ext;
+            //sp_value = this.value
+          }
+          oswitch.onclick = function() {
+            oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+            //setTileOn(id, ((oswitch.checked)?"on":"off"), null);
+          }
+        }
+
+        if (typeof tm_slider !== 'undefined' && tm_slider != null) {
+          tm_slider.min = ((typeof timer_slider_min !== 'undefined')?timer_slider_min:0);
+          tm_slider.max = ((typeof timer_slider_max !== 'undefined')?timer_slider_max:360);
+          tm_slider.step = ((typeof timer_slider_step !== 'undefined')?timer_slider_step:10);
+          tm_ext = ' runtime (min)';
+
+          tm_slider.value = tm_slider.min;
+
+          tm_slider_output.innerHTML = tm_slider.value + tm_ext;
+          tm_slider.oninput = function() {
+            tm_slider_output.innerHTML = this.value + tm_ext;
+            if (this.value == 0) {
+              oswitch.checked = false;
+              oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+            } else {
+              oswitch.checked = true;
+              oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+            }
+          }
+          oswitch.onclick = function() {
+            oswitch_output.innerHTML = ((oswitch.checked) ? "On" : "Off");
+            if (oswitch.checked == false) {
+              tm_slider.value = 0;
+              tm_slider_output.innerHTML = "0" + tm_ext;
+            }
+          }
+        }
+
+        var cTime;
+        try {
+          cTime = performance.now();
+        } catch (e) {
+          cTime = Date.now(); // NSF Probably won't test well below, need to check.
+        }
+        var clickHandler = function(e) {
+          // Short time diff means event was the one that launched the options pane, so ignore
+          // Above description is incorrect, we get here when click is OFF the tile
+          if ((e.timeStamp - cTime) > 1000) {
+            showTileOptions(false);
+            document.getElementById("body_wrap").removeEventListener("click", clickHandler);
+          }
+        };
+        document.getElementById("body_wrap").addEventListener("click", clickHandler);
+        close_button.onclick = function() {
+          document.getElementById("body_wrap").removeEventListener("click", clickHandler);
+          var state = oswitch?.checked;
+          if (type == 'switch_program') {
+            var mode=false;
+            if (_lightProgramDropdown) {
+              if (pswitch.selectedIndex > 0) {
+                send_light_mode(pswitch.selectedIndex, id, pswitch.options[pswitch.selectedIndex].text);
+                mode=true;
+              }
+            } else {
+              var radio = document.getElementsByName("light_program");
+              var x;
+              for (x = 0; x < radio.length; x++) {
+                 if (radio[x].checked == true) {
+                   //console.log("Light Current= "+(getTileSPvalue(id)+1)+" - "+getTileOnText(id)+"  Selected="+radio[x].value+" - "+document.getElementById('pswitch_option_switch_text_value').innerHTML);
+                   if (getTileSPvalue(id)+1 != radio[x].value) {
+                     send_light_mode(radio[x].value, id, document.getElementById('pswitch_option_switch_text_value').innerHTML);
+                   }
+                   mode=true;
+                   break;
+                 }
+              }
+            }
+            if (mode == false) {
+             // if (state == (tile.getAttribute('status') == 'off')) // Only bother with this if we didn;t set the light mode.
+                setTileState(id, state);
+            }
+          } else if (type == 'light_dimmer') {
+            //console.log("DIMMER "+state+" - "+tile.getAttribute('status'));
+            var value = slider.value;
+            if (state == false) { //Turn off
+              //console.log("State off");
+              setTileState(id, state);
+            } else if (sp_value != slider.value && dimmer_slider_changed == true) {
+              //console.log("SLIDER CHANGED");
+              setThermostatSetpoint(id, slider.value);
+            } else {
+              //console.log("State on/off");
+              setTileState(id, state);
+            }
+            /*
+            if (state == (tile.getAttribute('status') == 'off')) {
+              console.log("ON/OFF "+state+" = "+(tile.getAttribute('status') == 'off'));
+              setTileState(id, state);
+            } else if (sp_value != slider.value && dimmer_slider_changed == true) {
+              console.log("SLIDER CHANGED");
+              setThermostatSetpoint(id, slider.value);
+            }*/
+          } else if (type == 'setpoint_swg') {
+            //console.log ("Boost attribute = "+tile.getAttribute('boost'));
+            //console.log ("state = "+state);
+            if (state == (tile.getAttribute('Boost') == 'off')) {
+              //console.log ("change boost");
+              send_command( 'SWG/Boost', (state==true?"1":"0") );
+            } else {
+              if (sp_value != slider.value && slider.value != 101) // Don't change setpoint if slider is on boost
+                setThermostatSetpoint(id, slider.value);
+            }
+          } else if (type == 'switch_program') {
+            var value = slider.value;
+            if (state == (tile.getAttribute('status') == 'off'))
+              setTileState(id, state);
+            if (sp_value != slider.value)
+              setThermostatSetpoint(id, slider.value)
+          } else if (type == 'switch_timer') {
+            if (tm_slider.value == 0 && state == (tile.getAttribute('status') == 'off'))
+              setTileState(id, state);
+          } else if (type == 'switch_vsp') {
+            // VSP, first check is slider changed, as startup we have no ide on RPM
+            var value = slider.value;
+            if (state == (tile.getAttribute('status') == 'off'))
+              setTileState(id, state);
+            if (sp_value != slider.value && vsp_slider_changed == true)
+              setThermostatSetpoint(id, slider.value)
+          } else if (type == 'scheduler') {
+            // NSF SAVE SCHEDULE HERE
+            // validate input form, alert and return if error, contimue if ok.
+            if ( ! cs_createJSON() ) {
+              return // This stops pane from closing.
+            }
+          } else if (type == 'simulator') {
+          } else {
+            var value = slider.value;
+            if (state == (tile.getAttribute('status') == 'off'))
+              setTileState(id, state);
+            if (sp_value != slider.value)
+              setThermostatSetpoint(id, slider.value)
+          }
+
+          if (typeof tm_slider !== 'undefined' && tm_slider != null) {
+            if (tm_slider.value > 0)
+              send_switch_timer(id, tm_slider.value);
+          }
+          //showTileOptions(false, null, 'this');
+          active_option.style.display = 'none';
+          document.getElementById('wrapper').classList.remove("opaque");
+        }
+      }
+    }
+
+
+
+    var _displayMsgTimer=0;
+    var _displayMsgTimeout=0;
+
+    function displayErrorMessagee(message, timeout) {
+      document.getElementById("header").classList.add("error");
+      displayMessage(message, timeout);
+    }
+
+    function displayMessage(message, timeoutSeconds) {
+      // Check to see if we can display message
+      if (_displayMsgTimeout > 0) {
+        if ( _displayMsgTimer + (_displayMsgTimeout * 1000) >  Date.now() ) {
+          // Can't diaply message, still on timer
+          //console.log("Can't display message '"+message+"'");
+          return;
+        }
+        _displayMsgTimer=0;
+        _displayMsgTimeout=0;
+      }
+
+      // Set the timer if needed
+      if (timeoutSeconds !== undefined && timeoutSeconds > 0) {
+        _displayMsgTimer = Date.now();
+        _displayMsgTimeout = timeoutSeconds;
+      }
+/*
+      if (message.toLowerCase().includes("error")) {
+        document.getElementById("header").classList.add("error");
+      } 
+      else if (document.getElementById("header").classList.contains("error")) {
+        document.getElementById("header").classList.remove("error");
+      }
+*/
+      document.getElementById("message").innerHTML = message;
+    }
+    /*********************************************************************
+     *  
+     *   SCHEDULER FUNCTIONS
+     * 
+     *********************************************************************/
+
+    // NSF change this import to dynamic config in future.
+    //import("./cronstrue.min.js");
+
+    var CS_ROW_INDEX = 2;
+    var V_OFF = 0;
+    var V_ON = 1;
+    var V_SETPOINT = 3;
+    var V_PERCENT = 4;
+    var V_RPM = 5;
+    var V_GPM = 6;
+
+    function showScheduler(caller){
+
+      if (typeof _enable_schedules === "undefined" || _enable_schedules != false)
+      {
+        if ( parseInt(getComputedStyle(document.querySelector('.scheduler_pane')).width) > Math.max(document.documentElement.clientWidth, window.innerWidth) ) {
+          //alert("Sorry, Scheduler won't fit on screen\nPlease use a different device");
+          displayMessage("Scheduler won't fit on screen", 3);
+          return;
+        }
+        import("./cronstrue.min.js");
+        caller.setAttribute('type', 'scheduler');
+        showTileOptions(true, caller.id);
+      }
+    }
+
+    function showSimulator(caller){
+      caller.setAttribute('type', 'simulator');
+      showTileOptions(true, caller.id);
+    }
+
+    function startSimulator() {
+      console.log("Starting ifram sim init");
+      document.getElementById('onetouch_iframe').display = 'block';
+    }
+
+    // NSF CHANGE TO USING WS FOR THIS REQUEST
+    /*
+      function cs_loadJSON(path, success, error) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              success(JSON.parse(xhr.responseText));
+            }
+            else {
+              error(xhr);
+            }
+          }
+        };
+        xhr.open('GET', path, true);
+        xhr.send();
+      }*/
+
+        function device2english(device, name) {
+          for (let i = 0, obj; i < _scheduler_devices_json.length, obj = _scheduler_devices_json[i]; i++) {
+            if (device == obj.id) {
+              if (name == true) {
+                return obj.name;
+              } else {
+                switch (obj.type) {
+                  case "setpoint_thermo":
+                  case "setpoint_freeze":
+                  case "setpoint_chiller":
+                    return "temperature";
+                    break;
+                  case "setpoint_swg":
+                    return "percent";
+                    break;
+                  case "switch":
+                    if (obj.type_ext == "switch_vsp") {
+                      if (obj.Pump_Type == "vfPump" && _config.tile_settings.show_vsp_gpm.toLowerCase() === "true") {
+                        return "GPM";
+                      } else {
+                        return "RPM";
+                      }
+                    }
+                    break;
+                }
+              }
+            }
+          }
+        }
+
+    function cs_crontext(caller){
+
+      for (let cell of caller.parentNode.parentNode.cells) {
+        switch (cell.firstChild.id) {
+          case "min":
+            min = cell.firstChild.value;
+            break;
+          case "hour":
+            hour = cell.firstChild.value;
+            break;
+          case "daym":
+            daym = cell.firstChild.value;
+            break;
+          case "month":
+            month = cell.firstChild.value;
+            break;
+          case "dayw":
+            dayw = cell.firstChild.value;
+            break;
+          case "device":
+            device = cell.firstChild.value;
+            break;
+          case "command":
+            command = cell.firstChild.value;
+            break;
+          case "value":
+            value = cell.firstChild.value;
+            break;
+        }
+      }
+      var extra = "";
+      
+      if (command >= 2) {
+        //command=cs_getExtraCommand(device);
+        extra = " set "+device2english(device, true)+" "+device2english(device, false)+" to "+value
+      } else {
+        extra = " turn "+device2english(device, true)+" "+((value ==1) ? 'on' : 'off')
+      }
+      
+      var cron = min + " " + hour + " " + daym + " " + month + " " + dayw
+      try {
+        document.getElementById("crontext").innerHTML = "<span class='cs_crontext'>&nbsp;" + cronstrue.toString(cron) + "<font size='-1'>" + extra + "</font>&nbsp;</span>";
+      } catch (error) {}
+
+      var html = ""
+
+      switch (caller.id) {
+        case "min":
+          html = html + "<tr><td class='cs_helpleft'>0-59</td><td class='cs_helpright'>allowed values</td></tr>";
+          break;
+        case "hour":
+          html = html + "<tr><td class='cs_helpleft'>0-23</td><td class='cs_helpright'>allowed values</td></tr>";
+          break;
+        case "daym":
+          html = html + "<tr><td class='cs_helpleft'>1-31</td><td class='cs_helpright'>allowed values</td></tr>";
+          break;
+        case "month":
+          html = html + "<tr><td class='cs_helpleft'>1-12</td><td class='cs_helpright'>allowed values</td></tr>" +
+            "<tr><td class='cs_helpleft'>JAN-DEC</td><td class='cs_helpright'>alternative single values</td></tr>";
+          break;
+        case "dayw":
+          html = html + "<tr><td class='cs_helpleft'>0-6</td><td class='cs_helpright'>allowed values</td></tr>" +
+            "<tr><td class='cs_helpleft'>SAT-SUN</td><td class='cs_helpright'>alternative single values</td></tr>";
+          break;
+      }
+
+      if (html != "") {
+        html = "<table align='center'>" +
+          html +
+          "<tr><td class='cs_helpleft'>*</td><td class='cs_helpright'>any vaue</td></tr>" +
+          "<tr><td class='cs_helpleft'>,</td><td class='cs_helpright'>value list seperator</td></tr>" +
+          "<tr><td class='cs_helpleft'>-</td><td class='cs_helpright'>range values</td></tr>" +
+          "<tr><td class='cs_helpleft'>/</td><td class='cs_helpright'>setp values</td></tr>" +
+          "</table>";
+      }
+
+      document.getElementById("cronhelp").innerHTML = html;
+    }
+
+    function cs_clearSchedules() {
+      var table = document.getElementById("cronschedules");
+      while (table.rows.length > 5) {
+        table.deleteRow(CS_ROW_INDEX+1);
+      }
+    }
+
+      function cs_addschedule(enabled, min, hour, daym, month, dayw, device, subdev, value) {
+        var table = document.getElementById("cronschedules");
+        //index = table.rows.length-ROW_INDEX;
+
+        var option = "";
+        var subOption = "";
+        //var value_type = "number";
+        //console.log("device'"+device+"'");
+        if (device === "") {
+          option = '<option selected value=""></option>';
+          //value_type="hidden";
+        }
+
+        for (let i = 0, obj; i < _scheduler_devices_json.length, obj = _scheduler_devices_json[i]; i++) {
+          if (device == obj.id) {
+            option = option + '<option selected value="' + obj.id + '">' + obj.name + '</option>';
+            subOption = cs_getDeviceOptions(obj, subdev, value)
+          } else {
+            option = option + '<option value="' + obj.id + '">' + obj.name + '</option>';
+          }
+        }
+        var checked
+        if (enabled==1) {checked="checked";}else{ehecked="";}
+        var html = '<tr> \
+        <td><input type="checkbox" class="cs_inputcell" id="enabled" onkeyup="cs_crontext(this);" onclick="cs_crontext(this);" '+checked+'></td> \
+        <td><input type="text" class="cs_inputcell" id="min" value="'+ min + '" onkeyup="cs_crontext(this);" onclick="cs_crontext(this);"></td> \
+        <td><input type="text" class="cs_inputcell" id="hour" value="'+ hour + '" onkeyup="cs_crontext(this);" onclick="cs_crontext(this);"></td> \
+        <td><input type="text" class="cs_inputcell" id="daym" value="'+ daym + '" onkeyup="cs_crontext(this);" onclick="cs_crontext(this);"></td> \
+        <td><input type="text" class="cs_inputcell" id="month" value="'+ month + '" onkeyup="cs_crontext(this);" onclick="cs_crontext(this);"></td> \
+        <td><input type="text" class="cs_inputcell" id="dayw" value="'+ dayw + '" onkeyup="cs_crontext(this);" onclick="cs_crontext(this);"></td> \
+        <td><select name="device" class="cs_inputcell cs_devicecell" id="device" onclick="cs_crontext(this);" onchange="cs_deviceChange(this);">'+ option + '<select></td> \
+        <td><select name="command" class="cs_inputcell cs_commandcell" id="command" onclick="cs_crontext(this);" onchange="cs_commandChange(this);">'+ subOption + '<select></td> \
+        <td><input type="text" class="cs_inputcell cs_valuecell" onclick="cs_crontext(this);" id="value" pattern="[0-9]+" value="'+ value + '"></td> \
+        <td><input type="button" class="cs_deletebutton sc_button" id="delete" value="X" onclick="cs_deleteschedule(this);"></td> \
+        </tr>';
+
+        //<td><input type="number" class="cs_inputcell cs_valuecell" onclick="cs_crontext(this);" min="0" max="9999" id="value" value="'+value+'"></td>
+
+        var row = table.insertRow(table.rows.length - CS_ROW_INDEX);
+        row.innerHTML = html;
+        //console.log("add row "+index)
+
+        // dummy an onchange event to the value input so they get hidded if needed.
+        var element = row.querySelector('#command')
+        var event = new Event('change');
+        element.dispatchEvent(event);
+      }
+
+        function cs_isSelected(option, val1, val2) {
+          var rtn = "";
+          if (val1 == "set") {
+            if (option == val2) { rtn = "selected" }
+          } else {
+            if (option == val1) { rtn = "selected" }
+          }
+
+          return rtn;
+        }
+
+
+        function cs_getDeviceOptions(deviceobj, val1, val2) {
+          //setpoint = Temp
+          var html = '<option value="' + V_ON + '" ' + cs_isSelected(V_ON, val1, val2) + '>On</option><option value="' + V_OFF + '" ' + cs_isSelected(V_OFF, val1, val2) + '>Off</option>';
+
+          switch (deviceobj.type) {
+            case "switch":
+              if (deviceobj.type_ext == "switch_vsp") {
+                if (deviceobj.Pump_Type == "vfPump") {
+                  //html = html + '<option value="' + V_RPM + '" ' + cs_isSelected("RPM", val1, val2) + '>RPM</option><option value="' + V_GPM + '" ' + cs_isSelected("GPM", val1, val2) + '>GPM</option>';
+                  html = html + '<option value="' + V_GPM + '" ' + cs_isSelected("GPM", val1, val2) + '>GPM</option>';
+                } else {
+                  html = html + '<option value="' + V_RPM + '" ' + cs_isSelected("RPM", val1, val2) + '>RPM</option>';
+                }
+              }
+              break
+            case "setpoint_thermo":
+            case "setpoint_chiller":
+              html = html + '<option value="' + V_SETPOINT + '" ' + cs_isSelected("setpoint", val1, val2) + '>Temp</option>'
+              break
+            case "setpoint_swg":
+              html = '<option value="' + V_PERCENT + '">Percent</option>'
+              break
+            case "setpoint_freeze":
+              html = '<option value="' + V_SETPOINT + '">Temp</option>'
+              break
+          }
+          return html;
+
+        }
+
+        function cs_deviceChange(caller) {
+
+          for (let i = 0, obj; i < _scheduler_devices_json.length, obj = _scheduler_devices_json[i]; i++) {
+            if (caller.value == obj.id) {
+              var element = caller.parentNode.parentNode.querySelector('#command')
+              element.innerHTML = cs_getDeviceOptions(obj);
+              var event = new Event('change');
+              element.dispatchEvent(event);
+              break;
+            }
+          }
+
+        }
+
+        function cs_commandChange(caller) {
+          //console.log("Called "+caller.value);
+          value = caller.parentNode.parentNode.querySelector('#value')
+          if (caller.value >= 2) {
+            value.type = "text";
+          } else {
+            value.type = "hidden";
+          }
+        }
+
+        function cs_deleteschedule(caller) {
+          var index = caller.parentNode.parentNode.rowIndex;
+          document.getElementById("cronschedules").deleteRow(index);
+        }
+
+        function cs_schedules(json) {
+          if (typeof json.schedules === "undefined"){
+            return
+          }
+            for (let i = 0; i < json.schedules.length; i++) {
+              let obj = json.schedules[i];
+              //console.log("Sched "+obj.url);
+              var f = 0;
+              var subdev = "";
+              var device = "";
+              for (var j = 0; j < obj.url.length; j++) {
+                if (obj.url[j] == "/") {
+                  f++;
+                } else if (f == 2) {
+                  device = device + obj.url[j];
+                } else if (f == 3) {
+                  subdev = subdev + obj.url[j];
+                }
+              }
+              // If in release we add device, use obj.id rather than device in below and remove device from above.
+              cs_addschedule(obj.enabled, obj.min, obj.hour, obj.daym, obj.month, obj.dayw, device, subdev, obj.value);
+            }
+        }
+
+        function cs_getExtraCommand(device, commandID) {
+            for (let i = 0, obj; i < _scheduler_devices_json.length, obj = _scheduler_devices_json[i]; i++) {
+              if (device == obj.id) {
+                switch (obj.type) {
+                  case "setpoint_thermo":
+                  case "setpoint_chiller":
+                  case "setpoint_freeze":
+                    return "/setpoint";
+                    break;
+                  case "setpoint_swg":
+                    return "/percent";
+                    break;
+                  case "switch":
+                    if (obj.type_ext == "switch_vsp") {
+                      if (commandID == 4) {
+                        return "/GPM";
+                      } else {
+                        return "/RPM";
+                      }
+                    }
+                    break;
+                }
+              }
+            }
+        }
+
+          function cs_createJSON() {
+
+            var json = {
+              uri: "schedules/set",
+              devices: []
+            };
+            var table = document.getElementById("cronschedules");
+            //console.log("ROWS = "+table.rows.length);
+            for (var r = CS_ROW_INDEX, row; row < table.rows.length-2, row = table.rows[r]; r++) {
+              enabled = Number(row.querySelector('#enabled')?.checked).toString();
+              min = row.querySelector('#min')?.value;
+              hour = row.querySelector('#hour')?.value;
+              daym = row.querySelector('#daym')?.value;
+              month = row.querySelector('#month')?.value;
+              dayw = row.querySelector('#dayw')?.value;
+              device = row.querySelector('#device')?.value;
+              command = row.querySelector('#command')?.value;
+              value = row.querySelector('#value')?.value;
+              if (min && hour && daym && month && dayw && device && command) {
+                if (command >= 2) {
+                  command = cs_getExtraCommand(device, command);
+                  if ( isNaN(value) ) {
+                    row.querySelector('#value').classList.add("cs_error");
+                    document.getElementById("crontext").innerHTML = "<span class='cs_crontext'>&nbsp;<font color='red'>FIX ERROR</font>&nbsp;</span>";
+                    return false;
+                  }
+                } else {
+                  value = command;
+                  command = "";
+                }
+                json.devices.push({
+                  "enabled": enabled,
+                  "min": min,
+                  "hour": hour,
+                  "daym": daym,
+                  "month": month,
+                  "dayw": dayw,
+                  "url": "/api/" + device + command + "/set",
+                  "value": value
+                })
+              }
+            }
+            //console.log(JSON.stringify(json));
+            set_schedules(json);
+            return true;
+          }
+
+    /*********************************************************************
+     *  
+     *   LOAD / INIT FUNCTIONS
+     * 
+     *********************************************************************/
+
+    function update_status(data) {
+      //console.log("Received Update Satus");
+      _aqualink_data = data;
+      var el = document.getElementById("datetime");
+
+      if (data.time.toString() != "" && data.time.toString() != "xx") 
+        el.innerHTML = data.time.toLowerCase().replace(" ", "&nbsp;") + ((_landscape) ? "&nbsp;" : "<br>") + data.date.toLowerCase().replace(" ", "&nbsp;");
+      
+      if (document.getElementById("name").innerHTML == "AqualinkD") {
+        if (data.status != "Ready") {
+          //document.getElementById("message").innerHTML = formatSatus(data.status);
+          displayMessage(formatSatus(data.status));
+        } else {
+          //document.getElementById("message").innerHTML = '';
+          displayMessage(formatSatus(''));
+        }
+      }
+     
+      if (data.status.indexOf("ERROR") >= 0)
+        document.getElementById("header").classList.add("error");
+
+      // Hard code value updated as I can't be bothered to update source.
+      // should come back and re-do these values.
+      // The ID's should ultimatly come from json
+      setThermostatTile("Pool_Heater", data.pool_temp, data.pool_htr_set_pnt);
+      setThermostatTile("Spa_Heater", data.spa_temp, data.spa_htr_set_pnt);
+      setThermostatTile("Freeze_Protect", data.air_temp, data.frz_protect_set_pnt);
+
+      if ( data.chiller_set_pnt !== undefined ) {
+        // NSF Should use spa temp if in spa mode
+        if (data.leds.Spa !== undefined && data.leds.Spa == "on")
+          setThermostatTile("Chiller", data.spa_temp, data.chiller_set_pnt);
+        else
+          setThermostatTile("Chiller", data.pool_temp, data.chiller_set_pnt);
+      }
+      if ( data.chiller_mode !== undefined ) {
+        try{
+          let elmt = document.getElementById("Chiller");
+          elmt.setAttribute("mode", data.chiller_mode);
+        } catch (exception){}
+      }
+      
+      setTileValue("Temperature/Air", data.air_temp);
+      setTileValue("Temperature/Pool", data.pool_temp);
+      setTileValue("Temperature/Spa", data.spa_temp);
+
+      if (typeof(data.swg_percent) !== 'undefined')
+        setThermostatTile("SWG", data.swg_percent, data.swg_percent);
+
+      if (typeof(data.swg_ppm) !== 'undefined')
+        setTileValue("SWG/PPM", data.swg_ppm);
+      if (typeof(data.swg_fullstatus) !== 'undefined')
+        setTileAttribute('SWG', "fullstatus", data.swg_fullstatus);
+      
+      if (typeof(data.chem_ph) !== 'undefined')
+        setTileValue("CHEM/pH", data.chem_ph);
+      if (typeof(data.chem_orp) !== 'undefined')
+        setTileValue("CHEM/ORP", data.chem_orp);
+
+      /*
+      setTileValue("Air", data.air_temp);
+      setTileValue("Pool_Water", data.pool_temp);
+      setTileValue("Spa_Water", data.spa_temp);*/
+      for (var obj in data.leds) {
+        setTileOn(obj.toString(), data.leds[obj]);
+
+        if (obj.toString() == 'SWG/Boost') {
+          //console.log("BOOST IS "+data.leds[obj]);
+          setTileAttribute('SWG', "Boost", data.leds[obj]);
+          //setTileValue
+        } 
+      }
+      for (var obj in data.timers) {
+        setTileOnText(obj.toString(),"On (timer)");
+        //setTileOnTextLine2(obj.toString(),"On (timer)");
+        //console.log("TIMER "+obj.toString());
+      }
+      for (var obj in data.timer_durations) {
+        setTileOnText(obj.toString(),"Timer "+toHoursAndMinutes(data.timer_durations[obj]));
+        //setTileOnTextLine2(obj.toString(),"Timer "+toHoursAndMinutes(data.timer_durations[obj]));
+        //console.log("TIMER "+obj.toString()+" duration "+data.timer_durations[obj]);
+      }
+
+      for (var obj in data.sensors) {
+        //console.log("Set Value `Sensor/"+obj.toString()+"' to "+data.sensors[obj]);
+        //setTileValue("Sensor/"+obj.toString(), data.sensors[obj]);
+        setTileValue(obj.toString(), data.sensors[obj]);
+      }
+
+      for (var obj in data.alternate_modes) {
+        //console.log(obj.toString() +" "+ data.alternate_modes[obj.toString()] );
+        try {
+          let element = document.getElementById(obj.toString());
+          let label = document.getElementById(obj.toString()+'_name');
+          if ( data.alternate_modes[obj.toString()] == "on") {
+            label.textContent = element.getAttribute('label')+" "+element.getAttribute('alt_label');
+          } else {
+            label.textContent = element.getAttribute('label');
+          }
+        } catch (exception){}
+      }
+
+      for (var obj in data.light_program_names) {
+        if (data.light_program_names[obj] != "") {
+          var light_mode_name = data.light_program_names[obj];
+          var light_mode = -1;
+          // If aqualinkd programmed light, need to convert int to text index, if not value is text
+          try {
+            var light_type = document.getElementById(obj.toString()).getAttribute('lighttype'); 
+            if (light_type == "0") {
+              light_mode = parseInt(data.light_program_names[obj])-1;
+              // For backward compatibility we could get a name here or number (number is is lights modes are in config.js vs aqualinkd.conf)
+              //console.log("Light "+light_mode);
+              if (! isNaN(light_mode)) {
+                light_mode_name = _light_program[light_type][light_mode];
+                if (light_mode_name.endsWith(" - Show")) {
+                  light_mode_name = light_mode_name.slice(0, -7);
+                }
+              }
+            } else if (/*light_type == 10 ||*/ light_type == 11) {
+              // Fo Dimmer Lights.
+              light_mode = parseInt(light_mode_name);
+              document.getElementById(obj.toString()).setAttribute('setpoint', light_mode);
+            } else {
+              light_mode = _light_program[light_type].findIndex(element => element.startsWith(light_mode_name))
+            }
+          } catch (e) { /*console.log(e);*/ }
+
+          if (light_mode_name != "-999%" && light_mode_name != "Off" && light_mode_name != "off")
+            setTileOnText(obj.toString(),light_mode_name);
+          
+          try {
+            document.getElementById(obj.toString()).setAttribute('spvalue', light_mode);
+            //console.log("Light mode index "+light_mode+" - "+light_mode_name+" ----- "+_light_program[light_type][light_mode]);
+          } catch (e) { /*console.log(e);*/ }
+          
+        }
+      }
+        
+
+      if (data.swg_boost_msg != null ) {
+        var tile = document.getElementById('SWG');
+        if (tile != null) {
+          var sp_value = tile.getAttribute('setpoint');
+          if (sp_value == 101)
+            document.getElementById('SWG' + '_status').innerHTML = 'Boost '+data.swg_boost_msg;
+        }
+      }
+      var i = 1;
+      while (i < 5) {
+        //console.log(data["Pump_"+i].RPM);
+        if (typeof data["Pump_"+i] !== 'undefined') {
+          updatePumpTile(data["Pump_"+i].id, data["Pump_"+i].Status, data["Pump_"+i].Pump_Type, data["Pump_"+i].RPM, data["Pump_"+i].GPM, data["Pump_"+i].Watts);
+        }
+        i++;
+      }
+    }
+
+    function updatePumpTile(tileid, status, type, rpm, gpm, watts) {
+      var tLine = '';
+      var bLine = '';
+       // If we have 1 line, simple (error & priming takes presidence over anything else)
+       // If we have 2 lines, then BOTTOM (line #1) is ERROR (not priming) or what the pump needs to control (RPM for all except VF which is GPM)
+       //                          TOP (line #2) is (priming/RPM/GPM).
+       
+      // 1,0,-1 are all good states, anything else error
+      try {
+      if (status >= 1 || status <= -3) {
+        if (status == -3) {
+          setTileOnText(tileid, 'Pump Offline');
+        } else {
+          setTileOnText(tileid, 'Pump ERROR');
+        }
+        document.getElementById(tileid).setAttribute('setpoint', 0);
+        setTileOnTextLine2(tileid, "");
+        return;
+      }
+
+      if (type == "vfPump") {
+        bLine = ((gpm > 0) ? 'GPM:'+gpm : 'GPM:0');
+        tLine = ((rpm > 0) ? 'RPM:'+rpm : '');
+        document.getElementById(tileid).setAttribute('setpoint', ((gpm > 0) ? gpm : 0));
+      } else if ( rpm > 0) {
+        bLine = ((rpm > 0) ? 'RPM:'+rpm : 'RPM:0');
+        if (gpm > 0) {
+          tLine = 'GPM:'+gpm;
+        } else if (watts > 0) {
+          tLine = 'Watts:'+watts;
+        }
+        document.getElementById(tileid).setAttribute('setpoint', ((rpm > 0) ? rpm : 0));
+      } else if ( watts > 0 ) {
+        bLine = ((watts > 0) ? 'Watts:'+watts : '');
+        document.getElementById(tileid).setAttribute('setpoint', ((rpm > 0) ? rpm : 0));
+      }
+      // If we are in priming. Move lines and display priming
+      if (status == -2) {
+        tLine = bLine;
+        bLine = 'Pump Priming';
+      } else if (status == -1) {
+        // Pump is off
+        var tLine = '';
+        var bLine = 'On';
+      }
+      
+      setTileOnText(tileid, bLine);
+      setTileOnTextLine2(tileid, tLine);
+      } catch (e) {
+        // NSF Do we need to create the device?
+        console.log('ERROR id=' + tileid + ' Line '+new Error().lineNumber+' | element = '+document.getElementById(tileid));
+      }
+    }
+
+    function deviceSort(a, b) {
+      var pa;
+      var pb;
+      try {
+        //pa = devices.indexOf(a.id);
+        //pb = devices.indexOf(b.id);
+        pa = caseInsensitiveIndexOf(_devices,a.id);
+        pb = caseInsensitiveIndexOf(_devices,b.id);
+        if (pa > pb) 
+          return 1;
+        else if (pa < pb)
+          return -1;
+      } catch (e) {}
+      return 0;
+    }
+
+    function check_devices(data) {
+      _temperature_units = data['temp_units'];
+      _scheduler_devices_json = [];
+      data['devices'].sort(deviceSort);
+      for (var obj in data['devices']) {
+
+        if ((data['devices'][obj].type == "switch" || data['devices'][obj].type == "switch_vsp" || data['devices'][obj].type.substr(0,8) == "setpoint" ) && data['devices'][obj].name != "NONE") {
+          _scheduler_devices_json.push(data['devices'][obj]);
+        }
+
+        if (document.getElementById(data['devices'][obj].id) == null) {
+          _displayNames[data['devices'][obj].id.replace("Aux_", "AUX")] = data['devices'][obj].name;
+          createTile(data['devices'][obj]);
+        } else {
+          //console.log("CHECK "+document.getElementById(data['devices'][obj].id).getAttribute('type')+" | against "+data['devices'][obj].type+" | and "+data['devices'][obj].type_ext+" | for "+data['devices'][obj].id);
+          //CHECK switch | against setpoint_thermo | and undefined | for Pool_Heater
+
+          var element_type = document.getElementById(data['devices'][obj].id).getAttribute('type');
+          var ext_type;
+          if (typeof data['devices'][obj].type_ext !== 'undefined')
+            ext_type = data['devices'][obj].type_ext;
+          else
+            ext_type = element_type; // Just force next if to match.
+
+          //if ( (element_type != data['devices'][obj].type) &&
+          //     (typeof data['devices'][obj].type_ext !== 'undefined' && (element_type != data['devices'][obj].type_ext) ) ) {
+          if ( (element_type != data['devices'][obj].type) && (ext_type != data['devices'][obj].type_ext) ) {
+            console.log("Remove and create "+data['devices'][obj].id);
+            console.log("Old type "+element_type+" | new type "+data['devices'][obj].type+" sub "+data['devices'][obj].type_ext);
+            var element = document.getElementById(data['devices'][obj].id);
+            element.parentNode.removeChild(element);
+            createTile(data['devices'][obj]);
+          }
+        }
+      }
+    }
+
+    function get_appropriate_ws_url() {
+      var pcol;
+      var u = document.URL;
+      /*
+       * We open the websocket encrypted if this page came on an
+       * https:// url itself, otherwise unencrypted
+       */
+      if (u.substring(0, 5) == "https") {
+        pcol = "wss://";
+        u = u.substr(8);
+      } else {
+        pcol = "ws://";
+        if (u.substring(0, 4) == "http")
+          u = u.substr(7);
+      }
+      u = u.split('/');
+      //alert (pcol + u[0] + ":6500");
+      return pcol + u[0];
+    }
+    /* dumb increment protocol */
+    var socket_di;
+
+    function startWebsockets() {
+      socket_di = new WebSocket(get_appropriate_ws_url());
+      try {
+        socket_di.onopen = function() {
+          // success!
+          get_devices();
+          // Set recurring fetch every 1 minute
+          if (!window.devicesInterval) {
+            window.devicesInterval = setInterval(() => {get_devices();}, 60 * 1000);
+          }
+          // Get Status just incase control panel hasn't connected yet
+          get_status();
+        }
+        socket_di.onmessage = function got_packet(msg) {
+          // Test if has clas list error and only remove if past date.
+          /*
+          if (document.getElementById("header").classList.contains("error")) {
+            if (Date.now() >= _targetClearErrorMsg) {
+              document.getElementById("header").classList.remove("error");
+            }
+          }*/
+          document.getElementById("header").classList.remove("error");
+          var data = JSON.parse(msg.data);
+          if (data.type == 'status') {
+            update_status(data);
+          } else if (data.type == 'devices') {
+            check_devices(data);
+            resetBackgroundSize();
+          } else if (data.type == 'schedules') {
+            cs_schedules(data);
+          }
+        }
+        socket_di.onclose = function() {
+          // something went wrong
+          document.getElementById("message").innerHTML = '  Connection error!  '
+          document.getElementById("header").classList.add("error");
+          // Try to reconnect every 5 seconds.
+          setTimeout(function() {
+            startWebsockets()
+          }, 5000);
+        }
+      } catch (exception) {
+        alert('<p>Error' + exception);
+      }
+    }
+
+    function get_devices() {
+      var msg = {
+        uri: "devices"
+      };
+      socket_di.send(JSON.stringify(msg));
+    }
+
+    function get_status() {
+      var msg = {
+        uri: "status"
+      };
+      socket_di.send(JSON.stringify(msg));
+    }
+
+    function get_schedules() {
+      var msg = {
+        uri: "schedules"
+      };
+      socket_di.send(JSON.stringify(msg));
+    }
+    function set_schedules(msg) {
+      msg.uri = "schedules/set";
+      //console.log(JSON.stringify(msg));
+      socket_di.send(JSON.stringify(msg));
+      //socket_di.send(msg);
+    }
+
+    function send_command(cmd, value=null) {
+      var _cmd = {};
+      _cmd.command = cmd;
+      _cmd.uri = cmd+"/set";
+      if (value != null) {
+        _cmd.value = value;
+      }
+      socket_di.send(JSON.stringify(_cmd));
+
+      if ( _link_spa_and_heater && cmd == "Spa_Mode" ) {
+        var ncmd = {};
+        ncmd.command = "Spa_Heater";
+        ncmd.uri = "Spa_Heater/set";
+        if (value != null) {
+          ncmd.value = value;
+        }
+        socket_di.send(JSON.stringify(ncmd));
+      }
+    }
+
+    function send_setpoint(id) {
+      var message = {};
+      var tile;
+      if ((tile = document.getElementById(id)) == null) {
+        return;
+      }
+      var type = tile.getAttribute('type');
+      message.parameter = tile.getAttribute('id');
+      message.value = tile.getAttribute('setpoint');
+
+      if (type == "setpoint_swg")
+        message.uri = id+"/percent/set";
+      else if (type == "switch_vsp")
+        message.uri = id+"/RPM/set";
+      else if (type == "light_dimmer")
+        message.uri = id+"/brightness/set";
+      else
+        message.uri = id+"/setpoint/set";
+//console.log("Send value back "+temperature.parameter+" "+temperature.value);
+      socket_di.send(JSON.stringify(message));
+    }
+
+    function send_light_mode(value, id, textvalue) {
+      //console.log("Set light mode to "+value+" id="+id+" text="+textvalue);
+      var mode = {};
+      //mode.parameter = 'POOL_LIGHT_MODE';
+      //mode.parameter = 'LIGHT_MODE';
+      mode.value = value;
+      mode.button = id;
+      mode.uri = id+"/program/set";
+      mode.text_value = textvalue;
+      socket_di.send(JSON.stringify(mode));  
+    }
+
+    function send_switch_timer(id, value) {
+      var message = {};
+      message.uri = id+"/timer/set";
+      message.value = value;
+      socket_di.send(JSON.stringify(message));  
+    }
+
+    function reset() {
+      socket_di.send("reset\n");
+    }
+
+    function showBackground() {
+      wrapper = document.getElementById("wrapper");
+      if (wrapper.classList.contains("vopaque")) {
+        wrapper.classList.remove("vopaque");
+      } else {
+        wrapper.classList.add("vopaque");
+      }
+    }
+
+    function showVersion(source) {
+      displayMessage("AqualinkD : " + _aqualink_data.aqualinkd_version + " | AqualinkRS : " + _aqualink_data.version, 5);
+      /*
+      if ((message = document.getElementById("message")) != null) {
+        message.innerHTML = "AqualinkD : " + _aqualink_data.aqualinkd_version + " | AqualinkRS : " + _aqualink_data.version;
+      }
+      source.innerHTML = "Version(s)";
+      setTimeout(function() {
+        source.innerHTML = "AqualinkD";
+      }, 5000);
+      */
+    }
+
+    function updatePwsitchOptions(source, light_type) {
+      if (source.type == 'radio') {
+        var modename = _light_program[light_type][source.value-1];
+        if (modename.endsWith(" - Show"))
+          modename = modename.substr(0, (modename.length - 7));
+        document.getElementById('pswitch_option_switch_text_value').innerHTML = modename;
+        document.getElementById('pswitch_option_switch').checked = true;
+      } else if (source.type == 'checkbox') {
+        //console.log(source);
+        var x;
+        if (document.getElementById('pswitch_option_switch').checked == false) {
+          var radio = document.getElementsByName("light_program");
+          for (x = 0; x < radio.length; x++) {
+            radio[x].checked = false
+          }
+          document.getElementById('pswitch_option_switch_text_value').innerHTML = 'Off';
+        }
+      }
+    }
+
+    function loadScriptIfAvailable(url) {
+        const script = document.createElement('script');
+        script.src = url;
+
+        script.onload = function () {
+          //console.log(`Script from ${url} loaded and executed.`);
+        };
+
+        script.onerror = function () {
+          //console.error(`Script from ${url} could not be loaded.`);
+        };
+
+        document.head.appendChild(script);
+      }
+
+/*
+    function updateTimerOptions(source) {
+      if (source.type == 'range') {
+        if (source.value > 0) {
+          document.getElementById('timer_switch').checked = true;
+        } else {
+          document.getElementById('timer_switch').checked = false;
+        }
+      } else if (source.type == 'checkbox') {
+        if (document.getElementById('timer_switch').checked == false) {
+          //timer_slider_range = 0;
+          document.getElementById("timer_slider_range").value = 0;
+          document.getElementById("timer_slider_text_value").value = 0;
+        }
+      }
+    }
+  */
+    
+
+  </script>
+</head>
+
+<!--<body onload='showTileOptions(false); test_harness();startWebsockets();'> -->
+
+<body onload='init();'>
+  <div id='body_wrap' class='body_wrap'>
+    <!-- <div id='body_wrap' class='body_wrap' onmousedown='showTileOptions(false);'> -->
+    <div id='wrapper' class="wrapper">
+      <div id="header" class="head" onclick="showBackground();">
+        <table border='0' width='100%' cellpadding='0' cellspacing='0'>
+          <tr>
+            <td width="25px" align='left' id='td_cog' style="vertical-align:middle">
+              <a id="cog_link" href="/aqmanager.html">
+                <svg viewBox='0 0 10 8' width='18' height='18'>
+                  <path d='M1 1h8M1 4h 8M1 7h8' stroke='#FFF' stroke-width='1.2' stroke-linecap='round'/>
+                </svg>
+              </a>
+            </td>
+          </td>
+            <td width="70px" align='left' id='td_name'><span class='title' id='name'
+                onclick="showVersion(this);event.stopPropagation();">AqualinkD</span>
+            </td>
+            <td align='center'><span class='title' id='message'></span>
+            </td>
+            <td width="70px" align='right' id='td_timedate'><span class='timedate' id='datetime'
+                onclick="event.stopPropagation();showScheduler(this);">X</class>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div id='thermostat_options' class='options hide'>
+      <div id='thermostat_options_pane' class='options_pane' onclick='event.stopPropagation();'>
+        <table border='0' cellpadding='10px'>
+          <tr class='options_title'>
+            <th colspan='2'><span id="option_title"></span>
+            </th>
+          </tr>
+          <tr>
+            <td align='right' width='50%'><span class="option_text" id='option_switch_text_value'></span>
+            </td>
+            <td align='left' width='50%'>
+              <label class="option_switch">
+                <input type="checkbox" id='option_switch'>
+                <span class="option_switch_slide"></span>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2' align='center'><span class="option_text" id="option_slider_text_value"></span>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2'>
+              <div class="slidecontainer">
+                <input type="range" class="option_slider" id='option_slider_range'>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td colspan='2' align='center'><span class="option_text" id="th_timer_slider_text_value"></span>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2'>
+              <div class="slidecontainer">
+                <input type="range" class="option_slider" id='th_timer_slider_range'>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td colspan='2' align='center'>
+              <input type="button" value="close" id='options_close' class='options_button'>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div id='swg_options' class='options hide'>
+      <div id='swg_options_pane' class='options_pane' onclick='event.stopPropagation();'>
+        <table border='0' cellpadding='10px'>
+          <tr class='options_title'>
+            <th colspan='2'><span id="swg_option_title"></span>
+            </th>
+          </tr>
+          <tr id="swg_option_switch_row">
+            <td align='right' width='50%'><span class="option_text" id='swg_option_switch_text_value'></span>
+            </td>
+            <td align='left' width='50%'>
+              <label class="option_switch">
+                <input type="checkbox" id='swg_option_switch'>
+                <span class="option_switch_slide"></span>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2' align='center'><span class="option_text" id="swg_option_slider_text_value"></span>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2'>
+              <div class="slidecontainer">
+                <input type="range" class="option_slider" id='swg_option_slider_range'>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2' align='center'>
+              <input type="button" value="close" id='swg_options_close' class='options_button'>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div id='pswitch_options' class='options hide'>
+      <div id='pswitch_options_pane' class='options_pane' onclick='event.stopPropagation();'>
+        <table id='pswitch_table' border='0' cellpadding='10px' width="100%">
+          <tr class='options_title'>
+            <th colspan='2'><span id="pswitch_option_title"></span>
+            </th>
+          </tr>
+          <tr>
+            <td align='right' width='50%'><span class="option_text" id='pswitch_option_switch_text_value'></span>
+            </td>
+            <td align='left' width='50%'>
+              <label class="option_switch">
+                <input type="checkbox" id='pswitch_option_switch' onchange='updatePwsitchOptions(this);'>
+                <span class="option_switch_slide"></span>
+              </label>
+            </td>
+          </tr>
+
+          <tr>
+            <td colspan='2' align='center'>
+              <select id='pswitch_option_list' class='options_selector'>
+                <option value="0">Pool Light Program</option>
+              </select>
+            </td>
+          </tr>
+
+          <tr>
+            <td colspan='2' align='center'><span class="option_text" id="ps_timer_slider_text_value"></span>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2'>
+              <div class="slidecontainer">
+                <input type="range" class="option_slider" id='ps_timer_slider_range'>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td colspan='2' align='center'>
+              <input type="button" value="close" id='pswitch_options_close' class='options_button'>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div id='vspswitch_options' class='options hide'>
+      <div id='vspswitch_options_pane' class='options_pane' onclick='event.stopPropagation();'>
+        <table border='0' cellpadding='10px'>
+          <tr class='options_title'>
+            <th colspan='2'><span id="vspswitch_option_title"></span>
+            </th>
+          </tr>
+          <tr>
+            <td align='right' width='50%'><span class="option_text" id='vspoption_switch_text_value'></span>
+            </td>
+            <td align='left' width='50%'>
+              <label class="option_switch">
+                <input type="checkbox" id='vspoption_switch'>
+                <span class="option_switch_slide"></span>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2' align='center'><span class="option_text" id="vspoption_slider_text_value"></span>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2'>
+              <div class="slidecontainer">
+                <input type="range" class="option_slider" id='vspoption_slider_range'>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td colspan='2' align='center'><span class="option_text" id="vsp_timer_slider_text_value"></span>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2'>
+              <div class="slidecontainer">
+                <input type="range" class="option_slider" id='vsp_timer_slider_range'>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td colspan='2' align='center'>
+              <input type="button" value="close" id='vspswitch_option_close' class='options_button'>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    
+    <div id='dimmerlight_options' class='options hide'>
+      <div id='dimmerlight_options_pane' class='options_pane' onclick='event.stopPropagation();'>
+        <table border='0' cellpadding='10px'>
+          <tr class='options_title'>
+            <th colspan='2'><span id="dimmerswitch_option_title"></span>
+            </th>
+          </tr>
+          <tr>
+            <td align='right' width='50%'><span class="option_text" id='dimmeroption_switch_text_value'></span>
+            </td>
+            <td align='left' width='50%'>
+              <label class="option_switch">
+                <input type="checkbox" id='dimmeroption_switch'>
+                <span class="option_switch_slide"></span>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2' align='center'><span class="option_text" id="dimmeroption_slider_text_value"></span>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2'>
+              <div class="slidecontainer">
+                <input type="range" class="option_slider" id='dimmeroption_slider_range'>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2' align='center'><span class="option_text" id="dimmer_timer_slider_text_value"></span>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2'>
+              <div class="slidecontainer">
+                <input type="range" class="option_slider" id='dimmer_timer_slider_range'>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2' align='center'>
+              <input type="button" value="close" id='dimmerswitch_option_close' class='options_button'>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  
+    <div id='timer_options' class='options hide'>
+      <div id='timer_options_pane' class='options_pane' onclick='event.stopPropagation();'>
+        <table border='0' cellpadding='10px'>
+          <tr class='options_title'>
+            <th colspan='2'><span id="timer_option_title"></span>
+            </th>
+          </tr>
+          <tr>
+            <td align='right' width='50%'><span class="option_text" id='timer_switch_text_value'></span>
+            </td>
+            <td align='left' width='50%'>
+              <label class="option_switch">
+                <input type="checkbox" id='timer_switch'>
+                <span class="option_switch_slide"></span>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2' align='center'><span class="option_text" id="timer_slider_text_value"></span>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2'>
+              <div class="slidecontainer">
+                <input type="range" class="option_slider" id='timer_slider_range'>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan='2' align='center'>
+              <input type="button" value="close" id='timer_options_close' class='options_button'>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+<!--
+    <div id="simulator_iframe" class='options hide'>
+      <div id="onetouch_iframe" class="simulator_pane" onclick='event.stopPropagation();''>
+        <iframe id="simulatoriframe" src="/onetouch_sim.html" class="simiframe"></iframe>
+        <input type="button" class="options_button" id="simulator_iframe_close" value="Close">
+      </div>
+    </div>
+  -->
+    <div id='scheduler_options' class='options hide'>
+      <div id='scheduler_options_pane' class='scheduler_pane' onclick='event.stopPropagation();'>
+        <table id="cronschedules" border="0">
+          <th colspan='10'><span id="scheduler_options_title"></span></th>
+          <tr>
+             <td colspan="10" align="center" id="crontext">&nbsp</td> 
+          </tr>
+          <tr class="sc_tablehead">
+              <td>Enable</td>
+              <td>Minute</td>
+              <td>Hour</td>
+              <td>Day<br><font size="-2">Month</font></td>
+              <td>Month</td>
+              <td>Day<br><font size="-2">Week</font></td>
+              <td>Device</td>
+              <td>Cmd</td>
+              <td>Value</td>
+              <td>Del</td>
+          </tr>
+          <!-- HTML will be added here -->
+          <tr  class="sc_tablehead">
+              <td colspan="10">
+                  <input type="button" class="options_button" id="Add" value="Add" onclick="cs_addschedule(1,0,0,'*','*','*','','','');">
+                  &nbsp;&nbsp;&nbsp;&nbsp;
+                  <input type="button" class="options_button" id="scheduler_options_close" value="Save" onclick="cs_createJSON();">
+              </td>
+          </tr>
+          <tr>
+              <td colspan="10" id="cronhelp"></td>
+          </tr>
+        <table>
+      </div>
+    </div>
+
+    
+
+  </div>
+
+</body>
+
+</html>

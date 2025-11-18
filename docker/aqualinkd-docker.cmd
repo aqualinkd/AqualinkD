@@ -22,6 +22,10 @@ if [ -d "$CONFDIR" ]; then
   if [ -f "$CONFDIR/config.js" ]; then
     ln -sf "$CONFDIR/config.js" /var/www/aqualinkd/config.js
   fi
+  # If we have a web config, replace the local filesystem with mounted
+  if [ -f "$CONFDIR/config.json" ]; then
+    ln -sf "$CONFDIR/config.json" /var/www/aqualinkd/config.json
+  fi
 
   # If don't have a cron file, create one
   if [ ! -f "$CONFDIR/aqualinkd.schedule" ]; then

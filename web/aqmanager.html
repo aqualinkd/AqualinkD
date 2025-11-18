@@ -337,6 +337,36 @@
         .config_options_added {
             background-color: white;
         }
+
+        .web_config_options {
+            top: 10px;
+            position: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;      
+            /*height: 100vw;*/
+        }
+        .web_config_options_pane {
+            background-color: var(--options_pane_background);
+            border: 2px solid var(--options_pane_bordercolor);
+            border-radius: 20px;
+            justify-content: center;
+            align-items: center;
+            width: 700px;
+            /*max-height: 870px;*/
+            max-height: var(--max-config-height);
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .web_config_textarea {
+          width:90%; 
+          /*height:700px;*/
+          height:var(--web-config-textarea-height);
+          box-sizing: border-box; 
+          resize: vertical;
+        }
+
         .hide {
             display: none;
             filter: alpha(opacity=0);
@@ -357,6 +387,35 @@
             border-radius: 5px !important;
             height: 18px !important;
         }
+
+        .valid_json {
+          background-color: var(--options_pane_background);
+        }
+        .invalid_json {
+          background-color: rgb(255, 100, 0);
+        }
+
+        #alertOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  z-index: 999;
+}
+
+#alertCustomDialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
 
         
         /*
@@ -382,6 +441,8 @@
         _addedBlankLightProgram = false;
         _addedBlankSensor = false;
         _addedBlankVirtualButton = false;
+
+        const _webConfigFile = "/config.json";
 
         //var _cfgRestartAlertShown = false;
         let _AlertsShown = {};
@@ -1546,6 +1607,182 @@
             */
         }
 
+
+        async function showWebConfig() {
+          var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+          //console.log("Height="+h);
+          document.documentElement.style.setProperty('--max-config-height', (h-50)+'px');
+
+          document.documentElement.style.setProperty('--web-config-textarea-height', (h-160)+'px');
+
+          document.getElementById("web_config_options").classList.remove("hide");
+          document.getElementById("web_config_options_pane").classList.remove("hide");
+
+          
+
+          const jsonInput = document.getElementById('webconfig-json-input');
+            
+            try {
+                // Fetch the file from the specified path (make sure config.json exists)
+                const response = await fetch(_webConfigFile, { cache: 'no-store' });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // Get the response as plain text
+                const configText = await response.text();
+                
+                // Populate the textarea
+                jsonInput.value = configText;
+                jsonInput.placeholder = "Enter or edit your JSON here...";
+                webconfig_validateAndDisplay(); // Optional: Validate immediately upon loading
+                
+            } catch (error) {
+                console.error('There was a problem fetching the config file:', error);
+                jsonInput.value = ''; // Clear placeholder
+                jsonInput.placeholder = "Could not load "+_webConfigFile+". Enter JSON manually.";
+                const resultArea = document.getElementById('validation-result');
+                resultArea.classList.add('invalid');
+                resultArea.textContent = 'Error: Could not load '+_webConfigFile+' from server.';
+            }
+          //populateconfigtable(data);
+        }
+
+        function closeWebConfig() {
+          clearconfigtable();
+
+          document.getElementById("web_config_options").classList.add("hide");
+          document.getElementById("web_config_options_pane").classList.add("hide");
+        }
+
+        function saveWebConfig() {
+          if (!webconfig_validateAndDisplay()) {
+            alert("bad web config, please validate");
+            //timedAlert("bad web config, please validate", 5);
+            return;
+          }
+
+          const jsonInput = document.getElementById('webconfig-json-input');
+          const jsonString = jsonInput.value;
+          const jsonObject = JSON.parse(jsonString);
+  
+          var json_ordered = {
+            uri: "webconfig/set",
+            values: jsonObject
+          };
+          send_command(json_ordered);
+          closeWebConfig();
+        }
+
+        // Function to validate and display the JSON
+        function webconfig_validateAndDisplay() {
+            const jsonInput = document.getElementById('webconfig-json-input');
+            const resultArea = document.getElementById('validation-result');
+            const jsonString = jsonInput.value;
+            
+
+            // Clear previous results
+            resultArea.className = '';
+            resultArea.textContent = '';
+
+            try {
+                // Attempt to parse the string into a JavaScript object
+                const jsonObject = JSON.parse(jsonString);
+
+                // If parsing succeeds, format the JSON nicely (pretty print)
+                const prettyJsonString = JSON.stringify(jsonObject, null, 2);
+                
+                // Update the text area with the pretty-printed JSON
+                jsonInput.value = prettyJsonString;
+                
+                // Display success message
+                resultArea.classList.add('valid_json');
+                resultArea.textContent = 'JSON is VALID.';
+
+                return true;
+            } catch (error) {
+                // If parsing fails, catch the error
+                
+                // Display error message
+                resultArea.classList.add('invalid_json');
+                // The error object provides useful information about where the syntax error is
+                resultArea.textContent = 'JSON is INVALID: ' + error.message;
+            }
+            return false;
+        }
+
+        async function updateWebConfigFromMaster() {
+          let masterJSON;
+          // Get new master
+          try {
+                // Fetch the file from the specified path (make sure config.json exists)
+                // BELOW file should be from github. File with any new config keys in it
+                const response = await fetch("/config.json.tmp", { cache: 'no-store' });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // Get the response as plain text
+                const text = await response.text();
+                masterJSON = JSON.parse(text)
+                // Populate the textarea
+                //jsonInput.value = configText;
+                //jsonInput.placeholder = "Enter or edit your JSON here...";
+                //webconfig_validateAndDisplay(); // Optional: Validate immediately upon loading
+                
+            } catch (error) {
+              alert("Error loading master cfg "+error);
+            }
+          // Now get local
+          try{
+          const jsonInput = document.getElementById('webconfig-json-input');
+          const jsonString = jsonInput.value;
+          var webcfgJSON = JSON.parse(jsonString);
+
+          webcfgJSON = mergeMissingKeysRecursive(webcfgJSON, masterJSON);
+
+          jsonInput.value = JSON.stringify(webcfgJSON);
+          alert(jsonInput.value);
+          webconfig_validateAndDisplay();
+          } catch (error) {
+            alert("Error "+error);
+          }
+  
+        }
+
+        function mergeMissingKeysRecursive(target, source) {
+          // Ensure we are dealing with actual objects at this level
+          if (typeof target !== 'object' || target === null || typeof source !== 'object' || source === null) {
+            return target;
+          }
+          // Iterate over all keys in the source object
+          for (const key in source) {
+            if (Object.hasOwn(source, key)) {
+              const sourceValue = source[key];
+              const targetValue = target[key];
+
+            // If the source value is a nested object and the target value is also 
+            // a nested object (and not an array or null), recurse.
+              if (
+                typeof sourceValue === 'object' && sourceValue !== null && !Array.isArray(sourceValue) &&
+                typeof targetValue === 'object' && targetValue !== null && !Array.isArray(targetValue)
+              ) {
+                // Recursively merge the nested objects
+                target[key] = mergeMissingKeysRecursive(targetValue, sourceValue);
+              } else if (targetValue === undefined) {
+                // Otherwise, if the key is missing entirely in the target, add it
+                target[key] = sourceValue;
+                // console.log("Added missing key:", key);
+              }
+            // If the key already exists and is not an object pair ready for recursion, it is ignored (target takes precedence).
+            }
+          }
+          return target;
+        }
+
+
         function update_status_message(message, error = false) {
             try {
                 if (error || message.substring(0, 5).toLowerCase() == "error")
@@ -2008,6 +2245,21 @@
             xmlhttp.setRequestHeader("Accept","application/vnd.github.raw");
             xmlhttp.send();
         }
+/*
+        function timedAlert(message, timeout) {
+            document.getElementById('alertDialogMessage').innerText = message;
+            document.getElementById('alertOverlay').style.display = 'block';
+            document.getElementById('alertCustomDialog').style.display = 'block';
+
+            // Set a timeout to automatically close the dialog
+            setTimeout(closeAlert, timeout * 1000);
+        }
+
+        function closeAlert() {
+            document.getElementById('alertOverlay').style.display = 'none';
+            document.getElementById('alertCustomDialog').style.display = 'none';
+        }
+*/
     </script>
 
 <body onload="init();init_collapsible();">
@@ -2129,6 +2381,10 @@
                                     value="edit config"></input>
                             </td>
                             <td align="center">
+                                <input id="webconfig" type="button" onclick="showWebConfig(this);"
+                                    value="web config"></input>
+                            </td>
+                            <td align="center">
                                 <input id="downloadconfig" type="button" onclick="requestFileDownload(this);""
                                     value="download config"></input>
                             </td>
@@ -2179,9 +2435,51 @@
                 </td>
             </tr></table>
             </div>
-          </div>
+         </div>
+
+         <div id="web_config_options" class="web_config_options hide" style="display: flex;">
+            <div id="web_config_options_pane" class="web_config_options_pane hide">>
+                <!--<div class="inner">END</div>-->
+                <table id="config_table" border="0" cellpadding="1px" width="100%" style="border-collapse: collapse;">
+                <tbody><tr class="options_title">
+                  <th colspan="3" style="padding: 10px;"><span>AqualinkD Web Configuration</span></th>
+                </tr>
+                <tr>
+                  <td align="center" colspan="3">    
+                    <textarea class="web_config_textarea" id="webconfig-json-input" placeholder="Loading configuration..."></textarea>
+                  </td>
+                  </tr>
+                  <tr>
+                    <td align="right" style="width:33%;padding-right: 10px;">
+                   <input type="button" onclick="webconfig_validateAndDisplay()" value="Validate"></input>
+                    </td>
+                    <td <td align="center" style="width:33%;">
+                   <input type="button" onclick="saveWebConfig()" value="Save"></input>
+                    </td>
+                    <td align="left" style="width:33%;padding-left: 10px;">
+                   <input type="button" onclick="closeWebConfig()" value="Close without Saving"></input>
+                   <!--<input onclick="updateWebConfigFromMaster()" value="get new"></input>-->
+                   <!-- For the future, to add new keys to json config pulling from github-->
+                    </td>
+                  </tr>
+              <tr>
+                <td colspan="3">
+              <div id="validation-result" style="padding-left: 10px;padding-right: 10px;"></div>
+              </td>
+              </tr>
+                </tbody>
+              </table>
+            </div>
+         </div>
         <!--<iframe src='about:blank' id="logdownload"></iframe>-->
     </div>
+<!--
+    <div id="alertOverlay" style="display: none;"></div>
+    <div id="alertCustomDialog" style="display: none;">
+      <p id="alertDialogMessage"></p>
+      <button onclick="closeAlert()">Close</button>
+    </div>
+  -->
 </body>
 
 </html>

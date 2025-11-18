@@ -10,7 +10,8 @@
 #include "sensors.h"
 //#include "aq_panel.h"  // Moved to later in file to overcome circular dependancy. (crappy I know)
 
-#define PRINTF(format, ...) printf("%s:%d: " format, __FILE__, __LINE__, ##__VA_ARGS__)
+//#define PRINTF(format, ...) printf("%s:%d: " format, __FILE__, __LINE__, ##__VA_ARGS__)
+#define PRINTF(format, ...)
 
 #define isMASK_SET(bitmask, mask) ((bitmask & mask) == mask)
 #define setMASK(bitmask, mask)    (bitmask |= mask)

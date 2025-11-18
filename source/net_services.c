@@ -948,7 +948,7 @@ void mqtt_broadcast_aqualinkstate(struct mg_connection *nc)
 }
 
 
-typedef enum {uActioned, uBad, uDevices, uStatus, uHomebridge, uDynamicconf, uDebugStatus, uDebugDownload, uSimulator, uSchedules, uSetSchedules, uAQmanager, uLogDownload, uNotAvailable, uConfig, uSaveConfig, uConfigDownload} uriAtype;
+typedef enum {uActioned, uBad, uDevices, uStatus, uHomebridge, uDynamicconf, uDebugStatus, uDebugDownload, uSimulator, uSchedules, uSetSchedules, uAQmanager, uLogDownload, uNotAvailable, uConfig, uSaveConfig, uConfigDownload, uSaveWebConfig} uriAtype;
 //typedef enum {NET_MQTT=0, NET_API, NET_WS, DZ_MQTT} netRequest;
 const char actionName[][5] = {"MQTT", "API", "WS", "DZ"};
 
@@ -1045,6 +1045,8 @@ uriAtype action_URI(request_source from, const char *URI, int uri_length, float 
     return uConfigDownload;
   } else if (strncmp(ri1, "config/set", 10) == 0) {
     return uSaveConfig;
+  } else if (strncmp(ri1, "webconfig/set", 13) == 0) {
+    return uSaveWebConfig;
   } else if (strncmp(ri1, "config", 6) == 0) {
     return uConfig;
   } else if (strncmp(ri1, "simulator", 9) == 0 && from == NET_WS) { // Only valid from websocket.
@@ -1652,7 +1654,7 @@ void action_web_request(struct mg_connection *nc, struct mg_http_message *http_m
         {
           char message[JSON_BUFFER_SIZE];
           DEBUG_TIMER_START(&tid2);
-          build_webconfig_js(_aqualink_data, message, JSON_BUFFER_SIZE);
+          build_dynamic_webconfig_js(_aqualink_data, message, JSON_BUFFER_SIZE);
           DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_webconfig_js took");
           mg_http_reply(nc, 200, CONTENT_JS, message);
         }
@@ -1853,6 +1855,14 @@ void action_websocket_request(struct mg_connection *nc, struct mg_ws_message *wm
       char message[JSON_BUFFER_SIZE];
       save_config_js((char *)wm->data.buf, wm->data.len, message, JSON_BUFFER_SIZE, _aqualink_data);
       DEBUG_TIMER_STOP(tid, NET_LOG, "action_websocket_request() save_config_js took");
+      ws_send(nc, message);
+    }
+    case uSaveWebConfig:
+    {
+      DEBUG_TIMER_START(&tid);
+      char message[JSON_BUFFER_SIZE];
+      save_web_config_json((char *)wm->data.buf, wm->data.len, message, JSON_BUFFER_SIZE, _aqualink_data);
+      DEBUG_TIMER_STOP(tid, NET_LOG, "action_websocket_request() save_web_config_json took");
       ws_send(nc, message);
     }
     break;

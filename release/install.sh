@@ -218,21 +218,25 @@ else
  log "Please install cron, if not the AqualinkD Scheduler will not work"
 fi
 
+# V3.0.0 uses config.json not config.js
+if [ -f "$WEBLocation/config.js" ]; then
+  log "AqualinkD web config is old, please migrate and settings from $WEBLocation/config.js to $WEBLocation/config.json"
+fi
 # V2.3.9 & V2.6.0 has kind-a breaking change for config.js, so check existing and rename if needed
 #        we added Aux_V? to the button list
-if [ -f "$WEBLocation/config.js" ]; then
+#if [ -f "$WEBLocation/config.js" ]; then
   # Test is if has AUX_V1 in file AND "Spa" is in file (Spa_mode changed to Spa)
   # Version 2.6.0 added Chiller as well
-  if  ! grep -q '"Aux_V1"' "$WEBLocation/config.js" || 
-      ! grep -q '"Spa"' "$WEBLocation/config.js" || 
-      ! grep -q '"Chiller"' "$WEBLocation/config.js" ||
-      ! grep -q '"Aux_S1"' "$WEBLocation/config.js"; then
-    dateext=`date +%Y%m%d_%H_%M_%S`
-    log "AqualinkD web config is old, making copy to $WEBLocation/config.js.$dateext"
-    log "Please make changes to new version $WEBLocation/config.js"
-    mv $WEBLocation/config.js $WEBLocation/config.js.$dateext
-  fi
-fi
+  #if  ! grep -q '"Aux_V1"' "$WEBLocation/config.js" || 
+  #    ! grep -q '"Spa"' "$WEBLocation/config.js" || 
+  #    ! grep -q '"Chiller"' "$WEBLocation/config.js" ||
+  #    ! grep -q '"Aux_S1"' "$WEBLocation/config.js"; then
+  #  dateext=`date +%Y%m%d_%H_%M_%S`
+  #  log "AqualinkD web config is old, making copy to $WEBLocation/config.js.$dateext"
+  #  log "Please make changes to new version $WEBLocation/config.js"
+  #  mv $WEBLocation/config.js $WEBLocation/config.js.$dateext
+  #fi
+#fi
 
 
 
@@ -268,14 +272,14 @@ if [ ! -d "$WEBLocation" ]; then
   mkdir -p $WEBLocation
 fi
 
-if [ -f "$WEBLocation/config.js" ]; then
-  log "AqualinkD web config exists, did not copy new config, you may need to edit existing $WEBLocation/config.js "
+if [ -f "$WEBLocation/config.json" ]; then
+  log "AqualinkD web config exists, did not copy new config, you may need to edit existing $WEBLocation/config.json "
   if command -v "rsync" &>/dev/null; then
-    rsync -avq --exclude='config.js' $BUILD/../web/* $WEBLocation
+    rsync -avq --exclude='config.json' $BUILD/../web/* $WEBLocation
   else
     # This isn;t the right way to do it, but seems to work.
     shopt -s extglob
-    `cp -r "$BUILD/../web/"!(*config.js) "$WEBLocation"`
+    `cp -r "$BUILD/../web/"!(*config.json) "$WEBLocation"`
     shopt -u extglob
     # Below should work, but doesn't.
     #shopt -s extglob

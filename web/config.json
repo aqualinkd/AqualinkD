@@ -1,0 +1,302 @@
+{
+  "background_image": {
+    "url": "-hk/background.jpg",
+    "url_reload": 0
+  },
+  "colors": {
+    "body_background": "#EBEBEB",
+    "body_text": "#000000",
+    "options_pane_background": "#F5F5F5",
+    "options_pane_bordercolor": "#7C7C7C",
+    "options_slider_highlight": "#2196F3",
+    "options_slider_lowlight": "#D3D3D3",
+    "head_background": "#2B6A8F",
+    "head_text": "#FFFFFF",
+    "error_background": "#8F2B2B",
+    "tile_background": "#DCDCDC",
+    "tile_text": "#6E6E6E",
+    "tile_on_background": "#FFFFFF",
+    "tile_on_text": "#000000",
+    "tile_status_text": "#575757",
+    "value_tile_normal_color": "#049FF8",
+    "value_tile_normal_color_": "#4ec400ff",
+    "value_tile_attention_color": "#FF8000",
+    "value_tile_outofrange_color": "#FF6400",
+    "options_radio_highlight": "#2196F3",
+    "options_radio_lowlight": "#D3D3D3",
+    "tile_icon_background_color_heat": "rgb(255, 123, 0)",
+    "tile_icon_background_color_cool": "rgb(4, 159, 248)",
+    "tile_icon_background_color_enabled": "rgb(78, 196, 0)",
+    "tile_icon_background_color_disabled": "rgb(110, 110, 110)"
+  },
+  "devices": {
+    "Filter_Pump": {
+      "display": "true"
+    },
+    "Spa": {
+      "display": "true"
+    },
+    "Aux_1": {
+      "display": "true"
+    },
+    "Aux_2": {
+      "display": "true"
+    },
+    "Aux_3": {
+      "display": "true"
+    },
+    "Aux_4": {
+      "display": "true"
+    },
+    "Aux_5": {
+      "display": "true"
+    },
+    "Aux_6": {
+      "display": "true"
+    },
+    "Aux_7": {
+      "display": "true"
+    },
+    "Aux_B1": {
+      "display": "true"
+    },
+    "Aux_B2": {
+      "display": "true"
+    },
+    "Aux_B3": {
+      "display": "true"
+    },
+    "Aux_B4": {
+      "display": "true"
+    },
+    "Aux_B5": {
+      "display": "true"
+    },
+    "Aux_B6": {
+      "display": "true"
+    },
+    "Aux_B7": {
+      "display": "true"
+    },
+    "Aux_B8": {
+      "display": "true"
+    },
+    "Pool_Heater": {
+      "display": "true"
+    },
+    "Spa_Heater": {
+      "display": "true"
+    },
+    "SWG": {
+      "display": "true"
+    },
+    "SWG/PPM": {
+      "display": "true"
+    },
+    "SWG/Percent": {
+      "display": "false"
+    },
+    "SWG/Boost": {
+      "display": "false"
+    },
+    "Temperature/Air": {
+      "display": "true"
+    },
+    "Temperature/Pool": {
+      "display": "true"
+    },
+    "Temperature/Spa": {
+      "display": "true"
+    },
+    "Pool_Water": {
+      "display": "true"
+    },
+    "Spa_Water": {
+      "display": "true"
+    },
+    "Freeze_Protect": {
+      "display": "true"
+    },
+    "CHEM/pH": {
+      "display": "true"
+    },
+    "CHEM/ORP": {
+      "display": "true"
+    },
+    "Solar_Heater": {
+      "display": "true"
+    },
+    "Extra_Aux": {
+      "display": "true"
+    },
+    "Chiller": {
+      "display": "true"
+    },
+    "Aux_V1": {
+      "display": "true"
+    },
+    "Aux_V2": {
+      "display": "true"
+    },
+    "Aux_V3": {
+      "display": "true"
+    },
+    "Aux_V4": {
+      "display": "true"
+    },
+    "Aux_V5": {
+      "display": "true"
+    },
+    "Aux_V6": {
+      "display": "true"
+    },
+    "Aux_V7": {
+      "display": "true"
+    },
+    "Aux_V8": {
+      "display": "true"
+    },
+    "Aux_V9": {
+      "display": "true"
+    },
+    "Aux_V10": {
+      "display": "true"
+    },
+    "Aux_V11": {
+      "display": "true"
+    },
+    "Aux_V12": {
+      "display": "true"
+    },
+    "Aux_V13": {
+      "display": "true"
+    },
+    "Aux_V14": {
+      "display": "true"
+    },
+    "Aux_V15": {
+      "display": "true"
+    },
+    "Sensor/Aux_S1": {
+      "display": "true"
+    },
+    "Sensor/Aux_S2": {
+      "display": "true"
+    },
+    "Sensor/Aux_S3": {
+      "display": "true"
+    },
+    "Sensor/Aux_S4": {
+      "display": "true"
+    },
+    "Sensor/Aux_S5": {
+      "display": "true"
+    },
+    "Sensor/Aux_S6": {
+      "display": "true"
+    },
+    "Sensor/Aux_S7": {
+      "display": "true"
+    },
+    "Sensor/Aux_S8": {
+      "display": "true"
+    },
+    "Sensor/Aux_S9": {
+      "display": "true"
+    },
+    "Sensor/Aux_S10": {
+      "display": "true"
+    }
+  },
+  "slider_range": {
+    "heater_slider_min": 36,
+    "heater_slider_max": 104,
+    "timer_slider_min": 0,
+    "timer_slider_max": 120,
+    "timer_slider_step": 1
+  },
+  "tile_thresholds": {
+    "SWG/PPM": {
+      "outofrange": {
+        "min": 2600,
+        "max": 3500,
+        "mintext": "Add Salt"
+      },
+      "attention": {
+        "min": 2700,
+        "max": 3400,
+        "mintext": "Add Salt"
+      }
+    },
+    "CHEM/pH": {
+      "outofrange": {
+        "min": 7,
+        "max": 8
+      },
+      "attention": {
+        "min": 7.2,
+        "max": 7.8,
+        "mintext": "Low",
+        "maxtext": "High"
+      }
+    },
+    "CHEM/ORP": {
+      "outofrange": {
+        "min": 560,
+        "max": 900
+      },
+      "attention": {
+        "min": 650,
+        "max": 850,
+        "mintext": "Low",
+        "maxtext": "High"
+      }
+    }
+  },
+  "swg_status": {
+    "0": "On",
+    "1": "No flow",
+    "2": "Low salt",
+    "4": "High salt",
+    "8": "Clean cell",
+    "9": "Turning off",
+    "16": "High current",
+    "32": "Low volts",
+    "64": "Low temp",
+    "128": "Check PCB",
+    "253": "General Fault",
+    "254": "Unknown",
+    "255": "Off"
+  },
+  "tile_settings": {
+    "turn_off_sensortiles": "true",
+    "show_vsp_gpm": "true",
+    "disable_off_icon_background": "true"
+  },
+  "EXAMPLE_colors_dark": {
+    "body_background": "#121212",
+    "body_text": "#FFFFFF",
+    "options_pane_background": "#1E1E1E",
+    "options_pane_bordercolor": "#555555",
+    "options_slider_highlight": "#64B5F6",
+    "options_slider_lowlight": "#555555",
+    "head_background": "#004d7a",
+    "head_text": "#FFFFFF",
+    "error_background": "#b00020",
+    "tile_background": "#333333",
+    "tile_text": "#AAAAAA",
+    "tile_on_background": "#BBBBBB",
+    "tile_on_text": "#000000",
+    "tile_status_text": "#888888",
+    "value_tile_normal_color": "#049FF8",
+    "value_tile_normal_color_": "#69F0AE",
+    "value_tile_attention_color": "#FFB74D",
+    "value_tile_outofrange_color": "#FF8A65",
+    "options_radio_highlight": "#64B5F6",
+    "options_radio_lowlight": "#555555",
+    "tile_icon_background_color_heat": "rgb(255, 123, 0)",
+    "tile_icon_background_color_cool": "rgb(4, 159, 248)",
+    "tile_icon_background_color_enabled": "rgb(78, 196, 0)",
+    "tile_icon_background_color_disabled": "rgb(110, 110, 110)"
+  }
+}
