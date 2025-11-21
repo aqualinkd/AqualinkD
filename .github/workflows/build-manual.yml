@@ -31,16 +31,9 @@ jobs:
     # 1. Checkout the source code (this runs INSIDE the container and populates /github/workspace)
     - uses: actions/checkout@v4
       with:
-        # CRITICAL FIX: Use the ternary operator (? :) for clearer prioritization.
-        # IF (manual run AND simulation checked AND tag input is NOT empty)
-        # THEN use the tag input value (e.g., v2.6.11)
-        # ELSE use the default reference (github.ref, which is master/main for a manual run)
-        ref: >- 
-          ${{ (github.event_name == 'workflow_dispatch' 
-                && fromJSON(github.event.inputs.simulate_tag_release) 
-                && github.event.inputs.tag_name_to_use != '') 
-              ? github.event.inputs.tag_name_to_use 
-              : github.ref }}
+        # CORRECTED: Reverting to the supported short-circuit logic: (Condition && TrueValue) || FalseValue
+        # This checks out the input tag if the simulation condition is fully met, otherwise it uses github.ref.
+        ref: ${{ (github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.simulate_tag_release) && github.event.inputs.tag_name_to_use != '') && github.event.inputs.tag_name_to_use || github.ref }}
     
     # --- NEW STEP: Display Checked-Out Version/Tag ---
     - name: Display Checked-Out Version
