@@ -4,7 +4,17 @@ on:
     branches: [ main ]
     tags:
       - 'v*.*.*'
-  workflow_dispatch: # Allow manual run
+    workflow_dispatch: # Allow manual run
+    inputs:
+      simulate_tag_release:
+        description: 'Simulate a formal tag release (e.g., v2.11) to create a final, published release.'
+        type: boolean
+        required: true
+        default: false
+      tag_name_to_use:
+        description: 'If simulating a tag release, provide the tag name (e.g., v2.11). Required if simulating.'
+        type: string
+        required: false
 
 jobs:
   build_and_deploy:
