@@ -17,12 +17,11 @@ jobs:
     # CONSOLIDATED STEP FOR DUAL-ARCH BUILD (ARM64 & ARMHF)
     - name: Compile AqualinkD for ARM64 and ARMHF inside Debian Container
       # Using the official x86 Debian image
-      uses: docker://debian:bullseye
+      uses: docker://debian:bookworm
       with:
         entrypoint: /bin/bash
         # Using the standard multi-arch Debian image. Adding arm64 and armhf toolchain 
         args: |
-          bash -l -c "
           dpkg --add-architecture armhf
           dpkg --add-architecture arm64
 
@@ -32,7 +31,7 @@ jobs:
           echo '--- Building AqualinkD (ARM64 & ARMHF) ---'
           make clean
           make buildrelease
-          "
+          
 
     - name: Create release archive
       # This step correctly archives both resulting binaries from the workspace
