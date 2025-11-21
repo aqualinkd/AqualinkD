@@ -60,13 +60,9 @@ jobs:
       # This step correctly archives both resulting binaries from the workspace
       run: tar -czvf aqualinkd-build.tar.gz web/ release/
 
-    # --- Step 1: Create/Update the Draft Development Release ---
+    # --- Create/Update the Draft Development Release ---
     - name: Create or Update GitHub Draft Release
-      if: |
-        ${{ 
-          github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') 
-          || github.event_name == 'workflow_dispatch' 
-        }}
+      if: ${{ (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) || github.event_name == 'workflow_dispatch' }}
       uses: softprops/action-gh-release@v2 
       with:
         files: aqualinkd-build.tar.gz
@@ -76,7 +72,7 @@ jobs:
         draft: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    # --- Step 2: Create the Formal Versioned Release ---
+    # --- Create the Formal Versioned Release ---
     - name: Create Final GitHub Release
       if: ${{ startsWith(github.ref, 'refs/tags/') }}
       uses: softprops/action-gh-release@v2 
