@@ -8,34 +8,58 @@ on:
 
 jobs:
   build_and_deploy:
-    # Using standard x86-64 runner for cross-compilation
-    runs-on: ubuntu-latest
-    
+    # Use the standard runner, the container handles the x86-64 to cross-compile setup
+    runs-on: ubuntu-latest 
+
+    # --- JOB-LEVEL CONTAINER DEFINITION ---
+    # This runs the entire job inside the Debian environment, making all 'run' steps clean.
+    container:
+      image: debian:bullseye 
+      
     steps:
+    # 1. Checkout the source code (this runs INSIDE the container and populates /github/workspace)
     - uses: actions/checkout@v4
     
-    # CONSOLIDATED STEP FOR DUAL-ARCH BUILD (ARM64 & ARMHF)
-    - name: Compile AqualinkD for ARM64 and ARMHF inside Debian Container
-      # Using the official x86 Debian image
-      uses: docker://debian:bookworm
-      with:
-        entrypoint: /bin/bash
-        # Using the standard multi-arch Debian image. Adding arm64 and armhf toolchain 
-        run: |
-          dpkg --add-architecture armhf
-          dpkg --add-architecture arm64
+    # 2. Optimized Cross-Compile step
+    - name: Setup build environment for ARM64 and ARMHF
+      # Using a standard 'run' block as we are already inside the container
+      run: |
+        # Enable cross-architectures
+        dpkg --add-architecture armhf && dpkg --add-architecture arm64 && \
+        
+        # Update and Install ALL dependencies (APT requires update after add-architecture)
+        apt-get update -y && \
+        apt-get install -y build-essential crossbuild-essential-armhf crossbuild-essential-arm64 libsystemd-dev libsystemd-dev:arm64 libsystemd-dev:armhf
 
-          apt-get update -y
-          apt-get install -y build-essential crossbuild-essential-armhf crossbuild-essential-arm64 libsystemd-dev libsystemd-dev:arm64 libsystemd-dev:armhf
-          
-          echo '--- Building AqualinkD (ARM64 & ARMHF) ---'
-          make clean
-          make buildrelease
-          
+        SYSR_ROOT=/glibc224_sysroot
+        mkdir -p $SYSR_ROOT
+
+        # --- ARMHF (32-bit) Setup ---
+        echo "Setting up ARMHF sysroot..."
+        # Download and extract the development and runtime packages
+        wget ${STRETCH_MIRROR}libc6-dev_2.24-11+deb9u4_armhf.deb -O /tmp/libc6-dev-armhf.deb
+        wget ${STRETCH_MIRROR}libc6_2.24-11+deb9u4_armhf.deb -O /tmp/libc6-armhf.deb
+        # Extract files into the cross-compiler's default path for its sysroot
+        dpkg-deb -x /tmp/libc6-dev-armhf.deb $SYSR_ROOT/arm-linux-gnueabihf
+        dpkg-deb -x /tmp/libc6-armhf.deb $SYSR_ROOT/arm-linux-gnueabihf
+
+        # 2.4. Cleanup downloads and set environment variables
+        rm /tmp/libc6-*.deb
+        
+        # These variables are CRITICAL for the next step:
+        echo "GLIBC_SYSR_ARMHF=$SYSR_ROOT/arm-linux-gnueabihf" >> $GITHUB_ENV
+        
+    - name: Compile AqualinkD
+      # Using a standard 'run' block as we are already inside the container
+      run: |
+        make clean && \
+        make SYSR_ARMHF=${{ env.GLIBC_SYSR_ARMHF }} buildrelease
+
+    # The remaining steps automatically run inside the container as well
 
     - name: Create release archive
       # This step correctly archives both resulting binaries from the workspace
-      run: tar -czvf aqualinkd-build.tar.gz web/ release/aqualinkd_arm64 release/aqualinkd_armhf
+      run: tar -czvf aqualinkd-build.tar.gz web/ release/
 
     # --- Step 1: Create/Update the Draft Development Release ---
     - name: Create or Update GitHub Draft Release
