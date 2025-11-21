@@ -9,7 +9,7 @@ on:
 jobs:
   build_and_deploy:
     # Using standard x86-64 runner for cross-compilation
-    runs-on: ubuntu-22.04 
+    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v4
