@@ -20,15 +20,19 @@ jobs:
       uses: docker://arm64v8/debian:bullseye 
       with:
         entrypoint: /bin/bash
-        args: -c "
-          cd /github/workspace && 
-          dpkg --add-architecture armhf && 
-          apt-get update -y && 
-          apt-get install -y build-essential crossbuild-essential-armhf libsystemd-dev libsystemd-dev:armhf && 
-          echo '--- Starting Unified Dual-Arch Build (ARM64 & ARMHF) ---' &&
-          make clean && 
+        # FIX: Using the literal block scalar (|) is the most robust way
+        # to handle multi-line script arguments in GitHub Actions YAML.
+        args: |
+          cd /github/workspace
+          
+          dpkg --add-architecture armhf
+          
+          apt-get update -y
+          apt-get install -y build-essential crossbuild-essential-armhf libsystemd-dev libsystemd-dev:armhf
+          
+          echo '--- Building AqualinkD (ARM64 & ARMHF) ---'
+          make clean
           make buildrelease
-        "
 
     - name: Create release archive
       # This step correctly archives both resulting binaries from the workspace
