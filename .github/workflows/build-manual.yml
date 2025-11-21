@@ -31,9 +31,10 @@ jobs:
     # 1. Checkout the source code (this runs INSIDE the container and populates /github/workspace)
     - uses: actions/checkout@v4
       with:
-        # CORRECTED: Reverting to the supported short-circuit logic: (Condition && TrueValue) || FalseValue
-        # This checks out the input tag if the simulation condition is fully met, otherwise it uses github.ref.
-        ref: ${{ (github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.simulate_tag_release) && github.event.inputs.tag_name_to_use != '') && github.event.inputs.tag_name_to_use || github.ref }}
+        # FINAL ATTEMPT AT RELIABLE SHORT-CIRCUITING: 
+        # Only prioritize the tag input if the simulation flag is true.
+        # This is the cleanest and most common working pattern for this override.
+        ref: ${{ (fromJSON(github.event.inputs.simulate_tag_release) && github.event.inputs.tag_name_to_use) || github.ref }}
     
     # --- NEW STEP: Display Checked-Out Version/Tag ---
     - name: Display Checked-Out Version
