@@ -17,7 +17,7 @@ jobs:
     # CONSOLIDATED STEP FOR DUAL-ARCH BUILD (ARM64 & ARMHF)
     - name: Compile AqualinkD for ARM64 and ARMHF inside Debian Container
       # Using the official 64-bit ARM Debian image
-      uses: docker://arm64/debian:bullseye 
+      uses: docker://arm64v8/debian:bullseye 
       with:
         entrypoint: /bin/bash
         # FIX: Using the literal block scalar (|) is the most robust way
@@ -26,9 +26,10 @@ jobs:
           cd /github/workspace
           
           dpkg --add-architecture armhf
-          
+          dpkg --add-architecture arm64
+
           apt-get update -y
-          apt-get install -y build-essential crossbuild-essential-armhf libsystemd-dev libsystemd-dev:armhf
+          apt-get install -y build-essential crossbuild-essential-armhf crossbuild-essential-arm64 libsystemd-dev libsystemd-dev:arm64 libsystemd-dev:armhf
           
           echo '--- Building AqualinkD (ARM64 & ARMHF) ---'
           make clean
