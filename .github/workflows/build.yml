@@ -25,20 +25,31 @@ jobs:
       # Using a standard 'run' block as we are already inside the container
       run: |
         # Enable cross-architectures
-        dpkg --add-architecture armhf && dpkg --add-architecture arm64 && \
+        dpkg --add-architecture armhf 
+        dpkg --add-architecture arm64
         
         # Update and Install ALL dependencies (APT requires update after add-architecture)
-        apt-get update -y && \
-        apt-get install -y build-essential crossbuild-essential-armhf crossbuild-essential-arm64 libsystemd-dev libsystemd-dev:arm64 libsystemd-dev:armhf
+        apt-get update -y
+        apt-get install -y \
+          build-essential \
+          crossbuild-essential-armhf \
+          crossbuild-essential-arm64 \
+          libsystemd-dev \
+          libsystemd-dev:arm64 \
+          libsystemd-dev:armhf \
+          wget \
+          dpkg-dev
 
         SYSR_ROOT=/glibc224_sysroot
         mkdir -p $SYSR_ROOT
 
         # --- ARMHF (32-bit) Setup ---
         echo "Setting up ARMHF sysroot..."
+
         # Download and extract the development and runtime packages
         wget ${STRETCH_MIRROR}libc6-dev_2.24-11+deb9u4_armhf.deb -O /tmp/libc6-dev-armhf.deb
         wget ${STRETCH_MIRROR}libc6_2.24-11+deb9u4_armhf.deb -O /tmp/libc6-armhf.deb
+        
         # Extract files into the cross-compiler's default path for its sysroot
         dpkg-deb -x /tmp/libc6-dev-armhf.deb $SYSR_ROOT/arm-linux-gnueabihf
         dpkg-deb -x /tmp/libc6-armhf.deb $SYSR_ROOT/arm-linux-gnueabihf
