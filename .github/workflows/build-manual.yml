@@ -1,10 +1,20 @@
-name: AqualinkD build Workflow
+name: AqualinkD build Workflow (manual)
 on:
-  push:
-    branches: [ main ]
-    tags:
-      - 'v*.*.*'
+  #push:
+  #  branches: [ main ]
+  #  tags:
+  #    - 'v*.*.*'
   workflow_dispatch: # Allow manual run
+    inputs:
+      simulate_tag_release:
+        description: 'Simulate a formal tag release (e.g., v2.11) to create a final, published release.'
+        type: boolean
+        required: true
+        default: false
+      tag_name_to_use:
+        description: 'If simulating a tag release, provide the tag name (e.g., v2.11). Required if simulating.'
+        type: string
+        required: false
 
 jobs:
   build_and_deploy:
@@ -17,10 +27,10 @@ jobs:
       image: debian:bullseye 
       
     steps:
-    # Checkout the source code (this runs INSIDE the container and populates /github/workspace)
+    # 1. Checkout the source code (this runs INSIDE the container and populates /github/workspace)
     - uses: actions/checkout@v4
       with:
-        # Use the input tag name if we are manually simulating a formal release.
+        # CRITICAL FIX: Use the input tag name if we are manually simulating a formal release.
         # Otherwise, fall back to the default reference (github.ref), which handles 'push' and 'tag' events correctly.
         ref: >- 
           ${{ github.event_name == 'workflow_dispatch' 
@@ -28,7 +38,7 @@ jobs:
               && github.event.inputs.tag_name_to_use 
               || github.ref }}
     
-    # Display what we are going to compile
+    # --- NEW STEP: Display Checked-Out Version/Tag ---
     - name: Display Checked-Out Version
       run: |
         echo "--- Workflow Context ---"
@@ -37,7 +47,7 @@ jobs:
         # github.ref is the full Git reference (e.g., 'refs/heads/main' or 'refs/tags/v2.11')
         echo "Full GitHub Reference: ${{ github.ref }}"
         echo "--- Starting Build ---"
-
+    
     # 2. Optimized Cross-Compile step
     - name: Setup build environment for ARM64 and ARMHF
       # Using a standard 'run' block as we are already inside the container
@@ -69,11 +79,12 @@ jobs:
       run: tar -czvf aqualinkd-build.tar.gz web/ release/
 
     # --- Step 1: Create/Update the Draft Development Release ---
+    # Condition Logic: Run if it's a 'push' on 'main' AND NOT a tag, OR if it's a manual run AND NOT simulating a tag.
     - name: Create or Update GitHub Draft Release
       if: |
         ${{ 
-          github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') 
-          || github.event_name == 'workflow_dispatch' 
+          (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) 
+          || (github.event_name == 'workflow_dispatch' && !fromJSON(github.event.inputs.simulate_tag_release))
         }}
       uses: softprops/action-gh-release@v2 
       with:
@@ -85,14 +96,24 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     # --- Step 2: Create the Formal Versioned Release ---
+    # Condition Logic: Run if it's a tag push, OR if it's a manual run AND IS simulating a tag 
+    # AND the required tag name input is NOT empty.
     - name: Create Final GitHub Release
-      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      if: |
+        ${{ 
+          startsWith(github.ref, 'refs/tags/') 
+          || (github.event_name == 'workflow_dispatch' 
+              && fromJSON(github.event.inputs.simulate_tag_release)
+              && github.event.inputs.tag_name_to_use != '' # <- NEW CHECK: Skip if simulation is on but tag name is empty
+          )
+        }}
       uses: softprops/action-gh-release@v2 
       with:
         files: aqualinkd-build.tar.gz
         overwrite: true
-        tag_name: ${{ github.ref_name }}
-        name: AqualinkD Release ${{ github.ref_name }}
+        # This will now safely use the provided input or the actual tag name
+        tag_name: ${{ github.event.inputs.tag_name_to_use || github.ref_name }}
+        name: AqualinkD Release ${{ github.event.inputs.tag_name_to_use || github.ref_name }}
         draft: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
