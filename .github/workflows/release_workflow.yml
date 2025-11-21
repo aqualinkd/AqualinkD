@@ -1,0 +1,30 @@
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
+
+  - name: Create specific artifact and tar.gz it
+    run: |
+      echo "Creating staging directory..."
+      mkdir staging_area
+      mkdir staging_area/release
+      mkdir staging_area/web
+      cp -r release/* staging_area/release/
+      cp -r web/* staging_area/web/
+      
+      echo "Creating release.tar..."
+      tar -czvf release.tar.gz staging_area
+
+  - name: Create GitHub Release and Upload Artifact
+    uses: softprops/action-gh-release@v2
+    with:
+      # Get the tag name that triggered the push
+      tag_name: ${{ github.ref }}
+      # Use the tag name for the release name
+      name: Release ${{ github.ref }}
+      # Set this to true if you want to review the release before publishing
+      draft: false
+      # Upload the generated release.tar.gz file
+      files: release.tar.gz
+    env:
+      # The GITHUB_TOKEN is automatically provided by GitHub Actions
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

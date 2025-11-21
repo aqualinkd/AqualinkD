@@ -32,7 +32,7 @@
 // Add your HA API token
 var HA_TOKEN = '<YOUR LONG HA TOKEN HERE>';
 // Change to your HA server IP
-var HA_SERVER = 'http://192.168.1.255:8123';
+var HA_SERVER = 'http://192.168.1.255:8123';  
 
 
 setupTiles();
