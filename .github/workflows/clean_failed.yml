@@ -1,20 +1,35 @@
 name: Cleanup Failed Workflow Runs
 on:
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch: # Allows manual trigger (Delete ALL failed)
   schedule:
-    # Runs every day at 00:00 UTC
+    # Runs every day at 00:00 UTC (Delete failed older than 30 days)
     - cron: '0 0 * * *' 
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-    - name: Delete old, failed workflow runs
+    
+    # ----------------------------------------------------
+    # Step 1: Manual Run (workflow_dispatch) - Delete ALL failed runs
+    # ----------------------------------------------------
+    - name: MANUAL TRIGGER - Delete ALL Failed Runs (Regardless of age)
+      if: ${{ github.event_name == 'workflow_dispatch' }}
       uses: 'actions/delete-workflow-runs@v5'
       with:
-        # The token is automatically provided by GitHub Actions
         token: ${{ secrets.GITHUB_TOKEN }} 
-        # Only delete runs with the 'failure' status
+        # Target only failed runs
         what-to-delete: 'failure'
-        # Delete runs older than 30 days (default is usually 90)
+        # By omitting 'older-than', it deletes ALL runs matching the status.
+
+    # ----------------------------------------------------
+    # Step 2: Scheduled Run (schedule) - Delete ONLY older failed runs
+    # ----------------------------------------------------
+    - name: SCHEDULED TRIGGER - Delete Failed Runs Older Than 30 Days
+      if: ${{ github.event_name == 'schedule' }}
+      uses: 'actions/delete-workflow-runs@v5'
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }} 
+        what-to-delete: 'failure'
+        # Keeps the 30-day limit for automated runs
         older-than: '30 days'
