@@ -1,4 +1,4 @@
-name: AqualinkD build Workflow
+name: AqualinkD build Workflow (Manual)
 on:
   # The push triggers are currently commented out to focus on manual runs
   #push:
