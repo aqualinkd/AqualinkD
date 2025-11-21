@@ -4,7 +4,7 @@ on:
     branches: [ main ]
     tags:
       - 'v*.*.*'
-    workflow_dispatch: # Allow manual run
+  workflow_dispatch: # Allow manual run
     inputs:
       simulate_tag_release:
         description: 'Simulate a formal tag release (e.g., v2.11) to create a final, published release.'
