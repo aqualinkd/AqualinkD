@@ -6,6 +6,7 @@ on:
   #    - 'v*.*.*'
   workflow_dispatch: # Allow manual run
 
+jobs:
   steps:
   - name: Checkout repository
     uses: actions/checkout@v4
