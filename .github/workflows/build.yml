@@ -17,17 +17,19 @@ jobs:
     
     - name: Install build tools and compile
       run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential crossbuild-essential-armhf libsystemd-dev:arm64
         sudo dpkg --add-architecture armhf
         sudo apt-get update
-        sudo apt install libsystemd-dev:armhf
+        sudo apt-get install -y build-essential crossbuild-essential-armhf libsystemd-dev:arm64 libsystemd-dev:armhf
         make buildrelease 
     - name: Create release archive
       run: tar -czvf aqualinkd-build.tar.gz web/ release/
-    # --- Step 1: Create/Update the Draft Development Release (Runs ONLY on main branch push) ---
+    # --- Step 1: Create/Update the Draft Development Release (Runs ONLY on main branch push, or manual run) ---
     - name: Create or Update GitHub Draft Release
-      if: ${{ github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') }}
+      if: |
+        ${{ 
+          github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') 
+          || github.event_name == 'workflow_dispatch' 
+        }}
       uses: softprops/action-gh-release@v2 
       with:
         files: aqualinkd-build.tar.gz
