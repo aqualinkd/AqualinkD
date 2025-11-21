@@ -11,17 +11,9 @@ jobs:
   - name: Checkout repository
     uses: actions/checkout@v4
 
-  - name: Create specific artifact and tar.gz it
-    run: |
-      echo "Creating staging directory..."
-      mkdir staging_area
-      mkdir staging_area/release
-      mkdir staging_area/web
-      cp -r release/* staging_area/release/
-      cp -r web/* staging_area/web/
-      
-      echo "Creating release.tar..."
-      tar -czvf release.tar.gz staging_area
+  - name: Create release archive
+    # This step correctly archives both resulting binaries from the workspace
+    run: tar -czvf aqualinkd-build.tar.gz web/ release/
 
   - name: Create GitHub Release and Upload Artifact
     uses: softprops/action-gh-release@v2
