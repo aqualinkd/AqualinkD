@@ -19,14 +19,6 @@ jobs:
     steps:
     # Checkout the source code (this runs INSIDE the container and populates /github/workspace)
     - uses: actions/checkout@v4
-      with:
-        # Use the input tag name if we are manually simulating a formal release.
-        # Otherwise, fall back to the default reference (github.ref), which handles 'push' and 'tag' events correctly.
-        ref: >- 
-          ${{ github.event_name == 'workflow_dispatch' 
-              && fromJSON(github.event.inputs.simulate_tag_release) 
-              && github.event.inputs.tag_name_to_use 
-              || github.ref }}
     
     # Display what we are going to compile
     - name: Display Checked-Out Version
