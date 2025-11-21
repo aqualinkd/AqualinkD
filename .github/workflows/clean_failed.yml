@@ -15,7 +15,7 @@ jobs:
     # ----------------------------------------------------
     - name: MANUAL TRIGGER - Delete ALL Failed Runs (Regardless of age)
       if: ${{ github.event_name == 'workflow_dispatch' }}
-      uses: 'actions/delete-workflow-runs@v5'
+      uses: 'Mattraks/delete-workflow-runs@v2'
       with:
         token: ${{ secrets.GITHUB_TOKEN }} 
         # Target only failed runs
@@ -27,7 +27,7 @@ jobs:
     # ----------------------------------------------------
     - name: SCHEDULED TRIGGER - Delete Failed Runs Older Than 30 Days
       if: ${{ github.event_name == 'schedule' }}
-      uses: 'actions/delete-workflow-runs@v5'
+      uses: 'Mattraks/delete-workflow-runs@v2'
       with:
         token: ${{ secrets.GITHUB_TOKEN }} 
         what-to-delete: 'failure'
