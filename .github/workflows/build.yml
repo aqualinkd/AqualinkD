@@ -27,10 +27,19 @@ jobs:
       image: debian:bullseye 
       
     steps:
-    # 1. Checkout the source code (this runs INSIDE the container and populates /github/workspace)
+    # Checkout the source code (this runs INSIDE the container and populates /github/workspace)
     - uses: actions/checkout@v4
     
-    # 2. Optimized Cross-Compile step
+    - name: Display Checked-Out Version
+      run: |
+        echo "--- Workflow Context ---"
+        # github.ref_name is the branch name or tag name (e.g., 'main' or 'v2.6.11')
+        echo "Checked out Reference Name (Branch/Tag): ${{ github.ref_name }}"
+        # github.ref is the full Git reference (e.g., 'refs/heads/main' or 'refs/tags/v2.6.11')
+        echo "Full GitHub Reference: ${{ github.ref }}"
+        echo "--- Starting Build ---"
+
+    # Cross-Compile step
     - name: Setup build environment for ARM64 and ARMHF
       # Using a standard 'run' block as we are already inside the container
       run: |
@@ -62,11 +71,10 @@ jobs:
 
     # --- Step 1: Create/Update the Draft Development Release ---
     - name: Create or Update GitHub Draft Release
-      if: |
-        ${{ 
-          github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') 
-          || github.event_name == 'workflow_dispatch' 
-        }}
+      if: ${{ 
+            (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) 
+            || (github.event_name == 'workflow_dispatch' && !fromJSON(github.event.inputs.simulate_tag_release))
+          }}
       uses: softprops/action-gh-release@v2 
       with:
         files: aqualinkd-build.tar.gz
@@ -78,7 +86,10 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     # --- Step 2: Create the Formal Versioned Release ---
     - name: Create Final GitHub Release
-      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      if: ${{ 
+            startsWith(github.ref, 'refs/tags/') 
+            || (github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.simulate_tag_release))
+          }}
       uses: softprops/action-gh-release@v2 
       with:
         files: aqualinkd-build.tar.gz
