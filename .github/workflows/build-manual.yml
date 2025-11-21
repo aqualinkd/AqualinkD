@@ -104,7 +104,7 @@ jobs:
           startsWith(github.ref, 'refs/tags/') 
           || (github.event_name == 'workflow_dispatch' 
               && fromJSON(github.event.inputs.simulate_tag_release)
-              && github.event.inputs.tag_name_to_use != '' # <- NEW CHECK: Skip if simulation is on but tag name is empty
+              && github.event.inputs.tag_name_to_use != ''
           )
         }}
       uses: softprops/action-gh-release@v2 
