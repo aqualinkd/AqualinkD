@@ -21,7 +21,7 @@ jobs:
     - uses: actions/checkout@v4
     
     # 2. Optimized Cross-Compile step
-    - name: Cross-Compile for ARM64 and ARMHF
+    - name: Setup build environment for ARM64 and ARMHF
       # Using a standard 'run' block as we are already inside the container
       run: |
         # Enable cross-architectures
@@ -31,16 +31,19 @@ jobs:
         apt-get update -y && \
         apt-get install -y build-essential crossbuild-essential-armhf crossbuild-essential-arm64 libsystemd-dev libsystemd-dev:arm64 libsystemd-dev:armhf && \
         
-        # Compile
-        echo '--- Starting Unified Dual-Arch Cross-Build (ARM64 & ARMHF) ---' && \
+    - name: Compile AqualinkD
+      # Using a standard 'run' block as we are already inside the container
+      run: |
         make clean && \
-        make buildrelease
+        make buildrelease && \
+        ls -alR && \
+        pwd
 
     # The remaining steps automatically run inside the container as well
 
     - name: Create release archive
       # This step correctly archives both resulting binaries from the workspace
-      run: tar -czvf aqualinkd-build.tar.gz web/ release/aqualinkd_arm64 release/aqualinkd_armhf
+      run: tar -czvf aqualinkd-build.tar.gz web/ release/
 
     # --- Step 1: Create/Update the Draft Development Release ---
     - name: Create or Update GitHub Draft Release
