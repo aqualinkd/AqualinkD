@@ -22,8 +22,6 @@ jobs:
         entrypoint: /bin/bash
         # Using the standard multi-arch Debian image. Adding arm64 and armhf toolchain 
         args: |
-          cd /github/workspace
-          
           dpkg --add-architecture armhf
           dpkg --add-architecture arm64
 
