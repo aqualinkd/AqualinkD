@@ -68,7 +68,7 @@ jobs:
       # Using a standard 'run' block as we are already inside the container
       run: |
         make clean && \
-        make SYSR_ARMHF=${{ env.GLIBC_SYSR_ARMHF }} buildrelease
+        make SYSR_ARMHF=${{ env.GLIBC_SYSR_ARMHF }} LDR_PATH_ARMHF="/usr/lib/arm-linux-gnueabihf" buildrelease
 
     # The remaining steps automatically run inside the container as well
 

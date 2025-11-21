@@ -17,9 +17,14 @@ AQ_MANAGER = true
 # The value is empty if not passed via the command line.
 SYSR_ARMHF ?=
 SYSR_ARM64 ?=
+LDR_PATH_ARMHF ?=
+LDR_PATH_ARM64 ?=
 # If SYSR_ARMHF is empty, the --sysroot flag will be empty, 
 SYSR_ARMHF_FLAG = $(if $(SYSR_ARMHF), --sysroot=$(SYSR_ARMHF),)
 SYSR_ARM64_FLAG = $(if $(SYSR_ARM64), --sysroot=$(SYSR_ARM64),)
+
+LDR_PATH_ARMHF_FLAG = $(if $(LDR_PATH_ARMHF), -L$(LDR_PATH_ARMHF),)
+LDR_PATH_ARM64_FLAG = $(if $(LDR_PATH_ARM64), -L$(LDR_PATH_ARM64),)
 
 #AQ_CONTAINER = false // this is for compiling for containers
 
@@ -340,10 +345,10 @@ $(MAIN_ARM64): $(OBJ_FILES_ARM64)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS) 
 
 $(MAIN_ARMHF): $(OBJ_FILES_ARMHF)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS) $(SYSR_ARMHF_FLAG)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS) $(SYSR_ARMHF_FLAG) $(LDR_PATH_ARMHF_FLAG)
 
 $(MAIN_AMD64): $(OBJ_FILES_AMD64)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS) $(SYSR_ARM64_FLAG)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS) $(SYSR_ARM64_FLAG) $(LDR_PATH_ARM64_FLAG)
 
 $(DEBG): $(DBG_OBJ_FILES)
 	$(CC) $(DBG_CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
