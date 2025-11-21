@@ -226,6 +226,12 @@ function get_all_versions {
   curl -fsSL "$REPO/releases" | awk 'match($0,/.*"tarball_url": "(.*\/tarball\/.*)".*/)' | awk -F '/' '{split($NF,a,"\""); print a[1]}'
 }
 
+function NEW_GET_RELEASE_BU_TAG {
+  #
+  # curl -fsSL https://api.github.com/repos/AqualinkD/AqualinkD/releases/tags/v2.6.11
+  # lok for browser_download_url and then tarball_url
+}
+
 function run_install_script {
   if [ ! -f "$TEMP_INSTALL/release/install.sh" ]; then
     logerr "Can not find install script $TEMP_INSTALL/release/install.sh"

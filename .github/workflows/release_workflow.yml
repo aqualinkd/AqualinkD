@@ -20,7 +20,7 @@ jobs:
 
     - name: Create release archive
       # This step correctly archives both resulting binaries from the workspace
-      run: tar -czvf aqualinkd-build.tar.gz web/ release/
+      run: tar -czvf aqualinkd-release.tar.gz web/ release/
       
     - name: Update GitHub Release and Upload Artifact
       uses: softprops/action-gh-release@v2
@@ -34,7 +34,7 @@ jobs:
         # Overwrite is necessary to attach assets to an existing release.
         overwrite: true 
         # The files parameter should match the file you created in the previous step.
-        files: aqualinkd-build.tar.gz
+        files: aqualinkd-release.tar.gz
       env:
         # The GITHUB_TOKEN is automatically provided by GitHub Actions
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
