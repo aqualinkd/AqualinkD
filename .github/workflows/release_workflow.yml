@@ -1,4 +1,12 @@
-steps:
+name: AqualinkD create release .tar.gz
+on:
+  #push:
+  #  branches: [ main ]
+  #  tags:
+  #    - 'v*.*.*'
+  workflow_dispatch: # Allow manual run
+
+  steps:
   - name: Checkout repository
     uses: actions/checkout@v4
 
