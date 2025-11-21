@@ -18,7 +18,8 @@ jobs:
     - name: Install build tools and compile
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential crossbuild-essential-armhf libsystemd-dev:arm64 libsystemd-dev:armhf
+        sudo dpkg --add-architecture armhf
+        sudo apt-get install -y build-essential crossbuild-essential-armhf libsystemd-dev libsystemd-dev:armhf
         make buildrelease 
     - name: Create release archive
       run: tar -czvf aqualinkd-build.tar.gz web/ release/
