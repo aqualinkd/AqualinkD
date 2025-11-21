@@ -17,3 +17,4 @@ jobs:
           echo "This is running inside the Debian Bookworm container on an x86 runner"
           # Check the architecture inside the container
           dpkg --print-architecture
+          ls -al
