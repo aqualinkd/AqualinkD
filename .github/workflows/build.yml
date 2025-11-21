@@ -21,19 +21,10 @@ jobs:
       with:
         entrypoint: /bin/bash
         args: -c "
-          # 1. Change to the workspace directory
           cd /github/workspace && 
-
-          # 2. Enable 32-bit (armhf) architecture
           dpkg --add-architecture armhf && 
-
-          # 3. Update and Install ALL build dependencies:
           apt-get update -y && 
           apt-get install -y build-essential crossbuild-essential-armhf libsystemd-dev libsystemd-dev:armhf && 
-
-          # --- 4. RUN SINGLE COMPILATION COMMAND ---
-          # Assuming 'make buildrelease' now handles the dual-architecture build
-          # and produces: release/aqualinkd_arm64 and release/aqualinkd_armhf
           echo '--- Starting Unified Dual-Arch Build (ARM64 & ARMHF) ---' &&
           make clean && 
           make buildrelease
