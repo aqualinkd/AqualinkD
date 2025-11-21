@@ -14,7 +14,12 @@ jobs:
     steps:
       - name: Run command in container
         run: |
-          echo "This is running inside the Debian Bookworm container on an x86 runner"
-          # Check the architecture inside the container
-          dpkg --print-architecture
-          ls -al
+          dpkg --add-architecture armhf
+          dpkg --add-architecture arm64
+
+          apt-get update -y
+          apt-get install -y build-essential crossbuild-essential-armhf crossbuild-essential-arm64 libsystemd-dev libsystemd-dev:arm64 libsystemd-dev:armhf
+          
+          echo '--- Building AqualinkD (ARM64 & ARMHF) ---'
+          make clean
+          make buildrelease
