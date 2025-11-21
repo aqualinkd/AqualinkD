@@ -34,6 +34,7 @@ _logfile=""
 _frommake=$FALSE
 _ignorearch=$FALSE
 _nosystemd=$FALSE
+_ignoreglibc=$TRUE
 
 log()
 {
@@ -163,14 +164,41 @@ if [ "$PARENT_COMMAND" != "make" ] && [ "$_frommake" -eq $FALSE ] && [ "$_ignore
     SOURCEBIN=$BIN$BINEXT
   elif [ -f $BUILD/$SOURCEBIN ]; then
     # Not good
-    log "Can't find correct aqualnkd binary for $ARCH, '$BUILD/$SOURCEBIN$BINEXT' using '$BUILD/$SOURCEBIN' ";
+    log "Can't find correct aqualinkd binary for $ARCH, '$BUILD/$SOURCEBIN$BINEXT' using '$BUILD/$SOURCEBIN' ";
   fi
 fi
 
 # Exit if we can't find binary
 if [ ! -f $BUILD/$SOURCEBIN ]; then
-  log "Can't find aqualnkd binary `$BUILD/$SOURCEBIN` ";
+  log "Can't find aqualinkd binary `$BUILD/$SOURCEBIN` ";
   exit 1
+fi
+
+## New for V3.0 check GLIBC version.
+if [ "$_ignoreglibc" -eq $FALSE ]; then 
+  # Check glib-c version.
+  REQUIRED_GLIBC_VERSION="2.31"
+  REQUIRED_GLIBC_MAJOR=2
+  REQUIRED_GLIBC_MINOR=31
+
+  CURRENT_GLIBC_VERSION_STRING=$(ldd --version 2>/dev/null | head -n 1 | awk '{print $NF}')
+
+  if [[ ! "$CURRENT_GLIBC_VERSION_STRING" =~ ^[0-9]+\.[0-9]+$ ]]; then
+    # Print the combined, simple error message as requested
+    log "Error: Cannot find or parse GLIBC version from system utilities." 
+    exit 1
+  fi
+
+  IFS='.' read -r CURRENT_GLIBC_MAJOR CURRENT_GLIBC_MINOR <<< "$CURRENT_GLIBC_VERSION_STRING"
+
+  if [ "$CURRENT_GLIBC_MAJOR" -lt "$REQUIRED_GLIBC_MAJOR" ] || \
+   ([ "$CURRENT_GLIBC_MAJOR" -eq "$REQUIRED_GLIBC_MAJOR" ] && [ "$CURRENT_GLIBC_MINOR" -lt "$REQUIRED_GLIBC_MINOR" ]); then
+    
+    # Version is too old (FAILURE)
+    echo "Error: GLIBC version is too old." 
+    echo "Required: ${REQUIRED_GLIBC_VERSION} or newer."
+    exit 1 
+  fi
 fi
 
 # Exit if we can't find systemctl

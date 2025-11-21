@@ -36,39 +36,13 @@ jobs:
           crossbuild-essential-arm64 \
           libsystemd-dev \
           libsystemd-dev:arm64 \
-          libsystemd-dev:armhf \
-          wget \
-          dpkg-dev
-
-        SYSR_ROOT=/glibc224_sysroot
-        mkdir -p $SYSR_ROOT
-
-        # --- ARMHF (32-bit) Setup ---
-        echo "Setting up ARMHF sysroot..."
-
-        # Download and extract GLib-C v2.24 libraries (from Debian Stretch)
-        # We manually pull the specific 2.24 packages to create the sysroot directories.
-        STRETCH_MIRROR="http://archive.debian.org/debian/pool/main/g/glibc/"
-
-        # Download and extract the development and runtime packages
-        wget ${STRETCH_MIRROR}libc6-dev_2.24-11+deb9u4_armhf.deb -O /tmp/libc6-dev-armhf.deb
-        wget ${STRETCH_MIRROR}libc6_2.24-11+deb9u4_armhf.deb -O /tmp/libc6-armhf.deb
-
-        # Extract files into the cross-compiler's default path for its sysroot
-        dpkg-deb -x /tmp/libc6-dev-armhf.deb $SYSR_ROOT/arm-linux-gnueabihf
-        dpkg-deb -x /tmp/libc6-armhf.deb $SYSR_ROOT/arm-linux-gnueabihf
-
-        # Cleanup downloads and set environment variables
-        rm /tmp/libc6-*.deb
-        
-        # These variables are CRITICAL for the next step:
-        echo "GLIBC_SYSR_ARMHF=$SYSR_ROOT/arm-linux-gnueabihf" >> $GITHUB_ENV
+          libsystemd-dev:armhf
         
     - name: Compile AqualinkD
       # Using a standard 'run' block as we are already inside the container
       run: |
         make clean && \
-        make SYSR_ARMHF=${{ env.GLIBC_SYSR_ARMHF }} LDR_PATH_ARMHF="/usr/lib/arm-linux-gnueabihf" buildrelease
+        make buildrelease
 
     # The remaining steps automatically run inside the container as well
 
