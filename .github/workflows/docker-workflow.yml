@@ -9,8 +9,13 @@ on:
 jobs:
   run-container:
     runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
     container:
       image: debian:bookworm # This will run the x86 (amd64) variant by default
+      
     steps:
       - name: Run command in container
         run: |
