@@ -1,4 +1,4 @@
-name: Test docker in runner
+name: TEST AqualinkD build Workflow
 on:
   push:
     branches: [ main ]
@@ -7,24 +7,66 @@ on:
   workflow_dispatch: # Allow manual run
 
 jobs:
-  run-container:
-    runs-on: ubuntu-latest
+  build_and_deploy:
+    # Use the standard runner, the container handles the x86-64 to cross-compile setup
+    runs-on: ubuntu-latest 
 
-    steps:
-      - uses: actions/checkout@v4
-
+    # --- JOB-LEVEL CONTAINER DEFINITION ---
+    # This runs the entire job inside the Debian environment, making all 'run' steps clean.
     container:
-      image: debian:bookworm # This will run the x86 (amd64) variant by default
+      image: debian:bullseye 
       
     steps:
-      - name: Run command in container
-        run: |
-          dpkg --add-architecture armhf
-          dpkg --add-architecture arm64
+    # 1. Checkout the source code (this runs INSIDE the container and populates /github/workspace)
+    - uses: actions/checkout@v4
+    
+    # 2. Optimized Cross-Compile step
+    - name: Cross-Compile for ARM64 and ARMHF
+      # Using a standard 'run' block as we are already inside the container
+      run: |
+        # Enable cross-architectures
+        dpkg --add-architecture armhf && dpkg --add-architecture arm64 && \
+        
+        # Update and Install ALL dependencies (APT requires update after add-architecture)
+        apt-get update -y && \
+        apt-get install -y build-essential crossbuild-essential-armhf crossbuild-essential-arm64 libsystemd-dev libsystemd-dev:arm64 libsystemd-dev:armhf && \
+        
+        # Compile
+        echo '--- Starting Unified Dual-Arch Cross-Build (ARM64 & ARMHF) ---' && \
+        make clean && \
+        make buildrelease
 
-          apt-get update -y
-          apt-get install -y build-essential crossbuild-essential-armhf crossbuild-essential-arm64 libsystemd-dev libsystemd-dev:arm64 libsystemd-dev:armhf
-          
-          echo '--- Building AqualinkD (ARM64 & ARMHF) ---'
-          make clean
-          make buildrelease
+    # The remaining steps automatically run inside the container as well
+
+    - name: Create release archive
+      # This step correctly archives both resulting binaries from the workspace
+      run: tar -czvf aqualinkd-build.tar.gz web/ release/aqualinkd_arm64 release/aqualinkd_armhf
+
+    # --- Step 1: Create/Update the Draft Development Release ---
+    - name: Create or Update GitHub Draft Release
+      if: |
+        ${{ 
+          github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') 
+          || github.event_name == 'workflow_dispatch' 
+        }}
+      uses: softprops/action-gh-release@v2 
+      with:
+        files: aqualinkd-build.tar.gz
+        overwrite: true
+        tag_name: development-latest 
+        name: Development Build (Latest Main/Manual)
+        draft: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # --- Step 2: Create the Formal Versioned Release ---
+    - name: Create Final GitHub Release
+      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      uses: softprops/action-gh-release@v2 
+      with:
+        files: aqualinkd-build.tar.gz
+        overwrite: true
+        tag_name: ${{ github.ref_name }}
+        name: AqualinkD Release ${{ github.ref_name }}
+        draft: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
