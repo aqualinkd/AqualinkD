@@ -7,19 +7,13 @@ on:
   workflow_dispatch: # Allow manual run
 
 jobs:
-  build_and_deploy:
-    # Using standard x86-64 runner for cross-compilation
-    runs-on: ubuntu-22.04 
-    
+  run-container:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm # This will run the x86 (amd64) variant by default
     steps:
-    - uses: actions/checkout@v4
-    
-    # CONSOLIDATED STEP FOR DUAL-ARCH BUILD (ARM64 & ARMHF)
-    - name: Compile AqualinkD for ARM64 and ARMHF inside Debian Container
-      # Using the official x86 Debian image
-      uses: docker://debian:bookworm
-      with:
-        entrypoint: /bin/bash
-        # Using the standard multi-arch Debian image. Adding arm64 and armhf toolchain 
-        args: |
-          ls -al && pwd
+      - name: Run command in container
+        run: |
+          echo "This is running inside the Debian Bookworm container on an x86 runner"
+          # Check the architecture inside the container
+          dpkg --print-architecture
