@@ -1,31 +1,40 @@
 name: AqualinkD create release .tar.gz
 on:
-  #push:
-  #  branches: [ main ]
-  #  tags:
-  #    - 'v*.*.*'
   workflow_dispatch: # Allow manual run
+    inputs: # ADDED INPUTS to request the specific tag
+      tag_name:
+        description: 'The existing tag/release name (e.g., v2.6.11) to pull code from and upload assets to.'
+        type: string
+        required: true
 
 jobs:
-  steps:
-  - name: Checkout repository
-    uses: actions/checkout@v4
+  create_release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout specific release tag
+      uses: actions/checkout@v4
+      with:
+        # Use the tag provided by the user input to pull the correct code
+        ref: ${{ github.event.inputs.tag_name }}
 
-  - name: Create release archive
-    # This step correctly archives both resulting binaries from the workspace
-    run: tar -czvf aqualinkd-build.tar.gz web/ release/
-
-  - name: Create GitHub Release and Upload Artifact
-    uses: softprops/action-gh-release@v2
-    with:
-      # Get the tag name that triggered the push
-      tag_name: ${{ github.ref }}
-      # Use the tag name for the release name
-      name: Release ${{ github.ref }}
-      # Set this to true if you want to review the release before publishing
-      draft: false
-      # Upload the generated release.tar.gz file
-      files: release.tar.gz
-    env:
-      # The GITHUB_TOKEN is automatically provided by GitHub Actions
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create release archive
+      # This step correctly archives both resulting binaries from the workspace
+      run: tar -czvf aqualinkd-build.tar.gz web/ release/
+      
+    - name: Update GitHub Release and Upload Artifact
+      uses: softprops/action-gh-release@v2
+      with:
+        # Use the tag input to find the existing release and attach the asset
+        tag_name: ${{ github.event.inputs.tag_name }} 
+        # Use the tag name for the release name
+        name: Update Release ${{ github.event.inputs.tag_name }}
+        # Set draft to false if the intention is to publish/update a final version.
+        draft: false
+        # Overwrite is necessary to attach assets to an existing release.
+        overwrite: true 
+        # The files parameter should match the file you created in the previous step.
+        files: aqualinkd-build.tar.gz
+      env:
+        # The GITHUB_TOKEN is automatically provided by GitHub Actions
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
