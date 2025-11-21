@@ -1,11 +1,13 @@
 
 
-name: Unified AqualinkD Release Workflow
+name: AqualinkD build Workflow
 on:
   push:
     branches: [ main ]
     tags:
       - 'v*.*.*'
+  workflow_dispatch: # Allow manual run
+  
 jobs:
   build_and_deploy:
     runs-on: ubuntu-22.04-arm 
