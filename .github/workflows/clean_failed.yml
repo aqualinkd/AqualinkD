@@ -1,0 +1,20 @@
+name: Cleanup Failed Workflow Runs
+on:
+  workflow_dispatch: # Allows manual trigger
+  schedule:
+    # Runs every day at 00:00 UTC
+    - cron: '0 0 * * *' 
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Delete old, failed workflow runs
+      uses: 'actions/delete-workflow-runs@v5'
+      with:
+        # The token is automatically provided by GitHub Actions
+        token: ${{ secrets.GITHUB_TOKEN }} 
+        # Only delete runs with the 'failure' status
+        what-to-delete: 'failure'
+        # Delete runs older than 30 days (default is usually 90)
+        older-than: '30 days'
