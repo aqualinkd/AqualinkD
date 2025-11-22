@@ -8,7 +8,7 @@
 # To get good / bad exit code from both curl and bash, use below. It will exit current term so be careful.
 # curl -fsSL "https://raw.githubusercontent.com/aqualinkd/AqualinkD/master/release/remote_install.sh" | ( sudo bash && exit 0 ) || exit $?
 
-REQUIRED_SPACE_MB=18 # Need 17MB, use 18
+REQUIRED_SPACE_MB=18 # Need 17MB, use 18 ( will get reset to 2MB if using new install)
 
 TRUE=0
 FALSE=1
@@ -27,9 +27,19 @@ INSTALLED_VERSION=""
 
 TEMP_INSTALL="/tmp/aqualinkd"
 OUTPUT="/tmp/aqualinkd_upgrade.log"
+UNTAR_CMD="tar xz --strip-components=1 --directory=$TEMP_INSTALL"
 
 FROM_CURL=$FASE
 SYSTEMD_LOG=$FALSE
+
+USE_RELEASE_PKG=$TRUE
+
+
+if [ "$USE_RELEASE_PKG" -eq $TRUE ]; then
+  REQUIRED_SPACE_MB=2
+  UNTAR_CMD="tar xz --directory=$TEMP_INSTALL"
+fi
+
 
 # Remember not to use (check for terminal, as it may not exist when pipe to bash)
 # ie.  if [ -t 0 ]; then  
@@ -188,10 +198,15 @@ function check_can_upgrade {
   return "$TRUE"
 }
 
-
 function download_latest_release {
   mkdir -p "$TEMP_INSTALL"
-  tar_url=$(curl -fsSL "$REPO/releases/latest" | grep -Po '"tarball_url": "\K.*?(?=")')
+  
+  if [ "$USE_RELEASE_PKG" -eq $TRUE ]; then
+    tar_url=$(curl -fsSL "$REPO/releases/latest" | grep -Po '"browser_download_url": "\K.*?(?=")' | grep aqualinkd-release.tar.gz)
+  else
+    tar_url=$(curl -fsSL "$REPO/releases/latest" | grep -Po '"tarball_url": "\K.*?(?=")')
+  fi
+
   if [[ "$tar_url" == "" ]]; then return "$FALSE"; fi
 
   curl -fsSL "$tar_url" | tar xz --strip-components=1 --directory="$TEMP_INSTALL"
@@ -210,27 +225,34 @@ function download_latest_development {
 }
 
 function download_version {
-  tar_url=$(curl -fsSL "$REPO/releases" | awk 'match($0,/.*"tarball_url": "(.*\/tarball\/.*)".*/)' | grep $1\" | awk -F '"' '{print $4}')
+  if [ "$USE_RELEASE_PKG" -eq $TRUE ]; then
+    tar_url=$(curl -fsSL "$REPO/releases" | awk 'match($0,/.*"browser_download_url": "(.*\/aqualinkd-release\.tar\.gz)".*/)' | grep $1 | awk -F '"' '{print $4}' )
+  else
+    tar_url=$(curl -fsSL "$REPO/releases" | awk 'match($0,/.*"tarball_url": "(.*\/tarball\/.*)".*/)' | grep $1\" | awk -F '"' '{print $4}')
+  fi
+
   if [[ ! -n "$tar_url" ]]; then
     return $"$FALSE"
   fi
 
   mkdir -p "$TEMP_INSTALL"
-  curl -fsSL "$tar_url" | tar xz --strip-components=1 --directory="$TEMP_INSTALL"
+
+  #curl -fsSL "$tar_url" | tar xz --strip-components=1 --directory="$TEMP_INSTALL"
+  curl -fsSL "$tar_url" | $UNTAR_CMD
+
   if [ $? -ne 0 ]; then return "$FALSE"; fi
 
   return "$TRUE";
 }
 
 function get_all_versions {
-  curl -fsSL "$REPO/releases" | awk 'match($0,/.*"tarball_url": "(.*\/tarball\/.*)".*/)' | awk -F '/' '{split($NF,a,"\""); print a[1]}'
+  if [ "$USE_RELEASE_PKG" -eq $TRUE ]; then
+    curl -fsSL "$REPO/releases" | awk 'match($0,/.*"browser_download_url": "(.*\/aqualinkd-release\.tar\.gz)".*/)' | awk -F '/' '{split($(NF-1), a, "\""); print a[1]}'
+  else
+    curl -fsSL "$REPO/releases" | awk 'match($0,/.*"tarball_url": "(.*\/tarball\/.*)".*/)' | awk -F '/' '{split($NF,a,"\""); print a[1]}'
+  fi
 }
 
-function NEW_GET_RELEASE_BU_TAG {
-  #
-  # curl -fsSL https://api.github.com/repos/AqualinkD/AqualinkD/releases/tags/v2.6.11
-  # lok for browser_download_url and then tarball_url
-}
 
 function run_install_script {
   if [ ! -f "$TEMP_INSTALL/release/install.sh" ]; then
@@ -330,7 +352,9 @@ case $1 in
     echo "AqualinkD Installation script"
     echo "$SELF               <- download and install latest AqualinkD version"
     echo "$SELF latest        <- download and install latest AqualinkD version"
-    echo "$SELF development   <- download and install latest AqualinkD development version"
+    if [ "$USE_RELEASE_PKG" -eq $FALSE ]; then
+      echo "$SELF development   <- download and install latest AqualinkD development version"
+    fi
     echo "$SELF clean         <- Remove AqualinkD"
     echo "$SELF list          <- List available versions to install"
     echo "$SELF v1.0.0        <- install AqualinkD v1.0.0 (use list option to see available versions)"

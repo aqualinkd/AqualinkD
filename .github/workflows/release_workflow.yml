@@ -1,5 +1,9 @@
 name: AqualinkD create release .tar.gz
 on:
+#  push:
+#    branches: [ main ]
+#    tags:
+#      - 'v*.*.*'
   workflow_dispatch: # Allow manual run
     inputs: # ADDED INPUTS to request the specific tag
       tag_name:

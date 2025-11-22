@@ -1,9 +1,9 @@
 name: AqualinkD build Workflow
 on:
-  push:
-    branches: [ main ]
-    tags:
-      - 'v*.*.*'
+#  push:
+#    branches: [ main ]
+#    tags:
+#      - 'v*.*.*'
   workflow_dispatch: # Allow manual run
 
 jobs:
@@ -14,7 +14,8 @@ jobs:
     # --- JOB-LEVEL CONTAINER DEFINITION ---
     # This runs the entire job inside the Debian environment, making all 'run' steps clean.
     container:
-      image: debian:bullseye 
+      #image: debian:bullseye 
+      image: debian:buster 
       
     steps:
     # Checkout the source code (this runs INSIDE the container and populates /github/workspace)

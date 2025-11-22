@@ -186,7 +186,7 @@ if [ "$_ignoreglibc" -eq $FALSE ]; then
   if [[ ! "$CURRENT_GLIBC_VERSION_STRING" =~ ^[0-9]+\.[0-9]+$ ]]; then
     # Print the combined, simple error message as requested
     log "Error: Cannot find or parse GLIBC version from system utilities." 
-    exit 1
+    #exit 1
   fi
 
   IFS='.' read -r CURRENT_GLIBC_MAJOR CURRENT_GLIBC_MINOR <<< "$CURRENT_GLIBC_VERSION_STRING"
@@ -195,9 +195,11 @@ if [ "$_ignoreglibc" -eq $FALSE ]; then
    ([ "$CURRENT_GLIBC_MAJOR" -eq "$REQUIRED_GLIBC_MAJOR" ] && [ "$CURRENT_GLIBC_MINOR" -lt "$REQUIRED_GLIBC_MINOR" ]); then
     
     # Version is too old (FAILURE)
-    echo "Error: GLIBC version is too old." 
-    echo "Required: ${REQUIRED_GLIBC_VERSION} or newer."
-    exit 1 
+    #echo "Error: GLIBC version is too old." 
+    #echo "Required: ${REQUIRED_GLIBC_VERSION} or newer."
+    #exit 1
+    log "Warning: GLIBC version $CURRENT_GLIBC_VERSION_STRING is old and will not be supported in future releases, please upgrade your OS"
+    log "Minimum GLIBC version $REQUIRED_GLIBC_VERSION / Debian Bullseye or newer will be required"
   fi
 fi
 
