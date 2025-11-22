@@ -14,8 +14,7 @@ jobs:
     # --- JOB-LEVEL CONTAINER DEFINITION ---
     # This runs the entire job inside the Debian environment, making all 'run' steps clean.
     container:
-      #image: debian:bullseye 
-      image: debian:buster 
+      image: debian:bullseye 
       
     steps:
     # Checkout the source code (this runs INSIDE the container and populates /github/workspace)
