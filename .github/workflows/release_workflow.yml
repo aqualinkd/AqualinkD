@@ -23,6 +23,15 @@ jobs:
         # Otherwise (workflow_dispatch), use the user-provided tag name.
         ref: ${{ github.event_name == 'push' && github.sha || github.event.inputs.tag_name }}
 
+    - name: Print Determined Tag Name
+      run: |
+        # Evaluate the same conditional expression used for the release action
+        TAG_NAME="${{ github.event_name == 'push' && github.ref_name || github.event.inputs.tag_name }}"
+        echo "---------------------------------"
+        echo "Workflow Event: ${{ github.event_name }}"
+        echo "Tag to be used for Release: $TAG_NAME"
+        echo "---------------------------------"
+
     - name: Create release archive
       # This step correctly archives both resulting binaries from the workspace
       run: tar -czvf aqualinkd-release.tar.gz web/ release/
@@ -43,7 +52,7 @@ jobs:
 
         # Overwrite is necessary to attach assets to an existing release.
         overwrite: true 
-        
+
         # The files parameter should match the file you created in the previous step.
         files: aqualinkd-release.tar.gz
       env:
