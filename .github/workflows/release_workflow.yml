@@ -19,8 +19,9 @@ jobs:
     - name: Checkout specific release tag
       uses: actions/checkout@v4
       with:
-        # Use the tag provided by the user input to pull the correct code
-        ref: ${{ github.event.inputs.tag_name }}
+        # If event is 'push', use the specific commit SHA (github.sha).
+        # Otherwise (workflow_dispatch), use the user-provided tag name.
+        ref: ${{ github.event_name == 'push' && github.sha || github.event.inputs.tag_name }}
 
     - name: Create release archive
       # This step correctly archives both resulting binaries from the workspace
@@ -29,14 +30,20 @@ jobs:
     - name: Update GitHub Release and Upload Artifact
       uses: softprops/action-gh-release@v2
       with:
-        # Use the tag input to find the existing release and attach the asset
-        tag_name: ${{ github.event.inputs.tag_name }} 
-        # Use the tag name for the release name
-        name: Update Release ${{ github.event.inputs.tag_name }}
+       # If event is 'push', use the tag name from the ref (github.ref_name).
+        # Otherwise, use the user-provided tag name.
+        tag_name: ${{ github.event_name == 'push' && github.ref_name || github.event.inputs.tag_name }} 
+        
+        # DYNAMIC LOGIC for 'name':
+        # Same dynamic logic applied to the release name.
+        name: Update Release ${{ github.event_name == 'push' && github.ref_name || github.event.inputs.tag_name }}
+
         # Set draft to false if the intention is to publish/update a final version.
         draft: false
+
         # Overwrite is necessary to attach assets to an existing release.
         overwrite: true 
+        
         # The files parameter should match the file you created in the previous step.
         files: aqualinkd-release.tar.gz
       env:
