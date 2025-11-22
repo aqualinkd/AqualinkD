@@ -25,7 +25,6 @@ jobs:
 
     - name: Print Determined Tag Name
       run: |
-        # Evaluate the same conditional expression used for the release action
         TAG_NAME="${{ github.event_name == 'push' && github.ref_name || github.event.inputs.tag_name }}"
         echo "---------------------------------"
         echo "Workflow Event: ${{ github.event_name }}"
