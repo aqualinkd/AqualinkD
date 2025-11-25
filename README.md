@@ -10,6 +10,8 @@ Binaries are supplied for Raspberry Pi both 32 & 64 bit OS, Has been, and can be
 If you like this project, you can buy me a cup of coffee :)
 <br>
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=SEGN9UNS38TXJ)
+<hr>
+
 
 
 ## AqualinkD new home
@@ -79,7 +81,7 @@ Designed to mimic AqualinkRS devices, used to fully configure the master control
 
 ## All Web interfaces.
 * http://aqualink.ip/     <- (Standard WEB UI
-* http://aqualink.ip/simple.html   <- (Simple opion if you don't like the above)
+<!--* http://aqualink.ip/simple.html   <- (Simple opion if you don't like the above)-->
 * http://aqualink.ip/simulator.html  <- (Displays all simulators in one page with tabs)
 * http://aqualink.ip/aqmanager.html  <- (Manage AqualinkD configuration & runtime)
 * http://aqualink.ip/allbutton_sim.html  <- (All Button Simulator)
@@ -136,6 +138,20 @@ NEED TO FIX FOR THIS RELEASE.
 * Use set_allbutton_light_dimmer for all lights (ie color lights)
 
 -->
+
+<br>
+<br>
+<br>
+
+# <span style="color: red;">Notice</span>
+
+AqualinkD will soon be dropping support for OS's older than debian bullseye. (GLIBC 2.31 will be minimum).
+
+AqualinkD will be moving over to github hosted runners for compiling, currently AqualinkD is using self hosted. This means supporting old OS releases like Stretch is not worth it. AqualinkD will still be tested and support local compiling on old OS's, just the binaries in the release packages will be for bullseye and newer
+<hr>
+<br>
+<br>
+
 # Updates in 3.0.0 (dev)
 * WARNING V3.0 has undergone a significant amount code changes and refactoring, there may be issues.
 * Serial optimization for AqualinkD HAT.
@@ -143,7 +159,9 @@ NEED TO FIX FOR THIS RELEASE.
   * web/config.js is now web/config.json any custom settings will need to be migrated.
   * Added example plugin of how to get HomeAssistant devices to show up in AqualinkD UI.
 * upgraded network library ( HTTP(S), MQTT(S), WS ) 
-* Added support for HTTPS and MQTTS
+* Added support for HTTPS and MQTTS. 
+  * HTTPS is for two way auth only, ie You create your own cert and load on both AqualinkD server and all client devices.
+  * Example script to generate HTTPS certificates is in (./extras/generate-certs.sh)
 * Optimized updates to MQTT, web sockets & WebUI (only update when absolutely necessary)
 * Added options to force upgrades in aqmanager. (add ?upgrade or ?devupgrade to url to enable upgrade button)
 * MQTT Discovery for all supporting hubs (HomeAssistant Domoticz Hubitat OpenHAB etc)
@@ -156,12 +174,12 @@ NEED TO FIX FOR THIS RELEASE.
 * Changed caching of HTTP server. (Better for UI config updates)
 * Autoconfigure will now get panel size/type for panels that support PC-Dock interface.
 * Autoconfigure will *try* to work for PDA panels.
-* Added example script to generate HTTPS certificates. (./extras/generate-certs.sh)
 * Cleaned up exit & errors when running as daemon and docker.
 * Fixed issues with external sensors and homekit.
 * Added preliminary support for Jandy Infinite water color lights
 - Need to finish off :-
   * HAT serial optimizations broke some USB serial adapters
+  * SWG not auto finding
 
   
 # Updates in 2.6.11 (Sept 14 2025)

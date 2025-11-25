@@ -34,7 +34,7 @@ _logfile=""
 _frommake=$FALSE
 _ignorearch=$FALSE
 _nosystemd=$FALSE
-_ignoreglibc=$TRUE
+_ignoreglibc=$FALSE
 
 log()
 {
@@ -250,7 +250,9 @@ fi
 
 # V3.0.0 uses config.json not config.js
 if [ -f "$WEBLocation/config.js" ]; then
-  log "AqualinkD web config is old, please migrate and settings from $WEBLocation/config.js to $WEBLocation/config.json"
+  if [ ! -f "$WEBLocation/config.json" ]; then
+    log "AqualinkD web config is old, please migrate and settings from $WEBLocation/config.js to $WEBLocation/config.json"
+  fi
 fi
 # V2.3.9 & V2.6.0 has kind-a breaking change for config.js, so check existing and rename if needed
 #        we added Aux_V? to the button list

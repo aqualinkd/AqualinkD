@@ -42,6 +42,7 @@
       --options_slider_highlight: #2196F3;
       --options_slider_lowlight: #d3d3d3;
       --options_slider_height: 20px;
+      --options_button_background: rgb(192, 192, 192);
       --head_background: rgb(43, 106, 143);
       --head_text: #fff;
       --error_background: rgb(143, 43, 43);
@@ -480,9 +481,11 @@
 
     .options_button {
       color: var(--body_text);
+      background-color: var(--options_button_background);
       font-family: var(--fonts);
       font-weight: 600;
       font-size: 16px;
+      border-radius: 8px !important;
     }
 
     .option_text {
@@ -927,6 +930,25 @@
       }
     }
 
+
+    // Simply loop over each key/value in color jason array and set that property adding -- to the beginning of key
+    function setColors() {
+      if ( _config?.colors ) {
+        const rootElement = document.documentElement;
+
+        Object.entries(_config.colors).forEach(([key, value]) => {
+          //console.log(`Key (Color Variable): ${key}, Value (Color Code): ${value}`);
+          //console.log(key+ " " +document.documentElement.style.getPropertyValue('--' + key)+" | "+window.getComputedStyle(document.documentElement).getPropertyValue('--' + key));
+          if (window.getComputedStyle(rootElement).getPropertyValue('--'+key) && _config?.colors[key]) {
+            document.documentElement.style.setProperty('--'+key, value);
+          } else {
+            console.log(`Invalid config (Color Variable): ${key}, Value : ${value}`);
+          }
+        });
+      }
+    }
+    // The above replaces the below.  Below is safer, but needs modification every time we add a property.
+    /*
     function setProp(name) {
       //if ( _config?.colors[name] !== undefined ) {
       if ( _config?.colors && _config?.colors[name] ) {
@@ -936,10 +958,7 @@
         //console.log("Missing Color "+name);
       }
     }
-
     function setColors() {
-      //return;
-
       setProp("body_background");
       setProp("body_text");
       setProp("options_pane_background");
@@ -959,9 +978,13 @@
       setProp("tile_text");
       setProp("tile_background");
       setProp("tile_on_background");
-      
-    }
 
+      setProp("tile_icon_background_color_heat");
+      setProp("tile_icon_background_color_cool");
+      setProp("tile_icon_background_color_enabled");
+      setProp("tile_icon_background_color_disabled");
+    }
+*/
     function setSizeSpecifics() {
       var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
       var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
@@ -2314,13 +2337,16 @@
             if ( ! cs_createJSON() ) {
               return // This stops pane from closing.
             }
+          } else if (type == 'setpoint_freeze') {
+            if (sp_value != slider.value)
+              setThermostatSetpoint(id, slider.value);
           } else if (type == 'simulator') {
           } else {
             var value = slider.value;
             if (state == (tile.getAttribute('status') == 'off'))
               setTileState(id, state);
             if (sp_value != slider.value)
-              setThermostatSetpoint(id, slider.value)
+              setThermostatSetpoint(id, slider.value);
           }
 
           if (typeof tm_slider !== 'undefined' && tm_slider != null) {
@@ -3136,6 +3162,8 @@
       if (value != null) {
         _cmd.value = value;
       }
+//console.log("Send cmd  "+JSON.stringify(_cmd));
+//console.trace("Tracing");
       socket_di.send(JSON.stringify(_cmd));
 
       if ( _link_spa_and_heater && cmd == "Spa_Mode" ) {
@@ -3145,6 +3173,7 @@
         if (value != null) {
           ncmd.value = value;
         }
+//console.log("Send spa cmd  "+JSON.stringify(ncmd));
         socket_di.send(JSON.stringify(ncmd));
       }
     }
@@ -3167,7 +3196,8 @@
         message.uri = id+"/brightness/set";
       else
         message.uri = id+"/setpoint/set";
-//console.log("Send value back "+temperature.parameter+" "+temperature.value);
+
+//console.log("Send setpoint  "+JSON.stringify(message));
       socket_di.send(JSON.stringify(message));
     }
 

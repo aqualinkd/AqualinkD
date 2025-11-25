@@ -1109,7 +1109,19 @@ uriAtype action_URI(request_source from, const char *URI, int uri_length, float 
   } else if (strncmp(ri1, "restart", 7) == 0 && from == NET_WS) { // Only valid from websocket.
     LOG(NET_LOG,LOG_NOTICE, "Received restart request!\n");
     raise(SIGRESTART);
-    return uActioned; 
+    return uActioned;
+  } else if (strncmp(ri1, "installrelease", 14) == 0 && from == NET_WS) { // Only valid from websocket.
+    if (ri2 != NULL) {
+      LOG(NET_LOG,LOG_NOTICE, "Received install release request, %s\n",ri2);
+      _aqualink_data->upgrade_version = malloc( (sizeof(char*) * strlen(ri2)) + 1);
+      snprintf(_aqualink_data->upgrade_version, strlen(ri2)+1, ri2);
+    } else {
+      LOG(NET_LOG,LOG_NOTICE, "Received install release request, but no version named, using latest!\n");
+      _aqualink_data->upgrade_version = "latest";
+    }
+    raise(SIGRUPGRADE);
+    return uActioned;
+ /*   
   } else if (strncmp(ri1, "upgrade", 7) == 0 && from == NET_WS) { // Only valid from websocket.
     LOG(NET_LOG,LOG_NOTICE, "Received upgrade request!\n");
     setMASK(_aqualink_data->updatetype, UPDATERELEASE);
@@ -1120,6 +1132,7 @@ uriAtype action_URI(request_source from, const char *URI, int uri_length, float 
     setMASK(_aqualink_data->updatetype, INSTALLDEVRELEASE);
     raise(SIGRUPGRADE);
     return uActioned; 
+    */
   } else if (strncmp(ri1, "seriallogger", 12) == 0 && from == NET_WS) { // Only valid from websocket.
     LOG(NET_LOG,LOG_NOTICE, "Received request to run serial_logger!\n");
     //LOG(NET_LOG,LOG_NOTICE, "Received request ri1=%s, ri2=%s, ri3=%s value=%f\n",ri1,ri2,ri3,value);
@@ -1857,6 +1870,7 @@ void action_websocket_request(struct mg_connection *nc, struct mg_ws_message *wm
       DEBUG_TIMER_STOP(tid, NET_LOG, "action_websocket_request() save_config_js took");
       ws_send(nc, message);
     }
+    break;
     case uSaveWebConfig:
     {
       DEBUG_TIMER_START(&tid);

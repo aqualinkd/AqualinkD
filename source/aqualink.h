@@ -249,11 +249,11 @@ typedef enum panel_vsp_status
 #define ERROR_SERIAL        ( 1 << 9 )
 
 
-
+/*
 #define INSTALLDEVRELEASE  ( 1 << 0 )
 #define UPDATERELEASE      ( 1 << 1 )
 #define CHECKONLY          ( 1 << 3 )
-
+*/
 typedef struct pumpd
 {
   int rpm;
@@ -437,6 +437,7 @@ struct aqualinkdata
   //char version[AQ_MSGLEN*2]; // Will be replaced by below in future
   //char revision[AQ_MSGLEN]; // Will be replaced by below in future
   uint8_t updatetype;
+  char *upgrade_version;
   // The below 4 are set (sometimes) but not used yet
   char panel_rev[AQ_MSGLEN];    // From panel
   char panel_cpu[AQ_MSGLEN];    // From panel

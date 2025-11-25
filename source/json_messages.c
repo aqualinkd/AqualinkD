@@ -656,6 +656,11 @@ int build_aqualink_aqmanager_JSON(struct aqualinkdata *aqdata, char* buffer, int
 
   length += sprintf(buffer+length, ",\"aqualinkd_version\":\"%s\"",AQUALINKD_VERSION);
 
+  length += sprintf(buffer+length, ",\"panel_type_full\":\"%s\"",getPanelString());
+  length += sprintf(buffer+length, ",\"panel_type\":\"%s\"",getShortPanelString());
+  length += sprintf(buffer+length, ",\"panel_revision\":\"%s %s\"",aqdata->panel_cpu, aqdata->panel_rev );//8157 REV MMM",
+  
+
   
   /*
   length += sprintf(buffer+length, ",\"panel_type\":\"%s\"",getPanelString());
@@ -1204,7 +1209,7 @@ int json_cfg_element(char* buffer, int size, const char *name, const void *value
   if (isMASKSET(config_mask, CFG_FORCE_RESTART)) {
     adv_size += sprintf(adv+adv_size,",\"force_restart\": \"yes\"");
     if ( strcmp(name, CFG_N_panel_type) == 0 ) {
-      adv_size += sprintf(adv+adv_size,",\"force_restart_msg\": \"If you panel_type, you must save and reload config for correct config options to show, and must also restart AqualinkD once finished!\"");
+      adv_size += sprintf(adv+adv_size,",\"force_restart_msg\": \"If you change panel_type, you must save and reload config for correct config options to show!\\nYou must also restart AqualinkD once finished!\"");
     }
 
   }

@@ -14,7 +14,7 @@
     <style>
         :root {
             --max-config-height: 870px;
-            
+            --max-config-table-height: 730px;
             --aqualinkd-scale: 0.75;
             --aqualinkd-container: 265px; 
             --aqualinkd-iframe: 350px; /* Seems backwards, but the way the iframe scales the iframe need to be the same amount bigger 350*0.75*/
@@ -112,11 +112,11 @@
             background-color: rgb(221, 221, 221);
             padding: 10px;
         }
-
+/*
         th {
             background-color: white;
         }
-
+*/
         #title {
             background-color: rgb(200, 200, 200);
             font-weight: 600;
@@ -134,7 +134,7 @@
             text-decoration: none;
             margin: 2px 2px 2px 2px;
             min-width: 70px;
-            border-radius: 70px;
+            border-radius: 6px;
             height: 20px;
             /*max-width: 120px;*/
         }
@@ -222,7 +222,8 @@
 
         .toggle-switch {
             display: inline-block;
-            background: #ccc;
+            /*background: #ccc;*/
+            background: #ebebeb;
             border-radius: 16px;
             width: 35px;
             height: 18px;
@@ -238,7 +239,9 @@
 
         .toggle-switch:before {
             display: block;
-            background: linear-gradient(to bottom, #fff 0%, #eee 100%);
+            /*background: linear-gradient(to bottom, #fff 0%, #ccc 100%);*/
+            /*background: linear-gradient(to bottom, #fff 0%, #e6e6e6 100%);*/
+            background: linear-gradient(to bottom, #fff 0%, #979696 100%);
             border-radius: 50%;
             box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
             width: 15px;
@@ -250,8 +253,10 @@
         }
 
         .toggle:hover .toggle-switch:before {
-            background: linear-gradient(to bottom, #fff 0%, #fff 100%);
-            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+            /*background: linear-gradient(to bottom, #fff 0%, #fff 100%);*/
+            /*background: linear-gradient(to bottom, #979696 0%, #fff 100%);*/
+            background: linear-gradient(to bottom, #e7e7e7 0%, #747373 100%);
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
         }
 
         .toggle-checkbox:checked+.toggle-switch {
@@ -306,7 +311,8 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.2s ease-out;
-            background-color: #f1f1f1;
+            /*background-color: #f1f1f1;*/
+            background-color: rgb(211,211,211,211);
             font-size: 14px;
         }
 
@@ -322,22 +328,39 @@
             
             /*height: 100vw;*/
         }
+        
+        .config_pane_scrollable {
+          overflow-x: hidden;
+          overflow-y: auto;
+          max-height: var(--max-config-table-height);
+          resize: vertical;
+          
+        }
+        .config_pane_scrollable table {
+          /*background-color: #e7e7e7;*/
+          background-color: #f0f0f0;
+        }
         .config_options_pane {
+            position: relative; /* required for top right close button only */
             background-color: var(--options_pane_background);
             border: 2px solid var(--options_pane_bordercolor);
-            border-radius: 20px;
+            border-radius: 10px;
             justify-content: center;
             align-items: center;
             width: 700px;
             /*max-height: 870px;*/
             max-height: var(--max-config-height);
+            /*
             overflow-x: hidden;
-            overflow-y: auto;
+            overflow-y: auto;*/
+            overflow-x: hidden;
+            overflow-y: hidden;
         }
+        /*
         .config_options_added {
             background-color: white;
         }
-
+        */
         .web_config_options {
             top: 10px;
             position: fixed;
@@ -347,18 +370,21 @@
             width: 100vw;      
             /*height: 100vw;*/
         }
+        /*
         .web_config_options_pane {
+            position: relative; 
             background-color: var(--options_pane_background);
             border: 2px solid var(--options_pane_bordercolor);
             border-radius: 20px;
             justify-content: center;
             align-items: center;
             width: 700px;
-            /*max-height: 870px;*/
+          
             max-height: var(--max-config-height);
+            
             overflow-x: hidden;
-            overflow-y: auto;
-        }
+            overflow-y: hidden;
+        }*/
         .web_config_textarea {
           width:90%; 
           /*height:700px;*/
@@ -388,34 +414,95 @@
             height: 18px !important;
         }
 
+        .config_pane_close_button {
+          font-size: 10px !important;
+          font-weight: bold !important;
+          /*color: var(--body_text);*/
+          /*background-color: #7f8385 !important;*/
+          border: none !important;
+          color: rgb(0, 0, 0) !important;
+          padding: 2px 2px !important;
+          text-decoration: none !important;
+          margin: 2px 2px 2px 2px !important;
+          min-width: 18px !important;
+          border-radius: 2px !important;
+          height: 18px !important;
+          
+        }
+        
+        .config_pane_close_button_contaner {
+          position: absolute;
+          top: 0;
+          right: 0;
+          padding-top: 5px;
+          padding-right: 10px;
+        }
+
         .valid_json {
           background-color: var(--options_pane_background);
         }
         .invalid_json {
           background-color: rgb(255, 100, 0);
         }
+        
+        .textarea-container {
+          display: flex; /* Or display: grid; grid-template-columns: 1fr 1fr; */
+          gap: 0px; /* Optional: adds space between textareas */
+        }
+        .web_config_textarea {
+          width:90%; 
+          /*height:700px;*/
+          height:var(--web-config-textarea-height);
+          box-sizing: border-box; 
+          /*resize: vertical;*/
+          resize: none;
+          outline: none;
+          font-family: monospace;
+        }
+        .web_config_numbers {
+          width:5%; 
+          height:var(--web-config-textarea-height);
+          box-sizing: border-box; 
+          resize: vertical;
+          overflow: hidden;
+          resize: none;
+          background: transparent;
+          border: none;
+          outline: none;
+          text-align: right;
+          font-family: monospace;
+        }
+        .configTable {
+          border-collapse: collapse;
+        }
+
+        
 
         #alertOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
-  z-index: 999;
-}
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.5); 
+          z-index: 999;
+        }
 
-#alertCustomDialog {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: white;
-  padding: 20px;
-  border: 1px solid #ccc;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
+        #alertCustomDialog {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          /*background-color: rgb(240, 240, 240);*/
+          background-color: #2b2b2b;
+          color: #ffffff;
+          padding: 20px;
+          border: 1px solid #989898;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          z-index: 1000;
+          border-radius: 10px;
+          text-align: center;
+        }
 
         
         /*
@@ -464,7 +551,9 @@
             for (i = 0; i < coll.length; i++) {
                 coll[i].addEventListener("click", function () {
                     this.classList.toggle("active");
+                    
                     var content = this.nextElementSibling;
+                    //console.log(content);
                     if (content.style.maxHeight) {
                         content.style.maxHeight = null;
                     } else {
@@ -588,10 +677,10 @@
             _last_message_element = element;
         }
         */
-
+/*
         function update_status(data) {
         }
-
+*/
         function setloglevel(caller) {
             //console.log(caller.id);
             var id = parseInt(caller.id.split('_')[1]);
@@ -758,6 +847,7 @@
           var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
           //console.log("Height="+h);
           document.documentElement.style.setProperty('--max-config-height', (h-30)+'px');
+          document.documentElement.style.setProperty('--max-config-table-height', (h-140)+'px');
 
           document.getElementById("config_options").classList.remove("hide");
           document.getElementById("config_options_pane").classList.remove("hide");
@@ -1448,7 +1538,7 @@
               const newRow = configtable.insertRow();
               const cell1 = newRow.insertCell();
               cell1.colSpan = 3;
-              cell1.style.fontSize = "small";
+              cell1.style.fontSize = "x-small";
               cell1.textContent=_confighelp[obj.toString()];
               if (! hideLineSeperator) {
                 //newRow.style.borderBottom = "1px solid black";
@@ -1536,9 +1626,11 @@
             if ( _AlertsShown[key] == undefined || _AlertsShown[key] == false) {
               _AlertsShown[key] = true;
               if ("force_restart_msg" in _config[key]) {
-                alert(_config[key].force_restart_msg);
+                //alert(_config[key].force_restart_msg);
+                timedAlert(_config[key].force_restart_msg, 0);
               } else {
-                alert("If you change "+key+" You will need to restart AqualinkD after saving config!");
+                //alert("If you change "+key+" You will need to restart AqualinkD after saving config!");
+                timedAlert("If you change "+key+" You will need to restart AqualinkD after saving config!", 5);
               }
             }
         }
@@ -1589,15 +1681,21 @@
                     disablebutton("upgrade");
                 }
             }*/
+           //alert(data.type+" r="+data.panel_revision+", t="+data.panel_type);
             if (data['version']) {
                 document.getElementById("panelversion").innerHTML = data['version'];
             }
+            else if (data['panel_revision']) {
+              document.getElementById("panelversion").innerHTML = data['panel_revision'];
+            }
+
             if (data['panel_type']) {
                 document.getElementById("paneltype").innerHTML = data['panel_type'];
             }
             if (data['status']) {
                 update_status_message(data['status']);
             }
+            
             /*
             if (data['status'] == " ") {
                 document.getElementById("statusmsg").innerHTML = "Connected";
@@ -1613,12 +1711,22 @@
           //console.log("Height="+h);
           document.documentElement.style.setProperty('--max-config-height', (h-50)+'px');
 
-          document.documentElement.style.setProperty('--web-config-textarea-height', (h-160)+'px');
+          document.documentElement.style.setProperty('--web-config-textarea-height', (h-180)+'px');
 
           document.getElementById("web_config_options").classList.remove("hide");
           document.getElementById("web_config_options_pane").classList.remove("hide");
 
-          
+          // Link the scroll for the two text areas.
+          const textarea1 = document.getElementById('webconfig-json-input');
+          const textarea2 = document.getElementById('web_config_numbers');
+          textarea1.addEventListener('scroll', () => {
+            textarea2.scrollTop = textarea1.scrollTop;
+            textarea2.scrollLeft = textarea1.scrollLeft;
+          });/* // web_config_numbers doesn't have a scroll bar, so no need.
+          textarea2.addEventListener('scroll', () => {
+            textarea1.scrollTop = textarea2.scrollTop;
+            textarea1.scrollLeft = textarea2.scrollLeft;
+          });*/
 
           const jsonInput = document.getElementById('webconfig-json-input');
             
@@ -1658,8 +1766,8 @@
 
         function saveWebConfig() {
           if (!webconfig_validateAndDisplay()) {
-            alert("bad web config, please validate");
-            //timedAlert("bad web config, please validate", 5);
+            //alert("bad web config, please validate");
+            aqdAlert("bad web config, please validate");
             return;
           }
 
@@ -1681,7 +1789,6 @@
             const resultArea = document.getElementById('validation-result');
             const jsonString = jsonInput.value;
             
-
             // Clear previous results
             resultArea.className = '';
             resultArea.textContent = '';
@@ -1693,6 +1800,7 @@
                 // If parsing succeeds, format the JSON nicely (pretty print)
                 const prettyJsonString = JSON.stringify(jsonObject, null, 2);
                 
+                addWebConfigLineNumber(prettyJsonString);
                 // Update the text area with the pretty-printed JSON
                 jsonInput.value = prettyJsonString;
                 
@@ -1703,13 +1811,33 @@
                 return true;
             } catch (error) {
                 // If parsing fails, catch the error
-                
+                addWebConfigLineNumber(jsonString);
                 // Display error message
                 resultArea.classList.add('invalid_json');
                 // The error object provides useful information about where the syntax error is
                 resultArea.textContent = 'JSON is INVALID: ' + error.message;
             }
             return false;
+        }
+
+        function countLines(str) {
+          // Split the string by common line break sequences:
+          // \r\n (Windows), \r (old Mac), or \n (Unix/Linux)
+          const lines = str.split(/\r\n|\r|\n/);
+          return lines.length;
+        }
+
+        function addWebConfigLineNumber(str) {
+          const lineNumbers = document.getElementById('web_config_numbers');
+          const total = countLines(str) + 50;
+          
+          let numberString = "";
+
+          // Start at line number 2 so the JSON error line numbers match
+          for (let i = 1; i <= total; i++) {
+              numberString += i + "\n";
+          }
+          lineNumbers.value = numberString;
         }
 
         async function updateWebConfigFromMaster() {
@@ -1995,7 +2123,7 @@
                         update_status_message(data.message);
                     } else if (data.type == 'aqmanager') {
                         setAqManagerOptions(data);
-                        //update_status(data);
+                        update_status(data);
                     } else if (data.type == 'devices') {
                         //update_device(data);
                     } else if (data.type == 'status') {
@@ -2149,6 +2277,12 @@
             //cmd.uri = "rawcommand"
             switch (source.id) {
                 case "upgrade":
+                   getVersions();
+                   aqdAlert("Loading");
+                   //let dlg = document.getElementById("alertDialogHeader");
+                   //dlg.innerHTML='<input type="list"
+                   return;
+/*
                    if (source.getAttribute("upgrade_type") == "dev") {
                      if (confirm("Are you sure you want to proceed installing AqualinkD to Dev version '"+_latestDevVersionAvailable+"'' ?")) {
                        //console.log("Upgrading to dev release");
@@ -2166,7 +2300,14 @@
                       }
                       cmd.uri = "upgrade"
                     }
+*/
                     // NEED TO REGET aqmanager after restart.
+                    break;
+                case "installVersion":
+                    let version = document.getElementById("selectedrelease").value;
+                    cmd.uri = "installrelease/"+version
+                    cmd.value = version;
+                    update_log_message("***** AqualinkD upgrade in progress *****");
                     break;
                 case "restart":
                     cmd.uri = "restart"
@@ -2209,6 +2350,73 @@
             send_command(cmd);
         }
 
+const VERSION_URL = "https://api.github.com/repos/aqualinkd/AqualinkD/releases"
+let _aqualinkVersions = {};
+
+        function populateVersionSelection(caller=null) {
+          if (caller && caller.checked)
+            pre = true;
+          else
+            pre = false;
+        
+          try {
+            let dlg_head = document.getElementById("alertDialogHeader");
+            let dlg_msg = document.getElementById("alertDialogMessage");
+            
+            let dropdown = '<select id="selectedrelease" name="version selection">';
+            //for (const versionNumber of _aqualinkVersions) {
+            for (const [versionNumber, details] of Object.entries(_aqualinkVersions)) {
+              //alert(versionNumber);
+              if (pre || _aqualinkVersions[versionNumber].prerelease === false) {
+                dropdown += '<option value="'+versionNumber+'">'+versionNumber+'</option>';
+              }
+            }
+            dropdown += '</select>';
+            dropdown += '&nbsp;&nbsp;&nbsp;Include Dev Releases<input type="checkbox" onchange="populateVersionSelection(this)" name="prerelease" value="PreRelease" '+(pre==true?"checked":"")+'/>';
+            dropdown += '<br><input type="button" id="installVersion" onclick="send(this);aqdAlertClose();" value="Install"/>';
+            dlg_head.innerHTML = dropdown;
+            dlg_msg.innerText = "Select a version to install"
+            
+          } catch (e){
+            alert("load error "+e);
+          }
+
+          //alert("loaded");
+        }
+
+        async function getVersions() {
+    
+    try {
+        // Fetch the file from the specified path (make sure config.json exists)
+        const response = await fetch(VERSION_URL, { cache: 'no-store' });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Get the response as plain text
+        const versions = await response.text();
+        const versionObject = JSON.parse(versions);
+
+        for (const release of versionObject) {
+            if (!release.assets || release.prerelease == "true" || release.assets.length === 0) {
+                continue;
+            }
+            const downloadUrl = release.assets[0].browser_download_url;
+            if (downloadUrl) {
+              _aqualinkVersions[release.tag_name] = {};
+              _aqualinkVersions[release.tag_name].url = downloadUrl;
+              _aqualinkVersions[release.tag_name].prerelease = release.prerelease;
+            }
+        }
+
+        populateVersionSelection();
+
+    } catch (error) {
+        console.error('There was a problem fetching the config file:', error);
+    }
+}
+
         function getLatestVersion(url="https://api.github.com/repos/AqualinkD/AqualinkD/releases/latest", tryagain=true) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function () {
@@ -2245,21 +2453,27 @@
             xmlhttp.setRequestHeader("Accept","application/vnd.github.raw");
             xmlhttp.send();
         }
-/*
+
+        function aqdAlert(message) {
+          document.getElementById("alertDialogHeader").innerText = '';
+          document.getElementById('alertDialogMessage').innerText = message;
+          document.getElementById('alertOverlay').style.display = 'block';
+          document.getElementById('alertCustomDialog').style.display = 'block';
+        }
+
+        function aqdAlertClose() {
+          document.getElementById("alertDialogHeader").innerText = '';
+          document.getElementById('alertOverlay').style.display = 'none';
+          document.getElementById('alertCustomDialog').style.display = 'none';
+        }
+
         function timedAlert(message, timeout) {
-            document.getElementById('alertDialogMessage').innerText = message;
-            document.getElementById('alertOverlay').style.display = 'block';
-            document.getElementById('alertCustomDialog').style.display = 'block';
-
-            // Set a timeout to automatically close the dialog
-            setTimeout(closeAlert, timeout * 1000);
+          aqdAlert(message);
+          // Set a timeout to automatically close the dialog
+          if (timeout > 0)
+            setTimeout(aqdAlertClose, timeout * 1000);
         }
 
-        function closeAlert() {
-            document.getElementById('alertOverlay').style.display = 'none';
-            document.getElementById('alertCustomDialog').style.display = 'none';
-        }
-*/
     </script>
 
 <body onload="init();init_collapsible();">
@@ -2271,7 +2485,8 @@
         </div>
         <div class="inner">
             <div class="commands">
-                <table border='0' id="deviceList">
+              
+                <table border='0' id="deviceList" style="width: 100%;">
                     <tr style="title">
                         <td colspan="2" style="title" align="center"><label id="title">&nbsp;&nbsp;AqualinkD Managment
                                 Console&nbsp;&nbsp;</label></th>
@@ -2294,6 +2509,7 @@
                     </tr>
                     -->
                 </table>
+             
                 <button class="collapsible" id="systembutton">System Information</button>
                 <div class="content" id="system">
                     <table border='0'>
@@ -2401,11 +2617,15 @@
         </div>
         <!-- <div id="config_options" class="config_options hide" style="display: flex;" onclick="closeconfig();"> -->
         <div id="config_options" class="config_options hide" style="display: flex;">
+          <!--<div id="xx" class="config_options_pane" >-->
             <div id="config_options_pane" class="config_options_pane hide">
-              <table id="config_table" border="0" cellpadding="1px" width="100%" style="border-collapse: collapse;">
+              <div class="config_pane_close_button_contaner">
+                  <input class="config_pane_close_button" type="button" onclick="closeconfig();" value="x"></input>
+                </div>
+              <table id="config_table_outer" border="0" cellpadding="1px" width="100%" class="configTable">
                 <tbody><tr class="options_title">
-                  <th colspan="3"><span>AqualinkD Configuration</span>
-                  </th>
+                  <th colspan="3"><span>AqualinkD Configuration</span></th>
+                  <!--<td><input class="config_option_deletebutton" type="button" onclick="closeconfig(this);" value="x"></input></td>-->
                 </tr>
                 <tr>
                   <td align="center" colspan="3">    
@@ -2415,38 +2635,55 @@
                         <span class="toggle-label">Show&nbsp;Advanced&nbsp;Options</span>
                     </label>
                   </td> 
-                <!--
-                  <td align="right" width="50%">
-                    Key
-                  </td>
-                  <td align="left" width="50%">
-                    Value
-                  </td>
-                -->
+               
                 </tr>
-                </tbody>
-              </table>
-              <table border="0" cellpadding="0px" width="100%"><tr>
+                
+                <tr colspan="3">
+                  <td style="padding-left: 10px; padding-right: 10px">
+                    <div class="config_pane_scrollable">
+                    <table style="border-left: 1px solid black; border-right: 1px solid black;" id="config_table" border="0" cellpadding="1px" width="100%" class="configTable">
+                    </table>
+                    </div>
+                  </td>
+                </tr>
+              <tr colspan="3"><td>
+                
+              <table border="0" cellpadding="0px" width="100%">
+                <tr>
                 <td align="right" style="width:50%;padding-right: 10px;">
                   <input id="saveconfig" type="button" onclick="saveconfig(this);" value="Save Config"></input>
                 </td>
                 <td align="left" style="width:50%;padding-left: 10px;">
                   <input id="saveconfig" type="button" onclick="closeconfig(this);" value="Close (without saving)"></input> 
                 </td>
-            </tr></table>
+                </tr>
+              </table>
+              </td></tr>
+              </tbody>
+              </table>
             </div>
+          <!--</div>-->
          </div>
 
          <div id="web_config_options" class="web_config_options hide" style="display: flex;">
-            <div id="web_config_options_pane" class="web_config_options_pane hide">>
-                <!--<div class="inner">END</div>-->
-                <table id="config_table" border="0" cellpadding="1px" width="100%" style="border-collapse: collapse;">
+            <div id="web_config_options_pane" class="config_options_pane hide">
+                
+                <div class="config_pane_close_button_contaner">
+                  <input class="config_pane_close_button" type="button" onclick="closeWebConfig();" value="x"></input>
+                </div>
+              
+                <!--<table id="config_table" border="0" cellpadding="1px" width="100%" style="border-collapse: collapse;">-->
+                <table id="config_table" border="0" cellpadding="1px" width="100%" class="configTable">
                 <tbody><tr class="options_title">
                   <th colspan="3" style="padding: 10px;"><span>AqualinkD Web Configuration</span></th>
                 </tr>
                 <tr>
-                  <td align="center" colspan="3">    
-                    <textarea class="web_config_textarea" id="webconfig-json-input" placeholder="Loading configuration..."></textarea>
+                  <td align="center" colspan="3"> 
+                    <div class="textarea-container">
+                      <textarea class="web_config_numbers" id="web_config_numbers" readonly></textarea>
+                      <textarea class="web_config_textarea" id="webconfig-json-input" placeholder="Loading configuration..."></textarea>
+                      
+                    </div>
                   </td>
                   </tr>
                   <tr>
@@ -2473,13 +2710,17 @@
          </div>
         <!--<iframe src='about:blank' id="logdownload"></iframe>-->
     </div>
-<!--
+
     <div id="alertOverlay" style="display: none;"></div>
     <div id="alertCustomDialog" style="display: none;">
+      <div style="text-align: left; font-size: small; color:#8e8e8e;">AqualinkD</div>
+      <div id="alertDialogHeader"></div>
       <p id="alertDialogMessage"></p>
-      <button onclick="closeAlert()">Close</button>
+      <hr>
+      <!--<button onclick="aqdAlertClose()">Close</button>-->
+      <input type="button" onclick="aqdAlertClose()" value="Close"/>
     </div>
-  -->
+
 </body>
 
 </html>

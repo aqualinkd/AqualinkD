@@ -280,7 +280,7 @@ bool processPacketFromSWG(unsigned char *packet, int packet_length, struct aqual
       changedAnything = true;
       SET_DIRTY(aqdata->is_dirty);
     }
-    // logMessage(LOG_DEBUG, "Read SWG PPM %d from ID 0x%02hhx\n", aqdata.swg_ppm, SWG_DEV_ID);
+    // LOG(LOG_DEBUG, "Read SWG PPM %d from ID 0x%02hhx\n", aqdata.swg_ppm, SWG_DEV_ID);
   }
 
   return changedAnything;
@@ -334,8 +334,11 @@ void setSWGdeviceStatus(struct aqualinkdata *aqdata, emulation_type requester, u
   //  return;
   //}
 
+  //LOG(DJAN_LOG, LOG_DEBUG, "Set SWG device state to '0x%02hhx', request from %d\n", aqdata->ar_swg_device_status, requester);
+
+  
   if ((aqdata->ar_swg_device_status == status) || (last_status == status)) {
-    //LOG(DJAN_LOG, LOG_DEBUG, "Set SWG device state to '0x%02hhx', request from %d\n", aqdata->ar_swg_device_status, requester);
+    LOG(DJAN_LOG, LOG_DEBUG, "Set SWG device state to '0x%02hhx', request from %d (no change)\n", aqdata->ar_swg_device_status, requester);
     return;
   }
   last_status = status;
@@ -382,7 +385,7 @@ void setSWGdeviceStatus(struct aqualinkdata *aqdata, emulation_type requester, u
     return;
     break;
   }
-
+//printf("************ Set SWG device state to '0x%02hhx', request from %d, LED state = %d\n", aqdata->ar_swg_device_status, requester, aqdata->swg_led_state);
   LOG(DJAN_LOG, LOG_DEBUG, "Set SWG device state to '0x%02hhx', request from %d, LED state = %d\n", aqdata->ar_swg_device_status, requester, aqdata->swg_led_state);
 }
 
@@ -457,8 +460,11 @@ void setSWGpercent(struct aqualinkdata *aqdata, int percent) {
     if (aqdata->swg_led_state == OFF || (aqdata->swg_led_state == ENABLE && ! isSWGDeviceErrorState(aqdata->ar_swg_device_status)) ) // Don't change ENABLE / FLASH
       SET_IF_CHANGED(aqdata->swg_led_state, ON, aqdata->is_dirty);
     
-    if (aqdata->ar_swg_device_status == SWG_STATUS_UNKNOWN)
+    if (aqdata->ar_swg_device_status == SWG_STATUS_UNKNOWN) 
       SET_IF_CHANGED(aqdata->ar_swg_device_status, SWG_STATUS_ON, aqdata->is_dirty); 
+    
+    if (aqdata->swg_led_state == LED_S_UNKNOWN)
+      SET_IF_CHANGED(aqdata->swg_led_state, ON, aqdata->is_dirty);
   
   } if ( aqdata->swg_percent == 0 ) {
     if (aqdata->swg_led_state == ON)
@@ -466,6 +472,10 @@ void setSWGpercent(struct aqualinkdata *aqdata, int percent) {
     
     if (aqdata->ar_swg_device_status == SWG_STATUS_UNKNOWN)
       SET_IF_CHANGED(aqdata->ar_swg_device_status, SWG_STATUS_ON, aqdata->is_dirty); // Maybe this should be off
+
+    if (aqdata->swg_led_state == LED_S_UNKNOWN)
+      SET_IF_CHANGED(aqdata->swg_led_state, ENABLE, aqdata->is_dirty);
+  
   }
 
   LOG(DJAN_LOG, LOG_DEBUG, "Set SWG %% to %d, LED=%d, FullStatus=0x%02hhx\n", aqdata->swg_percent, aqdata->swg_led_state, aqdata->ar_swg_device_status);

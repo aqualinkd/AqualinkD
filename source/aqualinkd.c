@@ -116,7 +116,7 @@ bool isAqualinkDStopping() {
 void intHandler(int sig_num)
 {
   if (sig_num == SIGRUPGRADE) {
-    if (! run_aqualinkd_upgrade(_aqualink_data.updatetype)) {
+    if (! run_aqualinkd_upgrade(_aqualink_data.upgrade_version)) {
       LOG(AQUA_LOG,LOG_ERR, "AqualinkD upgrade failed!\n");
     }
     return; // Let the upgrade process terminate us.

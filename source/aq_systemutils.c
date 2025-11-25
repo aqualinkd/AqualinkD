@@ -72,6 +72,8 @@ FILE *aq_open_file(char *filename, bool *ro_root, bool *created_file)
         remount_root_ro(*ro_root);
     }
 
+    LOG(AQUA_LOG, LOG_INFO, "Open file %s for writing\n",filename);
+
     return fp;
 }
 
@@ -137,7 +139,8 @@ bool copy_file(const char *source_path, const char *destination_path)
     return true;
 }
 
-bool run_aqualinkd_upgrade(uint8_t type)
+//bool run_aqualinkd_upgrade(uint8_t type)
+bool run_aqualinkd_upgrade(char *version)
 {
     int pipe_curl_to_bash[2];
     pid_t pid_curl, pid_bash;
@@ -146,12 +149,18 @@ bool run_aqualinkd_upgrade(uint8_t type)
     char *bash_args[] = {"bash", "-s", "--", "", NULL};
     int status_curl, status_bash;
 
+    /*
     if (isMASK_SET(type, CHECKONLY)) {
       bash_args[3] = "check";
     } else {
+      
       if (isMASK_SET(type, INSTALLDEVRELEASE)) {
         bash_args[3] = "development";
       }
+    }*/
+
+    if (version != NULL) {
+      bash_args[3] = version; 
     }
 
     if (pipe(pipe_curl_to_bash) == -1)

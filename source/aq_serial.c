@@ -185,10 +185,10 @@ const char* get_jandy_packet_type(const unsigned char* packet , int length)
       return "GetID";
     break;
     case CMD_PERCENT:
-      return "AR %%";
+      return "SWG %%";
     break;
     case CMD_PPM:
-      return "AR PPM";
+      return "SWG PPM";
     break;
     case CMD_PDA_0x05:
       return "PDA Unknown";

@@ -256,7 +256,10 @@ void _processMessage(char *message, struct aqualinkdata *aqdata, bool reset)
       aqdata->service_mode_state = OFF; // IF we get this message then Service / Timeout is off
     }
 
-    if ( ((msg_loop & MSG_SWG_DEVICE) != MSG_SWG_DEVICE) && aqdata->swg_led_state != LED_S_UNKNOWN) {
+    // Removed aqdata->swg_led_state check from below if, so SWG can be found if read_SWG_rs584 is off.
+    // May want to add options like (isIAQT_ENABLED == false && isONET_ENABLED == false && READ_RSDEV_SWG == false )
+    // Then remove the aqdata->swg_led_state check
+    if ( ((msg_loop & MSG_SWG_DEVICE) != MSG_SWG_DEVICE) /*&& aqdata->swg_led_state != LED_S_UNKNOWN*/) {
       // No Additional SWG devices messages like "no flow"
       if ((msg_loop & MSG_SWG) != MSG_SWG && aqdata->aqbuttons[PUMP_INDEX].led->state == OFF )
         setSWGdeviceStatus(aqdata, ALLBUTTON, SWG_STATUS_OFF);
