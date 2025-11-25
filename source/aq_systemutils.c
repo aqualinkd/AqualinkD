@@ -160,6 +160,7 @@ bool run_aqualinkd_upgrade(char *version)
     }*/
 
     if (version != NULL) {
+      LOG(AQUA_LOG, LOG_NOTICE, "Running remote upgrade script with option : %s\n", version);
       bash_args[3] = version; 
     }
 

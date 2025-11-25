@@ -209,7 +209,8 @@ function download_latest_release {
 
   if [[ "$tar_url" == "" ]]; then return "$FALSE"; fi
 
-  curl -fsSL "$tar_url" | tar xz --strip-components=1 --directory="$TEMP_INSTALL"
+  #curl -fsSL "$tar_url" | tar xz --strip-components=1 --directory="$TEMP_INSTALL"
+  curl -fsSL "$tar_url" | $UNTAR_CMD
   if [ $? -ne 0 ]; then return "$FALSE"; fi
 
   return "$TRUE";
