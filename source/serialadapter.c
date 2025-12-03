@@ -372,7 +372,7 @@ bool process_rssadapter_packet(unsigned char *packet, int length, struct aqualin
                                   aqdata->lights[i].button->label,
                                   packet[6]==0x00?"OFF":"ON",
                                   packet[6],
-                                  packet[6]==0x00?"--":light_mode_name( aqdata->lights[i].lightType,(packet[6] - RSSD_COLOR_LIGHT_OFFSET), RSSADAPTER) );
+                                  packet[6]==0x00?"--":light_mode_name( aqdata->lights[i].lightType,(packet[6] - RSSD_COLOR_LIGHT_OFFSET_READ), RSSADAPTER) );
           } 
 
           SET_IF_CHANGED(aqdata->lights[i].RSSDstate, (packet[6]==0x00?OFF:ON), aqdata->is_dirty);
@@ -395,7 +395,7 @@ bool process_rssadapter_packet(unsigned char *packet, int length, struct aqualin
               rtn |= set_currentlight_value(&aqdata->lights[i], (packet[6] - RSSD_DIMMER_LIGHT_OFFSET));
             break;
             default:
-              rtn |= set_currentlight_value(&aqdata->lights[i], (packet[6] - RSSD_COLOR_LIGHT_OFFSET));
+              rtn |= set_currentlight_value(&aqdata->lights[i], (packet[6] - RSSD_COLOR_LIGHT_OFFSET_READ));
             break;
           }
           /*

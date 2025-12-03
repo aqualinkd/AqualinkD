@@ -771,7 +771,7 @@ void *set_aqualink_iaqtouch_light_colormode( void *ptr )
   // See if it's on the current page
   pButton = iaqtFindButtonByLabel(key->label);
 
-PRINTF("First button find = %s\n",pButton==NULL?"null":pButton->name);
+//DPRINTF("First button find = %s\n",pButton==NULL?"null":pButton->name);
 
   if (pButton == NULL) {
     // No luck, go to the device page
@@ -780,22 +780,24 @@ PRINTF("First button find = %s\n",pButton==NULL?"null":pButton->name);
 
     pButton = iaqtFindButtonByLabel(key->label);
  
-PRINTF("Second button find = %s\n",pButton==NULL?"null":pButton->name);
+//DPRINTF("Second button find = %s\n",pButton==NULL?"null":pButton->name);
   // If not found see if page has next
     if (pButton == NULL && iaqtFindButtonByIndex(16)->type == 0x03 ) {
       iaqt_queue_cmd(KEY_IAQTCH_NEXT_PAGE);
       waitfor_iaqt_nextPage(aqdata);
     // This will fail, since not looking at device page 2 buttons
       pButton = iaqtFindButtonByLabel(key->label);
-PRINTF("Third button find = %s\n",pButton==NULL?"null":pButton->name);
+//DPRINTF("Third button find = %s\n",pButton==NULL?"null":pButton->name);
     }
   }
 
   if (pButton == NULL) {  
-    LOG(IAQT_LOG, LOG_ERR, "IAQ Touch did not find '%s' button on device list\n", key->label);
+    LOG(IAQT_LOG, LOG_ERR, "IAQ Touch did not find '%s' button on device list, please check your config line '%s'\n", 
+                           key->label,
+                          isMASK_SET(key->special_mask, VIRTUAL_BUTTON)?"virtual_button_??_label":"button_??_label" );
     goto f_end;
   }
-PRINTF("FOUND button = %s\n",pButton==NULL?"null":pButton->name);
+//DPRINTF("FOUND button = %s\n",pButton==NULL?"null":pButton->name);
   // WE have a iaqualink button, press it.
   LOG(IAQT_LOG, LOG_DEBUG, "IAQ Touch found '%s' sending keycode '0x%02hhx'\n", key->label, pButton->keycode);
   send_aqt_cmd(pButton->keycode);
@@ -805,18 +807,23 @@ PRINTF("FOUND button = %s\n",pButton==NULL?"null":pButton->name);
     // After pressing the button, Just need to wait for 5 seconds and it will :- 
     // a) if off turn on and default to last color.
     // b) if on, turn off. (pain that we need to wait 5 seconds.)
-PRINTF("******** WAIT for next page\n");
+//DPRINTF("******** WAIT for next page\n");
     waitfor_iaqt_queue2empty();
     waitfor_iaqt_nextPage(aqdata);
     if (use_current_mode) {
       // Their is no message for this, so give one.
-      sprintf(aqdata->last_display_message, "Light will turn on in 5 seconds");
+      sprintf(aqdata->last_display_message, "Light will turn %s in 5 seconds", turn_off?"off":"on");
       aqdata->is_display_message_programming = true;
       SET_DIRTY(aqdata->is_dirty);
     }
     // Wait for next page maybe?
     // Below needs a timeout.
     while (waitfor_iaqt_nextPage(aqdata) == IAQ_PAGE_COLOR_LIGHT);
+
+    // Pre set key to off since it'll take ages
+    if (turn_off)
+      key->led->state = OFF;
+
     goto f_end;
   }
 
@@ -841,22 +848,26 @@ PRINTF("******** WAIT for next page\n");
   }
   
   LOG(IAQT_LOG, LOG_DEBUG, "IAQ Touch found '%s' sending keycode '0x%02hhx' = '0x%02hhx' for light selection\n", mode_name, pButton->keycode, pButton->keycode+16);
-  PRINTF("******** current page is '0x%02hhx'\n",iaqtCurrentPage());
+  //DPRINTF("******** current page is '0x%02hhx'\n",iaqtCurrentPage());
   // NSF Key code is +16 for some reason.  ie key 0x07=(send 0x17).  0x0a=(send 0x1a)
-  send_aqt_cmd(pButton->keycode + 16);
+  send_aqt_cmd(pButton->keycode + IAQ_COLOR_LIGHT_OFFSET);
   waitfor_iaqt_queue2empty();
   // Wait for popup message to disapera
   // This is iAq Popup messag    | HEX: 0x10|0x02|0x33|0x2c|0x00|0x01|0x50|0x6c|0x65|0x61|0x73|0x65|0x20|0x77|0x61|0x69|0x74|0x2e|0x2e|0x2e|0x0a|0x20|0x43|0x79|0x63|0x6c|0x69|0x6e|0x67|0x20|0x74|0x6f|0x20|0x63|0x68|0x6f|0x73|0x65|0x6e|0x20|0x63|0x6f|0x6c|0x6f|0x72|0x2e|0x00|0x00|0x00|0x00|0x2e|0x10|0x03| 
   // This is popup message clear | HEX: 0x10|0x02|0x33|0x2c|0x00|0x00|0x20|0x00|0x00|0x00|0x00|0x91|0x10|0x03|
   // 5th bit 0x00 = clear. (anything else message)
 
+  // Pre set light to on, since it'll take ages after this finished.
+  if (!turn_off)
+    key->led->state = ON;
+
   unsigned char msg;
   int i=0;
   while ( (msg = waitfor_iaqt_nextMessage(aqdata, CMD_IAQ_MSG_LONG)) != NUL) {
     const char *pmsg = iaqtPopupMsg();
-    PRINTF("******** popupMsg = %s ********\n",pmsg);
+    //DPRINTF("******** popupMsg = %s ********\n",pmsg);
     if (pmsg[0] == ' ') {
-      PRINTF("******** popupMsg clear ********\n");
+      //DPRINTF("******** popupMsg clear ********\n");
       break;
     }
     if (++i > 5) {
@@ -866,9 +877,9 @@ PRINTF("******** WAIT for next page\n");
   }
 /*
   unsigned char page;
-  PRINTF("******** current page is '0x%02hhx'\n",iaqtCurrentPage());
+  DPRINTF("******** current page is '0x%02hhx'\n",iaqtCurrentPage());
   while ( (page = waitfor_iaqt_nextPage(aqdata)) != NUL) {
-     PRINTF("******** next page is '0x%02hhx'\n",page);       // page = 0x48 IAQ_PAGE_COLOR_LIGHT
+     DPRINTF("******** next page is '0x%02hhx'\n",page);       // page = 0x48 IAQ_PAGE_COLOR_LIGHT
   }
 */
   //LOG(IAQT_LOG, LOG_ERR, "IAQ Touch WAIYING FOR 1 MESSAGES\n");

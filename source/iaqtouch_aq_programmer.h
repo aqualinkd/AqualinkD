@@ -4,7 +4,6 @@
 #define IAQ_TOUCH_PROGRAMMER_H_
 
 
-
 unsigned char pop_iaqt_cmd(unsigned char receive_type);
 
 void set_iaq_cansend(bool cansend);

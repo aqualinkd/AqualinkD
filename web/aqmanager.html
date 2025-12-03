@@ -518,23 +518,26 @@
     </style>
 
     <script type='text/javascript'>
+       'use strict';
+
         var _panel_size = 6;
         var _panel_set = 0;
+        var _currentVersion = 0;
         var _latestVersionAvailable = 0;
-        var _latestDevVersionAvailable = 0;
+        //var _latestDevVersionAvailable = 0;
         var _rssd_logmask = 0;
         const RSSD_MASK_ID = 512;  // Must match RSSD_LOG in utils.c
 
-        _addedBlankLightProgram = false;
-        _addedBlankSensor = false;
-        _addedBlankVirtualButton = false;
+        var _addedBlankLightProgram = false;
+        var _addedBlankSensor = false;
+        var _addedBlankVirtualButton = false;
 
         const _webConfigFile = "/config.json";
-
-        //var _cfgRestartAlertShown = false;
         let _AlertsShown = {};
-        
         var _config = {};
+
+        const VERSION_URL = "https://api.github.com/repos/aqualinkd/AqualinkD/releases"
+        let _aqualinkVersions = {};
 
         const _urlParams = new URLSearchParams(window.location.search);
 
@@ -585,6 +588,13 @@
             if (button) {
                 button.disabled = false;
                 button.classList.remove("disablebutton");
+            }
+        }
+        function setbuttontext(id, text) {
+            //console.log("enable " + id);
+            var button = document.getElementById(id);
+            if (button) {
+                button.value = text;
             }
         }
         function disabletoggle(id) {
@@ -894,7 +904,7 @@
                 //console.log(data[obj]["valid values"]);
                 //const 
                 input = document.createElement("select");
-                array = data[obj]["valid values"];
+                const array = data[obj]["valid values"];
                 for (var i = 0; i < array.length; i++) {
                     var option = document.createElement("option");
                     option.value = array[i];
@@ -994,7 +1004,7 @@
             //}
 
             const buttonTypelist = ["pumpIndex", "pumpID", "pumpType", "pumpName", "pumpMaxSpeed", "pumpMinSpeed", "lightMode"];
-            const virtButtonTypelist = ["pumpIndex", "pumpID", "pumpType", "pumpName", "pumpMaxSpeed", "pumpMinSpeed", "onetouchID", "altLabel"];
+            const virtButtonTypelist = ["pumpIndex", "pumpID", "pumpType", "pumpName", "pumpMaxSpeed", "pumpMinSpeed", "lightMode", "onetouchID", "altLabel"];
 
             const configtable = document.getElementById("config_table");
             const newRow = configtable.insertRow();
@@ -1060,7 +1070,7 @@
             var cell3 = newRow.insertCell();
 
             cell1.style.paddingLeft = "20px";
-            key = 'light_program_'+String(num+1).padStart(2, '0')
+            const key = 'light_program_'+String(num+1).padStart(2, '0')
             cell1.innerHTML = 'Add '+key;
             cell1.setAttribute('label', key);
 
@@ -1093,14 +1103,14 @@
             return;
           }
 
-          const virtButtonTypelist = ["pumpIndex", "pumpID", "pumpType", "pumpName", "pumpMaxSpeed", "pumpMinSpeed", "onetouchID", "altLabel"];
+          const virtButtonTypelist = ["pumpIndex", "pumpID", "pumpType", "pumpName", "pumpMaxSpeed", "pumpMinSpeed", "lightMode", "onetouchID", "altLabel"];
 
           const configtable = document.getElementById("config_table");
 
-          vbname="virtual_button_"+String(num).padStart(2, '0');
-          vblabel=vbname+"_label";
+          const vbname="virtual_button_"+String(num).padStart(2, '0');
+          const vblabel=vbname+"_label";
 
-          newRow = configtable.insertRow();
+          var newRow = configtable.insertRow();
           var cell1 = newRow.insertCell();
           cell1.colSpan = 3;
           cell1.style.fontSize = "small";
@@ -1273,7 +1283,7 @@
               newRow.style.borderTop = "1px solid black";
             }
 
-            key = 'sensor_'+String(num+1).padStart(2, '0');
+            const key = 'sensor_'+String(num+1).padStart(2, '0');
 
             // Add sensor_xx_path row
             var cell1 = newRow.insertCell();
@@ -1496,7 +1506,7 @@
 
           const configtable = document.getElementById("config_table");
               
-          showAdvanced = document.getElementById("show_advanced").checked;
+          var showAdvanced = document.getElementById("show_advanced").checked;
           //console.log (data);
           if (data != null)
             _config = data;
@@ -1620,9 +1630,11 @@
        
 
         function cfgAlertForceRestart(event) {
-            var key = event.srcElement.getAttribute('key');
             var value = event.srcElement.value;
-            //console.log( _AlertsShown[key]);
+            var key = event.srcElement.getAttribute('key');
+            if (key === undefined || key === null) {
+              key = event.srcElement.parentNode.getAttribute('key');
+            }
             if ( _AlertsShown[key] == undefined || _AlertsShown[key] == false) {
               _AlertsShown[key] = true;
               if ("force_restart_msg" in _config[key]) {
@@ -1938,16 +1950,14 @@
             }, 100);
           } else {
             //console.log("VERSION call="+call+" - "+currentVersion+". latest "+_latestVersionAvailable);
+            
             if ( isNewerVersion(_latestVersionAvailable, currentVersion ) || _urlParams.get('upgrade') != null) {
               enablebutton("upgrade");
+              setbuttontext("upgrade", "Update AqualinkD");
             } else {
-              disablebutton("upgrade");
-            }
-
-            if (_urlParams.get('devupgrade') != null) {
+              //disablebutton("upgrade");
               enablebutton("upgrade");
-              var button = document.getElementById("upgrade");
-              button.setAttribute("upgrade_type", "dev")
+              setbuttontext("upgrade", "Check for Updates");
             }
           }
         }
@@ -1970,6 +1980,7 @@
               enablebutton("restart");
              
               if (data['aqualinkd_version']) {
+                _currentVersion = data['aqualinkd_version'];
                 //document.getElementById("aqualinkdversion").innerHTML = data['aqualinkd_version'];
                 if (data['aqualinkd_version'] == _latestVersionAvailable ) {
                     document.getElementById("latesversionavailable").classList.add("hidden");
@@ -1978,11 +1989,11 @@
                 }
 
                 delayedVersionCheck(data['aqualinkd_version']);
-                /*
+                
                 if (_urlParams.get('upgrade') != null) {
                    enablebutton("upgrade");
                 }
-                */
+                
               }
             }
 
@@ -2177,19 +2188,20 @@
             
               if (patch1 === undefined) { patch1 = 0; }
               if (patch2 === undefined) { patch2 = 0; }
-
+            //console.log(version1+" major="+major1+", "+version2+" major="+major2);
               if (major1 > major2) return true;
               if (major1 < major2) return false;
-
+            //console.log(version1+" minor="+minor1+", "+version2+" minor="+minor2);
               if (minor1 > minor2) return true;
               if (minor1 < minor2) return false;
 
               //Look for any strings that might be a pre-release
               if ( version2.toLowerCase().includes("dev") ||
-                   version2.toLowerCase().includes("pre") ) {
+                   version2.toLowerCase().includes("dev") ||
+                   version2.toLowerCase().includes("beta") ) {
                 patch2--;
               }
-
+            //console.log(version1+" patch="+patch1+", "+version2+" patch="+patch2);
               return patch1 > patch2;
             } catch (e) {
               return false;
@@ -2240,7 +2252,7 @@
 
             startWebsockets();
             getLatestVersion();
-            getLatestDevVersion();
+            //getLatestDevVersion();
         }
 
         function set_unavailable(message) {
@@ -2278,35 +2290,15 @@
             switch (source.id) {
                 case "upgrade":
                    getVersions();
-                   aqdAlert("Loading");
+                   aqdAlert("Searching release versions");
                    //let dlg = document.getElementById("alertDialogHeader");
                    //dlg.innerHTML='<input type="list"
                    return;
-/*
-                   if (source.getAttribute("upgrade_type") == "dev") {
-                     if (confirm("Are you sure you want to proceed installing AqualinkD to Dev version '"+_latestDevVersionAvailable+"'' ?")) {
-                       //console.log("Upgrading to dev release");
-                       update_log_message("***** AqualinkD upgrade in progress *****");
-                      } else {
-                        return;
-                      }
-                      cmd.uri = "installdevrelease"
-                   } else {
-                     if (confirm("Are you sure you want to proceed upgrading AqualinkD to '"+_latestVersionAvailable+"'' ?")) {
-                       console.log("Upgrading");
-                       update_log_message("***** AqualinkD upgrade in progress *****");
-                      } else {
-                        return;
-                      }
-                      cmd.uri = "upgrade"
-                    }
-*/
-                    // NEED TO REGET aqmanager after restart.
                     break;
                 case "installVersion":
                     let version = document.getElementById("selectedrelease").value;
                     cmd.uri = "installrelease/"+version
-                    cmd.value = version;
+                    cmd.text_value = version;
                     update_log_message("***** AqualinkD upgrade in progress *****");
                     break;
                 case "restart":
@@ -2350,72 +2342,100 @@
             send_command(cmd);
         }
 
-const VERSION_URL = "https://api.github.com/repos/aqualinkd/AqualinkD/releases"
-let _aqualinkVersions = {};
 
-        function populateVersionSelection(caller=null) {
-          if (caller && caller.checked)
-            pre = true;
-          else
-            pre = false;
-        
-          try {
-            let dlg_head = document.getElementById("alertDialogHeader");
-            let dlg_msg = document.getElementById("alertDialogMessage");
-            
-            let dropdown = '<select id="selectedrelease" name="version selection">';
-            //for (const versionNumber of _aqualinkVersions) {
-            for (const [versionNumber, details] of Object.entries(_aqualinkVersions)) {
-              //alert(versionNumber);
-              if (pre || _aqualinkVersions[versionNumber].prerelease === false) {
-                dropdown += '<option value="'+versionNumber+'">'+versionNumber+'</option>';
-              }
-            }
-            dropdown += '</select>';
-            dropdown += '&nbsp;&nbsp;&nbsp;Include Dev Releases<input type="checkbox" onchange="populateVersionSelection(this)" name="prerelease" value="PreRelease" '+(pre==true?"checked":"")+'/>';
-            dropdown += '<br><input type="button" id="installVersion" onclick="send(this);aqdAlertClose();" value="Install"/>';
-            dlg_head.innerHTML = dropdown;
-            dlg_msg.innerText = "Select a version to install"
-            
-          } catch (e){
-            alert("load error "+e);
+
+  function populateVersionSelection(caller = null) {
+    let prerelease = false;
+    let showversionwarning=false
+
+    if (caller && caller.id == "useprerelease" && caller.checked){
+      prerelease = true;
+    } else if (caller && caller.id == "selectedrelease" && caller.value) {
+      if (isNewerVersion(_currentVersion, caller.value.replace(/[^\d.-]/g, '')))
+        showversionwarning=true;
+
+      prerelease = document.getElementById("useprerelease")?.checked?true:false;
+    }
+      
+    try {
+      let dlg_head = document.getElementById("alertDialogHeader");
+      let dlg_msg = document.getElementById("alertDialogMessage");
+
+      let dropdown = '<select id="selectedrelease" name="version selection" onchange="populateVersionSelection(this)">';
+      //for (const versionNumber of _aqualinkVersions) {
+      for (const [versionNumber, details] of Object.entries(_aqualinkVersions)) {
+        //alert(versionNumber);
+        if (prerelease || _aqualinkVersions[versionNumber].prerelease === false) {
+          let exttext='';
+          let selected='';
+
+          if (versionNumber.replace(/[^\d.-]/g, '') == _latestVersionAvailable) {
+            exttext = ' (latest)';
+          }
+          if (versionNumber === caller?.value) {
+            selected = 'selected';
           }
 
-          //alert("loaded");
+          dropdown += '<option value="' + versionNumber + '"'+selected+'>' + versionNumber + exttext +'</option>';
         }
+      }
+      dropdown += '</select>';
+      dropdown += '&nbsp;&nbsp;&nbsp;Include Dev Releases<input id="useprerelease" type="checkbox" onchange="populateVersionSelection(this)" name="prerelease" value="PreRelease" ' + (prerelease == true ? "checked" : "") + '/>';
+      dropdown += '<br>'
+      if (_latestVersionAvailable == _currentVersion) {
+        dropdown += '<br>latest Release version already installed';
+      }
+      dropdown += '<br><input type="button" id="installVersion" onclick="send(this);aqdAlertClose();" value="Install"/>';
+      dlg_head.innerHTML = dropdown;
 
-        async function getVersions() {
-    
+      if (showversionwarning) {
+        dlg_msg.innerHTML = 'Warning:<p style="font-size: small;">Config files are not always backward compatible when downgrading.<br>'+
+                            'You may need to manually update <b>aqualinkd.conf & config.json</b>.</p>';
+      } else {
+        dlg_msg.innerText = "";
+      }
+    } catch (e) {
+      alert("load error " + e);
+    }
+
+    //alert("loaded");
+  }
+
+  async function getVersions() {
+
     try {
-        // Fetch the file from the specified path (make sure config.json exists)
-        const response = await fetch(VERSION_URL, { cache: 'no-store' });
+      // Fetch the file from the specified path (make sure config.json exists)
+      const response = await fetch(VERSION_URL, { cache: 'no-store' });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Get the response as plain text
+      const versions = await response.text();
+      const versionObject = JSON.parse(versions);
+
+      for (const release of versionObject) {
+        if (!release.assets || release.prerelease == "true" || release.assets.length === 0) {
+          continue;
         }
-
-        // Get the response as plain text
-        const versions = await response.text();
-        const versionObject = JSON.parse(versions);
-
-        for (const release of versionObject) {
-            if (!release.assets || release.prerelease == "true" || release.assets.length === 0) {
-                continue;
-            }
-            const downloadUrl = release.assets[0].browser_download_url;
-            if (downloadUrl) {
-              _aqualinkVersions[release.tag_name] = {};
-              _aqualinkVersions[release.tag_name].url = downloadUrl;
-              _aqualinkVersions[release.tag_name].prerelease = release.prerelease;
-            }
+        const downloadUrl = release.assets[0].browser_download_url;
+        if (downloadUrl) {
+          _aqualinkVersions[release.tag_name] = {};
+          _aqualinkVersions[release.tag_name].url = downloadUrl;
+          _aqualinkVersions[release.tag_name].prerelease = release.prerelease;
         }
+      }
 
-        populateVersionSelection();
+      populateVersionSelection();
 
     } catch (error) {
-        console.error('There was a problem fetching the config file:', error);
+      console.error('There was a problem fetching the config file:', error);
+      let dlg_msg = document.getElementById("alertDialogMessage");
+      //dlg_msg.innerText = "Error connecting to github, please check connection!\n\n"+VERSION_URL;
+      dlg_msg.innerHTML = '<p>Error connecting to github, please check connection</p<<hr><p style="font-size: small;">'+VERSION_URL+'</p>';
     }
-}
+  }
 
         function getLatestVersion(url="https://api.github.com/repos/AqualinkD/AqualinkD/releases/latest", tryagain=true) {
             var xmlhttp = new XMLHttpRequest();
@@ -2435,7 +2455,7 @@ let _aqualinkVersions = {};
             xmlhttp.open("GET", url);
             xmlhttp.send();
         }
-
+/*
         function getLatestDevVersion(url="https://api.github.com/repos/AqualinkD/AqualinkD/contents/source/version.h", tryagain=true) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function () {
@@ -2453,7 +2473,7 @@ let _aqualinkVersions = {};
             xmlhttp.setRequestHeader("Accept","application/vnd.github.raw");
             xmlhttp.send();
         }
-
+*/
         function aqdAlert(message) {
           document.getElementById("alertDialogHeader").innerText = '';
           document.getElementById('alertDialogMessage').innerText = message;
@@ -2496,7 +2516,7 @@ let _aqualinkVersions = {};
                     </tr>
                     <tr>
                         <td colspan="1" align="center"><input id="restart" type="button" onclick="send(this);" value="Restart AqualinkD"></td>
-                        <td colspan="1" align="center"><input id="upgrade" type="button" onclick="send(this);" value="Upgrade AqualinkD"></td>
+                        <td colspan="1" align="center"><input id="upgrade" type="button" onclick="send(this);" value="Update AqualinkD"></td>
                     </tr>
                     <!--
                     <tr>

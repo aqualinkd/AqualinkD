@@ -1077,6 +1077,7 @@ bool parseJSONrequest(char *buffer, struct JSONkvptr *request)
   return true;
 }
 
+/*
 bool parseJSONwebrequest(char *buffer, struct JSONwebrequest *request)
 {
   int i=0;
@@ -1148,7 +1149,7 @@ bool parseJSONwebrequest(char *buffer, struct JSONwebrequest *request)
   
   return true;
 }
-
+*/
 /*
 int json_cfg_element_OLD(char* buffer, int size, const char *name, const void *value, cfg_value_type type, char *valid_val) {
   int result = 0;

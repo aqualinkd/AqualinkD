@@ -65,6 +65,14 @@ struct mg_connection *mg_next(struct mg_mgr *s, struct mg_connection *conn) {
     tolower((unsigned char)(str)[(len)-1]) == tolower((unsigned char)(SUFFIX)[2]) \
 )
 
+#define FAST_SUFFIX_4_CI(str, len, SUFFIX) ( \
+    (len) >= 4 && \
+    tolower((unsigned char)(str)[(len)-4]) == tolower((unsigned char)(SUFFIX)[0]) && \
+    tolower((unsigned char)(str)[(len)-3]) == tolower((unsigned char)(SUFFIX)[1]) && \
+    tolower((unsigned char)(str)[(len)-2]) == tolower((unsigned char)(SUFFIX)[2]) && \
+    tolower((unsigned char)(str)[(len)-1]) == tolower((unsigned char)(SUFFIX)[3]) \
+)
+
 
 /*
 #if defined AQ_DEBUG || defined AQ_TM_DEBUG
@@ -1611,7 +1619,8 @@ void action_web_request(struct mg_connection *nc, struct mg_http_message *http_m
   // If we have a get request, pass it
   if (strncmp(http_msg->uri.buf, "/api", 4 ) != 0) {
       DEBUG_TIMER_START(&tid);
-      if ( FAST_SUFFIX_3_CI(http_msg->uri.buf, http_msg->uri.len, ".js") ) {
+      //if ( FAST_SUFFIX_3_CI(http_msg->uri.buf, http_msg->uri.len, ".js") ) {
+      if ( FAST_SUFFIX_4_CI(http_msg->uri.buf, http_msg->uri.len, "json") ) {
         mg_http_serve_dir(nc, http_msg, &_http_server_opts_nocache);
       } else {
         mg_http_serve_dir(nc, http_msg, &_http_server_opts);
@@ -1754,6 +1763,8 @@ void action_websocket_request(struct mg_connection *nc, struct mg_ws_message *wm
   int i;
   char *uri = NULL;
   char *value = NULL;
+  //char *id = NULL;
+  //char *text_value = NULL;
   char *msg = NULL;
 #ifdef AQ_TM_DEBUG
   int tid;
@@ -1775,8 +1786,12 @@ void action_websocket_request(struct mg_connection *nc, struct mg_ws_message *wm
     
     if (jsonkv.kv[i].key != NULL && strncmp(jsonkv.kv[i].key, "uri", 3) == 0)
       uri = jsonkv.kv[i].value;
-    else if (jsonkv.kv[i].key != NULL && strncmp(jsonkv.kv[i].key, "value", 4) == 0)
+    else if (jsonkv.kv[i].key != NULL && strncmp(jsonkv.kv[i].key, "value", 5) == 0)
       value = jsonkv.kv[i].value;
+    //else if (jsonkv.kv[i].key != NULL && strncmp(jsonkv.kv[i].key, "button", 6) == 0)
+    //  id = jsonkv.kv[i].value;
+    //else if (jsonkv.kv[i].key != NULL && strncmp(jsonkv.kv[i].key, "text_value", 10) == 0)
+    //  text_value = jsonkv.kv[i].value;
   }
   
   if (uri == NULL) {
@@ -1784,6 +1799,7 @@ void action_websocket_request(struct mg_connection *nc, struct mg_ws_message *wm
     return;
   }
 
+  // NSF in future change action_URI to accept button and text_value
   switch ( action_URI(NET_WS, uri, strlen(uri), (value!=NULL?atof(value):TEMP_UNKNOWN), false, &msg)) {
     case uActioned:
       sprintf(buffer, "{\"message\":\"ok\"}");

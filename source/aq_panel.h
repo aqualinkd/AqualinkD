@@ -57,7 +57,7 @@ const uint32_t PANEL_COMPARISON_MASK = (1U << 12) - 1;  // We only care about bi
 #define RSP_SUP_PLAB   (1 << 11) // Pump VSP by Label and not number
 #define RSP_SUP_HPCHIL (1 << 12) // Heat Pump chiller
 #define RSP_SUP_PCDOC  (1 << 13) // PC Dock
-
+#define RSP_SUP_CLIT_RSSA  (1 << 14) // Color Lights can be set over serial adapter.
 
 #define PANEL_CPU    (1 << 0)
 #define PANEL_REV    (1 << 1)

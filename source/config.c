@@ -264,6 +264,7 @@ void init_parameters (struct aqconfig * parms)
   _cfgParams[_numCfgParams].name = CFG_N_rssa_device_id;
   _cfgParams[_numCfgParams].valid_values = CFG_V_rssa_device_id;
   _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_unknownHex;
+  _cfgParams[_numCfgParams].config_mask |= CFG_FORCE_RESTART;
 
   _numCfgParams++;
   _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.extended_device_id_programming;
@@ -279,6 +280,7 @@ void init_parameters (struct aqconfig * parms)
   _cfgParams[_numCfgParams].name = CFG_N_extended_device_id;
   _cfgParams[_numCfgParams].valid_values = CFG_V_extended_device_id;
   _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_unknownHex;
+  _cfgParams[_numCfgParams].config_mask |= CFG_FORCE_RESTART;
 
   _numCfgParams++;
   _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.enable_iaqualink;
@@ -286,6 +288,7 @@ void init_parameters (struct aqconfig * parms)
   _cfgParams[_numCfgParams].name = CFG_N_enable_iaqualink;
   _cfgParams[_numCfgParams].valid_values = CFG_V_BOOL;
   _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_false;
+  _cfgParams[_numCfgParams].config_mask |= CFG_FORCE_RESTART;
   
 #ifndef AQ_MANAGER
   _numCfgParams++;
@@ -311,6 +314,7 @@ void init_parameters (struct aqconfig * parms)
   _cfgParams[_numCfgParams].name = CFG_N_mqtt_user;
   _cfgParams[_numCfgParams].default_value = (void *)NULL;
   _cfgParams[_numCfgParams].config_mask |= CFG_ALLOW_BLANK;
+  _cfgParams[_numCfgParams].config_mask |= CFG_FORCE_RESTART;
 
    _numCfgParams++;
   _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.mqtt_passwd;
@@ -319,6 +323,7 @@ void init_parameters (struct aqconfig * parms)
   _cfgParams[_numCfgParams].config_mask |= CFG_PASSWD_MASK;
   _cfgParams[_numCfgParams].default_value = (void *)NULL;
   _cfgParams[_numCfgParams].config_mask |= CFG_ALLOW_BLANK;
+  _cfgParams[_numCfgParams].config_mask |= CFG_FORCE_RESTART;
 
    _numCfgParams++;
   _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.mqtt_aq_topic;
@@ -326,6 +331,7 @@ void init_parameters (struct aqconfig * parms)
   _cfgParams[_numCfgParams].name = CFG_N_mqtt_aq_topic;
   _cfgParams[_numCfgParams].default_value = (void *)_dcfg_mqtt_aq_tp;
   _cfgParams[_numCfgParams].config_mask |= CFG_ALLOW_BLANK;
+  _cfgParams[_numCfgParams].config_mask |= CFG_FORCE_RESTART;
 
    _numCfgParams++;
   _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.mqtt_discovery_topic;
@@ -333,12 +339,14 @@ void init_parameters (struct aqconfig * parms)
   _cfgParams[_numCfgParams].name = CFG_N_mqtt_discovery_topic;
   _cfgParams[_numCfgParams].default_value = (void *)_dcfg_mqtt_discovery;
   _cfgParams[_numCfgParams].config_mask |= CFG_ALLOW_BLANK;
+  _cfgParams[_numCfgParams].config_mask |= CFG_FORCE_RESTART;
 
   _numCfgParams++;
   _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.mqtt_discovery_use_mac;
   _cfgParams[_numCfgParams].value_type = CFG_BOOL;
   _cfgParams[_numCfgParams].name = CFG_N_mqtt_discovery_use_mac;
   _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_true;
+  _cfgParams[_numCfgParams].config_mask |= CFG_FORCE_RESTART;
   
 
 #if MG_TLS > 0
@@ -371,6 +379,14 @@ void init_parameters (struct aqconfig * parms)
   _cfgParams[_numCfgParams].name = CFG_N_light_programming_mode;
   _cfgParams[_numCfgParams].config_mask |= CFG_GRP_ADVANCED;
   _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_light_programming_mode;
+
+  _numCfgParams++;
+  _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.light_programming_interface;
+  _cfgParams[_numCfgParams].value_type = CFG_INT;
+  _cfgParams[_numCfgParams].name = CFG_N_light_programming_interface;
+  _cfgParams[_numCfgParams].config_mask |= CFG_GRP_ADVANCED;
+  _cfgParams[_numCfgParams].config_mask |= CFG_READONLY;
+  _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_zero;
 
   _numCfgParams++;
   _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.light_programming_initial_on;
@@ -1751,6 +1767,39 @@ void check_print_config (struct aqualinkdata *aqdata)
     }
   }
 
+  // Color lights check infinate water color (RS485, is set as vbutton)
+  for (i=1; i < aqdata->num_lights; i++) {
+    if (aqdata->lights[i].lightType  == LC_JANDYINFINATE) {
+      // Check we have a virtual light button
+      if ( !isMASK_SET(aqdata->lights[i].button->special_mask, VIRTUAL_BUTTON)) {
+        LOG(AQUA_LOG,LOG_WARNING, "Config error, Light mode %d is only valid for a virtual button\n",LC_JANDYINFINATE);
+      }
+    }
+  }
+
+  // Check valid setting
+  if (_aqconfig_.light_programming_interface > LIGHT_PROTOCOL_AQLD) {
+    if (_aqconfig_.device_id == 0x60) {
+      LOG(AQUA_LOG,LOG_WARNING, "Config error, %s set to %d, not supported in PDA mode",CFG_N_light_programming_interface,_aqconfig_.light_programming_interface);
+      _aqconfig_.light_programming_interface = LIGHT_PROTOCOL_AQLD;
+    }
+    
+    if(_aqconfig_.light_programming_interface == LIGHT_PROTOCOL_AQLT) {
+      if (! is_aqualink_touch_id(_aqconfig_.extended_device_id)) {
+        LOG(AQUA_LOG,LOG_WARNING, "Config error, %s set to AqualinkTouch, %s is not set for AqualinkTouch ID",CFG_N_light_programming_interface,CFG_N_extended_device_id);
+        _aqconfig_.light_programming_interface = LIGHT_PROTOCOL_AQLD;
+      }
+    // Below not supported yet
+    //} else if(_aqconfig_.light_programming_interface == LIGHT_PROTOCOL_ONET) {
+    //  if (! is_onetouch_id(_aqconfig_.extended_device_id)) {
+    //    LOG(AQUA_LOG,LOG_WARNING, "Config error, %s set to OneTouch, %s is not set for OneTouch ID",CFG_N_light_programming_interface,CFG_N_extended_device_id);
+    //    _aqconfig_.light_programming_interface = LIGHT_PROTOCOL_AQLD;
+    //  }
+    } else if ( _aqconfig_.light_programming_interface > LIGHT_PROTOCOL_ALLB ) {
+      LOG(AQUA_LOG,LOG_WARNING, "Config error, %s set to %d, not supported",CFG_N_light_programming_interface,_aqconfig_.light_programming_interface);
+      _aqconfig_.light_programming_interface = LIGHT_PROTOCOL_AQLD;
+    }
+  }
   /* 
      PDA Mode
 

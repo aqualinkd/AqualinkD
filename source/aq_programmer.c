@@ -73,6 +73,10 @@ const func_ptr _prog_functions[AQP_RSSADAPTER_MAX] = {
      [AQ_SET_SWG_PERCENT]              = set_allbutton_SWG, 
      [AQ_GET_AUX_LABELS]               = get_allbutton_aux_labels, 
      [AQ_SET_BOOST]                    = set_allbutton_boost, 
+     // Specific one to force all button for light programming
+     [AQ_SET_ALLB_LIGHTCOLOR_MODE]     = set_allbutton_light_colormode,
+     [AQ_SET_ALLB_LIGHTDIMMER]          = set_allbutton_light_dimmer,
+
      [AQ_SET_ONETOUCH_PUMP_RPM]        = set_aqualink_onetouch_pump_rpm, 
      [AQ_GET_ONETOUCH_FREEZEPROTECT]   = get_aqualink_onetouch_freezeprotect, 
      [AQ_GET_ONETOUCH_SETPOINTS]       = get_aqualink_onetouch_setpoints, 
@@ -909,9 +913,11 @@ const char *ptypeName(program_type type)
       return "Set light color (using AqualinkD)";
     break;
     case AQ_SET_LIGHTCOLOR_MODE:
-      return "Set light color (using Panel)";
+    case AQ_SET_ALLB_LIGHTCOLOR_MODE:
+      return "Set light color";
     break;
     case AQ_SET_LIGHTDIMMER:
+    case AQ_SET_ALLB_LIGHTDIMMER:
       return "Set light dimmer";
     break;
      case AQ_SET_SWG_PERCENT:
@@ -1004,7 +1010,7 @@ const char *ptypeName(program_type type)
       return "Set AqualinkTouch OneTouch On/Off";
     break;
     case AQ_SET_IAQTOUCH_LIGHTCOLOR_MODE:
-      return "Set AqualinkTouch Light Color (using panel)";
+      return "Set AqualinkTouch Light Mode";
     break;
     case AQ_SET_IAQTOUCH_SWG_BOOST:
       return "Set AqualinkTouch Boost";
@@ -1123,6 +1129,8 @@ const char *programtypeDisplayName(program_type type)
     case AQ_SET_LIGHTCOLOR_MODE:
     case AQ_SET_IAQTOUCH_LIGHTCOLOR_MODE:
     case AQ_SET_LIGHTDIMMER:
+    case AQ_SET_ALLB_LIGHTDIMMER:
+    case AQ_SET_ALLB_LIGHTCOLOR_MODE:
       return "Programming: setting light mode";
     break;
     case AQ_SET_SWG_PERCENT:

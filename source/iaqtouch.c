@@ -356,6 +356,8 @@ void updateAQButtonFromPageButton(struct aqualinkdata *aqdata, struct iaqt_page_
           break;
           case 0x01:
               SET_IF_CHANGED(aqdata->aqbuttons[i].led->state, ON, aqdata->is_dirty);
+              //NSF might want to check virtual light here, if so remove the color mode name, since
+              // we didnt turn the light on, we cant state the color mode
           break;
           case 0x02:
               SET_IF_CHANGED(aqdata->aqbuttons[i].led->state, FLASH, aqdata->is_dirty);
@@ -976,7 +978,7 @@ bool process_iaqtouch_packet(unsigned char *packet, int length, struct aqualinkd
     // Set disply message if PDA panel
     memset(_popupMsg, 0, AQ_MSGLONGLEN + 1);
     rsm_strncpy(_popupMsg, packet + 6, AQ_MSGLONGLEN, length-9);
-    LOG(IAQT_LOG,LOG_NOTICE, "Popup message '%s'\n",_popupMsg);
+    LOG(IAQT_LOG,LOG_INFO, "Popup message '%s'\n",_popupMsg);
     
     // Change this message, since you can't press OK.  'Light will turn off in 5 seconds. To change colors press Ok now.'
      if ((sp = rsm_strncasestr(_popupMsg, "To change colors press Ok now", strlen(_popupMsg))) != NULL)

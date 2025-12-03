@@ -68,6 +68,9 @@ typedef enum {
   AQ_SET_PUMP_RPM,
   AQ_SET_PUMP_VS_PROGRAM,
   AQ_SET_CHILLER_TEMP,
+  // **** Specific allputon light program. (maybe create all all button in future)
+  AQ_SET_ALLB_LIGHTCOLOR_MODE,
+  AQ_SET_ALLB_LIGHTDIMMER,
   // ******** PDA Delimiter make sure to change MAX/MIN below
   AQ_PDA_INIT,
   AQ_PDA_WAKE_INIT,

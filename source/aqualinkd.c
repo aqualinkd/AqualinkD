@@ -434,6 +434,9 @@ void action_delayed_request()
   else if (_aqualink_data.unactioned.type == LIGHT_MODE) {
     panel_device_request(&_aqualink_data, LIGHT_MODE, _aqualink_data.unactioned.id, _aqualink_data.unactioned.value, UNACTION_TIMER);
   }
+  else if (_aqualink_data.unactioned.type == LIGHT_BRIGHTNESS) {
+    panel_device_request(&_aqualink_data, LIGHT_BRIGHTNESS, _aqualink_data.unactioned.id, _aqualink_data.unactioned.value, UNACTION_TIMER);
+  }
   else 
   {
     LOG(AQUA_LOG,LOG_ERR, "Unknown request of type %d\n", _aqualink_data.unactioned.type);

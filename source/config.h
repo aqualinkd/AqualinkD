@@ -40,6 +40,22 @@
 
 #define MAX_RSSD_LOG_FILTERS 4
 
+/*
+#define LIGHT_PROGRAM_INTERFACE_AQLD 0
+#define LIGHT_PROGRAM_INTERFACE_ALLB 1
+#define LIGHT_PROGRAM_INTERFACE_ONET 2
+#define LIGHT_PROGRAM_INTERFACE_AQLT 3
+#define LIGHT_PROGRAM_INTERFACE_IAQL 4
+*/
+// Going to explicitly set these numbers since they come from config file
+typedef enum {
+  LIGHT_PROTOCOL_AQLD = 0,
+  LIGHT_PROTOCOL_ALLB = 1,
+  LIGHT_PROTOCOL_ONET = 2,
+  LIGHT_PROTOCOL_AQLT = 3,
+  LIGHT_PROTOCOL_IAQL = 4
+} light_program_interface;
+
 struct aqconfig
 {
 #if MG_TLS > 0
@@ -77,6 +93,7 @@ struct aqconfig
   int light_programming_initial_on;
   int light_programming_initial_off;
   bool light_programming_advance_mode;
+  light_program_interface light_programming_interface; // 0=let AqualinkD decide, 1=allbutton, 2=onetouch(N/A), 3=AqualinkTouch, 4=iaqualink(N/A)
   bool override_freeze_protect;
 #ifdef AQ_PDA
   bool pda_sleep_mode;
@@ -277,11 +294,12 @@ int _numCfgParams;
 #define CFG_N_override_freeze_protect           "override_freeze_protect"
 #define CFG_N_pda_sleep_mode                    "pda_sleep_mode"
 #define CFG_N_convert_mqtt_temp                 "mqtt_convert_temp_to_c"
+#define CFG_N_light_programming_interface       "light_programming_interface"
 
 #define CFG_N_report_zero_spa_temp              "report_zero_spa_temp"
 #define CFG_N_report_zero_pool_temp             "report_zero_pool_temp"
 #define CFG_N_read_RS485_devmask                "read_RS485_devmask"
-#define CFG_N_use_panel_aux_labels              "use_panel_aux_labels"
+//#define CFG_N_use_panel_aux_labels              "use_panel_aux_labels"
 #define CFG_N_force_swg                         "force_swg"
 #define CFG_N_force_ps_setpoints                "force_ps_setpoints"
 #define CFG_N_force_frzprotect_setpoints        "force_frzprotect_setpoints"
@@ -308,7 +326,7 @@ int _numCfgParams;
 #define CFG_N_event_check_freezeprotectoff      "event_freezeprotectoff_check_pump"
 #define CFG_N_event_check_boostoff              "event_boostoff_check_pump"
 #define CFG_N_event_check_pumpon_hour           "event_check_pumpon_hour"
-#define CFG_N_event_check_pumpoff_hour         "event_check_pumpoff_hour"
+#define CFG_N_event_check_pumpoff_hour          "event_check_pumpoff_hour"
 #define CFG_N_event_check_usecron               "event_check_use_scheduler_times"
 
 #define CFG_N_event_check_booston_device        "event_booston_check_device"

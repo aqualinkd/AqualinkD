@@ -53,11 +53,19 @@ typedef enum heatpumpmsgfrom{
 
 void updateHeatPumpLed(heatpumpstate state, aqledstate ledstate, struct aqualinkdata *aqdata, heatpumpmsgfrom from);
 
+bool shouldPrintJAndyDebugPacket()
+{
+  if (getLogLevel(DJAN_LOG) == LOG_DEBUG && getLogLevel(RSSD_LOG) < LOG_DEBUG ) {
+    return true;
+  }
 
+  return false;
+}
 void printJandyDebugPacket (const char *msg, const unsigned char *packet, int packet_length)
 {
   // Only log if we are jandy debug mode and not serial debug (otherwise it'll print twice)
-  if (getLogLevel(DJAN_LOG) == LOG_DEBUG && getLogLevel(RSSD_LOG) < LOG_DEBUG ) {
+  //if (getLogLevel(DJAN_LOG) == LOG_DEBUG && getLogLevel(RSSD_LOG) < LOG_DEBUG ) {
+  if (shouldPrintJAndyDebugPacket()) {
     char frame[1024];
     //beautifyPacket(frame, 1024, packet, packet_length, true);
 
@@ -914,28 +922,40 @@ bool processPacketFromJandyLXHeater(unsigned char *packet_buffer, int packet_len
 
 bool processPacketToJandyChemFeeder(unsigned char *packet_buffer, int packet_length, struct aqualinkdata *aqdata)
 {
+  /*
   char msg[1024];
   int length = 0;
 
   length += sprintf(msg+length, "Last panel info ");
-
   length += sprintf(msg+length, ", pH=%f, ORP=%d",aqdata->ph, aqdata->orp);
-
   LOG(DJAN_LOG, LOG_INFO, "%s\n", msg);
+*/
+  LOG(DJAN_LOG, LOG_INFO, "Last panel info : pH=%f, ORP=%d",aqdata->ph, aqdata->orp);
 
+  if (!shouldPrintJAndyDebugPacket()) {
+    // if we are not going to print the packet as debug, print it here
+    logPacket(DJAN_LOG, LOG_INFO, packet_buffer, packet_length, true);
+  }
+  
   return false;
 }
 
 bool processPacketFromJandyChemFeeder(unsigned char *packet_buffer, int packet_length, struct aqualinkdata *aqdata, const unsigned char previous_packet_to){
+/*
   char msg[1024];
   int length = 0;
 
   length += sprintf(msg+length, "Last panel info ");
-
   length += sprintf(msg+length, ", pH=%f, ORP=%d",aqdata->ph, aqdata->orp);
-
   LOG(DJAN_LOG, LOG_INFO, "%s\n", msg);
-
+*/
+  LOG(DJAN_LOG, LOG_INFO, "Last panel info : pH=%f, ORP=%d",aqdata->ph, aqdata->orp);
+  
+  if (!shouldPrintJAndyDebugPacket()) {
+    // if we are not going to print the packet as debug, print it here
+    logPacket(DJAN_LOG, LOG_INFO, packet_buffer, packet_length, true);
+  }
+  
   /*
   I think the below may be accurate
   ph_setpoint  = float(raw_data[8]) / 10
@@ -1214,7 +1234,10 @@ bool processPacketToJandyLight(unsigned char *packet_buffer, int packet_length, 
     LOG(DJAN_LOG, LOG_INFO, "Request to set Jandy Light RGB to %d:%d:%d\n", packet_buffer[6],packet_buffer[7],packet_buffer[8]);
   }
 
-  logPacket(DJAN_LOG, LOG_INFO, packet_buffer, packet_length, true);
+  if (!shouldPrintJAndyDebugPacket()) {
+    // if we are not going to print the packet as debug, print it here
+    logPacket(DJAN_LOG, LOG_INFO, packet_buffer, packet_length, true);
+  }
   
   return true;
 }
@@ -1226,7 +1249,10 @@ bool processPacketFromJandyLight(unsigned char *packet_buffer, int packet_length
     LOG(DJAN_LOG, LOG_INFO, "Light brightness=%d\n", packet_buffer[38]);
   }
 
-  logPacket(DJAN_LOG, LOG_INFO, packet_buffer, packet_length, true);
+  if (!shouldPrintJAndyDebugPacket()) {
+    // if we are not going to print the packet as debug, print it here
+    logPacket(DJAN_LOG, LOG_INFO, packet_buffer, packet_length, true);
+  }
   
   return true;
 }

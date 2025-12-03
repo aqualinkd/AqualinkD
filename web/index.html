@@ -268,7 +268,7 @@
       }
       50% {
         background-color: var(--tile_background);
-        opacity: 0.9;
+        opacity: 0.8; /* 0.9 */
       }
       100% {
         background-color: var(--tile_on_background);
@@ -285,13 +285,36 @@
       }
       50% {
         background-color: var(--tile_background);
-        opacity: 0.9;
+        opacity: 0.8; /* 0.9 */
       }
       100% {
         background-color: var(--tile_on_background);
         opacity: 1.0;
       }
     }
+/*
+    .flash-icon {
+      color: var(--tile_on_text);
+      filter: alpha(opacity=100);
+      opacity: 0.9;
+      -webkit-animation-name: tile-icon-flash;
+      -webkit-animation-duration: 2s;
+      animation-name: tile-icon-flash;
+      animation-duration: 2s;
+      animation-iteration-count: infinite;
+    }
+    @keyframes tile-icon-flash {
+      0% {
+        opacity: 1.0;
+      }
+      50% {
+        opacity: 0.7;
+      }
+      100% {
+        opacity: 1.0;
+      }
+    }
+*/
 
     /*
     .off {
@@ -869,9 +892,11 @@
       if (window.self !== window.top) {
         //console.log("The code is running inside an iframe.");
         // Change the link under the cog/hamburger icon
-        ele = document.getElementById('cog_link');
-        ele.setAttribute("href", "/");
-        ele.setAttribute("target", "_parent");
+        const ele = document.getElementById('cog_link');
+        if (ele) {
+          ele.setAttribute("href", "/");
+          ele.setAttribute("target", "_parent");
+        }
       } else {
         //console.log("The code is not running inside an iframe.");
       }
@@ -1140,6 +1165,7 @@
       //console.log(name+" = "+type+" "+subtype);
 
       if (type.startsWith("switch")) { // Use default SVG for icon images
+
         if (off_imgurl == null) {
             var valdiv = document.createElement('div');
           if (_DisableOffIconCircle) {
@@ -1271,13 +1297,14 @@
       try {
         if (state == (document.getElementById(id).getAttribute('status') == 'off')) {
           send_command(id, (state==true?1:0) );
-          //console.log("Switch state "+id+" to "+(state)?"on":"off");
         } else {
           //console.log("state "+id+" to "+(state)?"on":"off")
         }
         
         setTileOn(id, ((state) ? "on" : "off"));
-      } catch(exception) {}
+      } catch(exception) {
+        console.error("setTileState() :-" + exception);
+      }
     }
 
     function setThermostatSetpoint(id, sp_value) {
@@ -1290,37 +1317,7 @@
     }
 
 
-/*
-    function setTileValue(id, value) {
-      var ext = '';
-      var type;
-      if (value == undefined || value.startsWith("-999") || value.startsWith(" "))
-        value = '--';
-      else {
-        try {
-          if ((type = document.getElementById(id).getAttribute('type')) != null) { 
-            if (type == 'temperature' || type == 'setpoint_thermo' || type == 'setpoint_freeze')
-              ext = '&deg;';
-            else if (type == 'setpoint_swg')
-              ext = '%';
 
-            if ((type == 'temperature' || type == 'value') && turn_on_sensortiles == true) {
-              if (value == 0 || value == '--')
-                setTileOn(id, 'off');
-              else
-                setTileOn(id, 'on');
-            }
-          }
-        } catch (e) {
-          //console.log('ERROR id=' + id + ' Line 764 | element = '+document.getElementById(id));
-        }
-      }
-      //document.getElementById(id + '_tile_icon_value').textContent = value;
-      var tile;
-      if ((tile = document.getElementById(id + '_tile_icon_value')) != null)
-        tile.innerHTML = value + ext;
-    }
-*/
     function setTileValue(id, value) {
       var ext = '';
       var type = null;
@@ -1331,6 +1328,7 @@
         if (value == undefined || value.startsWith("-999") || value.startsWith(" ")) {
           value = '--';
         } else {
+          let uom;
           if ((uom = document.getElementById(id).getAttribute('UOM')) != null) {
             ext = uom;
           } else if ((type = document.getElementById(id).getAttribute('type')) != null) { 
@@ -1364,7 +1362,7 @@
         }
       } catch (e) {
           // Devices that are hidden are not found
-          //console.log('ERROR id=' + id + ' Line '+new Error().lineNumber+' | element = '+document.getElementById(id));
+          //console.log('ERROR id=' + id + ' Line '+new Error().lineNumber+' | element = '+document.getElementById(id)+"\n"+e);
       }
       //document.getElementById(id + '_tile_icon_value').textContent = value;
       var tile;
@@ -1518,7 +1516,6 @@
         //console.log("Error unknown ID '"+id+"' can't set to '"+status+"'");
         return;
       }
-
       // Display is a special status to "brighten up" sensor values. 
       if (status != "on" && status != "off" && status != "enabled" && status != "flash" 
                          && status != "rangecritical" && status != "rangewarning" && status != "rangeoptimal") {
@@ -1535,13 +1532,17 @@
           tile.classList.add("flash");
           tile.classList.remove("on");
           text = "Delay";
+          //const tile_icon = document.getElementById(id + "_tile_icon_value");
+          //if (tile_icon) {tile_icon.classList.add("flash-icon");}
         } else {
           tile.classList.add("on");
           tile.classList.remove("flash");
           text = "On";
+          //const tile_icon = document.getElementById(id + "_tile_icon_value");
+          //if (tile_icon) {tile_icon.classList.remove("flash-icon");}
         }
         try{
-          if (tile.getAttribute('type').startsWith("switch")) {
+          if (tile.getAttribute('type').startsWith("switch") || tile.getAttribute('type').startsWith("light")) {
             var el = document.getElementById(id + '_tile_icon_value');
             if (el) { // standard SVG icon
               el.classList.add('switch-on');
@@ -1603,7 +1604,7 @@
         /*
         */
         try {
-          if (tile.getAttribute('type').startsWith("switch")) {
+          if (tile.getAttribute('type').startsWith("switch") || tile.getAttribute('type').startsWith("light")) {
             var el = document.getElementById(id + '_tile_icon_value');
             if (el) { // standard SVG icon
               el.classList.add('switch-off');
@@ -1723,6 +1724,7 @@
       const tile_icon_classes = [
         "enabled",
         //"flash",
+        //"flash-icon",
         "disabled",
         "cool",
         "heat",
@@ -1740,7 +1742,7 @@
       
       if (_DisableOffIconCircle) {
        try{
-        if (document.getElementById(id).getAttribute('type').startsWith("switch")) {
+        if (document.getElementById(id).getAttribute('type').startsWith("switch") || document.getElementById(id).getAttribute('type').startsWith("light")) {
           allowed.delete("disabled");
         }
        } catch (e){console.log(e)}
@@ -3166,7 +3168,7 @@
 //console.trace("Tracing");
       socket_di.send(JSON.stringify(_cmd));
 
-      if ( _link_spa_and_heater && cmd == "Spa_Mode" ) {
+      if ( _config.tile_settings.link_spa_and_spa_heater && cmd == "Spa_Mode" ) {
         var ncmd = {};
         ncmd.command = "Spa_Heater";
         ncmd.uri = "Spa_Heater/set";

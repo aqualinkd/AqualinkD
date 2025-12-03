@@ -73,6 +73,7 @@ typedef  int32_t logmask_t;
 
 #define AQ_MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define AQ_MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define AQ_CLAMP(value, min_val, max_val) ((value) > (max_val) ? (max_val) : ((value) < (min_val) ? (min_val) : (value)))
 
 
 /*

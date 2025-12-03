@@ -43,7 +43,7 @@ char *_color_light_options[NUMBER_LIGHT_COLOR_TYPES][LIGHT_COLOR_OPTIONS] =
         "Magenta",
         "Garnet Red",
         "Violet",
-        "Color Splash"
+        "Color Splash"   // 0x4b
   },
   { // 2 = Jandy LED
         "Off",
@@ -182,6 +182,28 @@ void setColorLightsPanelVersion(uint8_t supported)
   set = true;
 }
 */
+
+bool is_valid_light_mode(clight_type type, int index)
+{
+  printf("Checking _color_light_options[%d][%d]\n",type,index);
+  
+  if (type == LC_DIMMER2) {
+    if (index >= 0 && index <=100) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  if (index < 0 || index > LIGHT_COLOR_OPTIONS || _color_light_options[type][index] == NULL ){
+    return false;
+  }
+
+  printf("result = %s\n", _color_light_options[type][index]);
+
+  return true;
+}
+
 void clear_aqualinkd_light_modes()
 {
   //_color_light_options[0] = _aqualinkd_custom_colors;
@@ -271,6 +293,8 @@ const char *get_currentlight_mode_name(clight_detail light, emulation_type proto
   return _color_light_options[light.lightType][light.currentValue];
 }
 
+
+
 // This should not be uses for getting current lightmode name since it doesn;t have full logic
 
 const char *light_mode_name(clight_type type, int index, emulation_type protocol)
@@ -344,6 +368,68 @@ bool set_currentlight_value(clight_detail *light, int index)
   }
 
   return rtn;
+}
+
+ // Take a % and return 0,1,2,3,4 for 0=0, 1=25, 2=50, 3=75, 4=100, ie the index of _color_light_options[10][??]
+int dimmer_percent_to_mode_index(int value)
+{
+  /*
+  value = round(value / 25);
+  if (value > 4 ) {value=4;}
+  */
+  value = round( (value+12) / 25);  // Round up/down 
+  if (value > 4 ) {value=4;}
+
+  return value;
+}
+
+int dimmer_mode_to_percent(int value)
+{
+  return value * 25;
+}
+
+
+const char* lightTypeName(clight_type type)
+{
+  switch (type) {
+    case LC_PROGRAMABLE:
+      return "AqualinkD Programmable";
+    break; 
+    case LC_JANDY:
+      return "Jandy Color";
+    break; 
+    case LC_JANDYLED:
+      return "Jandy LED";
+    break; 
+    case LC_SAL:
+      return "SAm/SAL";
+    break; 
+    case LC_CLOGIG:
+      return "Color Logic";
+    break; 
+    case LC_INTELLIB:
+      return "Intelibrite";
+    break; 
+    case LC_HAYWCL:
+      return "Haywood Universal";
+    break; 
+    case LC_JANDYINFINATE:
+      return "Jandy Infinite";
+    break; 
+    case LC_DIMMER:
+      return "Dimmer";
+    break; 
+    case LC_DIMMER2:
+      return "Dimmer (full range)";
+    break; 
+
+    default:
+    case LC_SPARE_2:
+    case LC_SPARE_3:
+    return "unknown";
+    break;
+  }
+  return "unknown";
 }
 
 // Used for dynamic config JS 

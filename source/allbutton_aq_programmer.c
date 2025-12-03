@@ -499,14 +499,14 @@ void *set_allbutton_light_colormode( void *ptr )
     use_current_mode = true;
     LOG(ALLB_LOG, LOG_INFO, "Light Programming #: %d, on button: %s, color light type: %d, using current mode\n", val, button->label, ((clight_detail *)button->special_mask_ptr)->lightType);
   } else {
-    mode_name = light_mode_name(((clight_detail *)button->special_mask_ptr)->lightType, val-1, ALLBUTTON);
+    mode_name = light_mode_name(((clight_detail *)button->special_mask_ptr)->lightType, val, ALLBUTTON); // NSF DO NOT -1 from value (check WS logic if you do)
     use_current_mode = false;
     if (mode_name == NULL) {
       LOG(ALLB_LOG, LOG_ERR, "Light Programming #: %d, on button: %s, color light type: %d, couldn't find mode name '%s'\n", val, button->label, ((clight_detail *)button->special_mask_ptr)->lightType, mode_name);
       cleanAndTerminateThread(threadCtrl);
       return ptr;
     } else {
-      LOG(ALLB_LOG, LOG_INFO, "Light Programming #: %d, on button: %s, color light type: %d, name '%s'\n", val, button->label, ((clight_detail *)button->special_mask_ptr)->lightType, mode_name);
+      LOG(ALLB_LOG, LOG_INFO, "Light Programming #: %d, on button: %s, color light type: %d, color name '%s'\n", val, button->label, ((clight_detail *)button->special_mask_ptr)->lightType, mode_name);
     }
   }
 /*
