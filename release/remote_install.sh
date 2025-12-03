@@ -29,6 +29,11 @@ TEMP_INSTALL="/tmp/aqualinkd"
 OUTPUT="/tmp/aqualinkd_upgrade.log"
 UNTAR_CMD="tar xz --strip-components=1 --directory=$TEMP_INSTALL"
 
+
+ERROR_ON_GLIBC=$FALSE # $TRUE will error and not continue, $FALSE will give a warning only. 
+REQUIRED_GLIBC_VERSION="2.31"
+
+
 FROM_CURL=$FASE
 SYSTEMD_LOG=$FALSE
 
@@ -118,7 +123,7 @@ function installed_version {
        check_tool awk &&
        check_tool tr; then
       INSTALLED_VERSION=$(strings "$INSTALLED_BINARY" | grep sw_version | awk -v RS="," -v FS=":" '/sw_version/{print $2;exit;}' | tr -d ' "' )
-      log "Current installed version $INSTALLED_VERSION"
+      #log "Current installed version $INSTALLED_VERSION"
     fi
   else
     log "AqualinkD is not installed"
@@ -144,6 +149,36 @@ function check_system_arch {
       return "$FALSE";
     ;;
   esac
+}
+
+function check_glibc_version {
+
+  # Extract the part BEFORE the first dot
+  REQUIRED_GLIBC_MAJOR="${REQUIRED_GLIBC_VERSION%.*}"
+  # Extract the part AFTER the first dot
+  REQUIRED_GLIBC_MINOR="${REQUIRED_GLIBC_VERSION#*.}"
+
+  CURRENT_GLIBC_VERSION_STRING=$(ldd --version 2>/dev/null | head -n 1 | awk '{print $NF}')
+
+  if [[ ! "$CURRENT_GLIBC_VERSION_STRING" =~ ^[0-9]+\.[0-9]+$ ]]; then
+    logerr "Error: Cannot find or parse GLIBC version from system utilities." 
+    return "$FALSE";
+  fi
+
+  IFS='.' read -r CURRENT_GLIBC_MAJOR CURRENT_GLIBC_MINOR <<< "$CURRENT_GLIBC_VERSION_STRING"
+
+  if [ "$CURRENT_GLIBC_MAJOR" -lt "$REQUIRED_GLIBC_MAJOR" ] || \
+    ([ "$CURRENT_GLIBC_MAJOR" -eq "$REQUIRED_GLIBC_MAJOR" ] && [ "$CURRENT_GLIBC_MINOR" -lt "$REQUIRED_GLIBC_MINOR" ]); then
+    
+    if [ "$ERROR_ON_GLIBC" -eq $TRUE ]; then 
+      logerr "GLIBC version $CURRENT_GLIBC_VERSION_STRING is too old, $REQUIRED_GLIBC_VERSION required"
+      return "$FALSE";
+    fi
+
+    log "Warning: Minimum GLIBC version $REQUIRED_GLIBC_VERSION / Debian Bullseye or newer will be required in the future, please upgrade OS"
+  fi
+
+  return "$TRUE"
 }
 
 
@@ -174,6 +209,8 @@ function check_can_upgrade {
   if command -v dpkg &>/dev/null; then
     if ! check_system_arch; then output+="System Architecture not supported!"; fi
   fi
+
+  if ! check_glibc_version; then output+="GLIBC is too old, $REQUIRED_GLIBC_VERSION required"; fi
 
   # Check free diskspace
   mkdir -p "$TEMP_INSTALL"
@@ -314,7 +351,7 @@ if check_can_upgrade; then
   installed_version
   if [[ "$INSTALLED_VERSION" != "" ]]; then
     log "Current AqualinkD installation $INSTALLED_VERSION"
-    log "System OK to upgrade AqualinkD to $REL_VERSION"
+    log "System OK to install AqualinkD latest release $REL_VERSION"
   else
     log "System OK to install AqualinkD $REL_VERSION"
   fi
@@ -346,7 +383,7 @@ case $1 in
   ;;
   v*)
     if ! download_version $1; then logerr "downloading version $1";exit "$FALSE"; fi
-    run_install_script "$REL_VERSION"
+    run_install_script "$1"
     cleanup
   ;;
   -h|help|h)
