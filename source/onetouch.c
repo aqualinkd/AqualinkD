@@ -778,8 +778,6 @@ void rs16led_update(struct aqualinkdata *aqdata, int updated) {
   }
 }
 
-
-
 bool new_menu(struct aqualinkdata *aqdata)
 {
   static bool initRS = false;
@@ -800,8 +798,9 @@ bool new_menu(struct aqualinkdata *aqdata)
       }
       rtn = log_qeuiptment_status(aqdata);
       // Hit select to get to next menu ASAP.
-      if ( in_ot_programming_mode(aqdata) == false )
-        ot_queue_cmd(KEY_ONET_SELECT);
+      if ( in_ot_programming_mode(aqdata) == false ) {
+        ot_queue_cmd(KEY_ONET_SELECT); // This makes it run through the menu's quicker.  But no need to do it.
+      }
       break;
     case OTM_SET_TEMP:
       rtn = log_heater_setpoints(aqdata);

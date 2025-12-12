@@ -518,13 +518,12 @@
     </style>
 
     <script type='text/javascript'>
-       'use strict';
+       //'use strict';
 
         var _panel_size = 6;
         var _panel_set = 0;
         var _currentVersion = 0;
         var _latestVersionAvailable = 0;
-        //var _latestDevVersionAvailable = 0;
         var _rssd_logmask = 0;
         const RSSD_MASK_ID = 512;  // Must match RSSD_LOG in utils.c
 
@@ -537,6 +536,7 @@
         var _config = {};
 
         const VERSION_URL = "https://api.github.com/repos/aqualinkd/AqualinkD/releases"
+        const WEB_CONFIG_DEFAULT = "https://raw.githubusercontent.com/aqualinkd/AqualinkD/refs/heads/master/web/config.json"
         let _aqualinkVersions = {};
 
         const _urlParams = new URLSearchParams(window.location.search);
@@ -1570,7 +1570,7 @@
             if (_config[obj].value !== undefined) {
               if (obj.toString().startsWith("light_program_") ) {
                 //console.log(obj.toString());
-                num = parseInt(lastKey.match(/[0-9]+/));
+                let num = parseInt(lastKey.match(/[0-9]+/));
                 num++;
                 //console.log("check for light_program_"+String(num+1).padStart(2, '0'));
                 //console.log("check for light_program_"+num);
@@ -1695,14 +1695,14 @@
             }*/
            //alert(data.type+" r="+data.panel_revision+", t="+data.panel_type);
             if (data['version']) {
-                document.getElementById("panelversion").innerHTML = data['version'];
+                document.getElementById("panelversion").textContent = data['version'];
             }
             else if (data['panel_revision']) {
-              document.getElementById("panelversion").innerHTML = data['panel_revision'];
+              document.getElementById("panelversion").textContent = data['panel_revision'];
             }
 
             if (data['panel_type']) {
-                document.getElementById("paneltype").innerHTML = data['panel_type'];
+                document.getElementById("paneltype").textContent = data['panel_type'];
             }
             if (data['status']) {
                 update_status_message(data['status']);
@@ -1855,28 +1855,36 @@
         async function updateWebConfigFromMaster() {
           let masterJSON;
           // Get new master
+          const jsonInput = document.getElementById('webconfig-json-input');
+
+          const resultArea = document.getElementById('validation-result');
+          // Clear previous results
+          resultArea.className = '';
+          resultArea.textContent = '';
+
           try {
                 // Fetch the file from the specified path (make sure config.json exists)
                 // BELOW file should be from github. File with any new config keys in it
-                const response = await fetch("/config.json.tmp", { cache: 'no-store' });
+                const response = await fetch(WEB_CONFIG_DEFAULT, { cache: 'no-store' });
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 // Get the response as plain text
-                const text = await response.text();
-                masterJSON = JSON.parse(text)
+                const configText = await response.text();
+                //masterJSON = JSON.parse(configText)
                 // Populate the textarea
-                //jsonInput.value = configText;
-                //jsonInput.placeholder = "Enter or edit your JSON here...";
-                //webconfig_validateAndDisplay(); // Optional: Validate immediately upon loading
-                
+                jsonInput.value = configText;
+                jsonInput.placeholder = "Enter or edit your JSON here...";
+                webconfig_validateAndDisplay();
             } catch (error) {
               alert("Error loading master cfg "+error);
             }
           // Now get local
+          /* This will merge the 2 files 
           try{
+             
           const jsonInput = document.getElementById('webconfig-json-input');
           const jsonString = jsonInput.value;
           var webcfgJSON = JSON.parse(jsonString);
@@ -1889,7 +1897,7 @@
           } catch (error) {
             alert("Error "+error);
           }
-  
+          */
         }
 
         function mergeMissingKeysRecursive(target, source) {
@@ -2671,10 +2679,10 @@
               <table border="0" cellpadding="0px" width="100%">
                 <tr>
                 <td align="right" style="width:50%;padding-right: 10px;">
-                  <input id="saveconfig" type="button" onclick="saveconfig(this);" value="Save Config"></input>
+                  <input id="saveconfig" type="button" onclick="saveconfig(this);" value="Save"></input>
                 </td>
                 <td align="left" style="width:50%;padding-left: 10px;">
-                  <input id="saveconfig" type="button" onclick="closeconfig(this);" value="Close (without saving)"></input> 
+                  <input id="saveconfig" type="button" onclick="closeconfig(this);" value="Discard"></input> 
                 </td>
                 </tr>
               </table>
@@ -2708,15 +2716,15 @@
                   </tr>
                   <tr>
                     <td align="right" style="width:33%;padding-right: 10px;">
-                   <input type="button" onclick="webconfig_validateAndDisplay()" value="Validate"></input>
+                      <input type="button" onclick="webconfig_validateAndDisplay()" value="Validate"></input>
                     </td>
                     <td <td align="center" style="width:33%;">
-                   <input type="button" onclick="saveWebConfig()" value="Save"></input>
+                      <input type="button" onclick="saveWebConfig()" value="Save"></input>
                     </td>
                     <td align="left" style="width:33%;padding-left: 10px;">
-                   <input type="button" onclick="closeWebConfig()" value="Close without Saving"></input>
-                   <!--<input onclick="updateWebConfigFromMaster()" value="get new"></input>-->
-                   <!-- For the future, to add new keys to json config pulling from github-->
+                      <input type="button" onclick="closeWebConfig()" value="Discard"></input>
+                      <!-- For the future, to reset config to github contents, or to add new keys to json config pulling from github-->
+                      <!-- <input type="button" onclick="updateWebConfigFromMaster()" value="get new"></input> -->
                     </td>
                   </tr>
               <tr>

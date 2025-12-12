@@ -273,7 +273,7 @@
     "show_vsp_gpm": "true",
     "disable_off_icon_background": "true"
   },
-  "EXAMPLE_colors_dark": {
+  "colors-dark-example": {
     "body_background": "#121212",
     "body_text": "#FFFFFF",
     "options_pane_background": "#1E1E1E",

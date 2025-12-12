@@ -146,12 +146,29 @@
       border-radius: 20px;
       justify-content: center;
       align-items: center;
-      width: 650px;
+      /*width: 650px;*/
+      min-width: 660px;
+      max-width: 680px;
       padding: 10px;
+
+     
+      
       /*overflow-y: scroll; didn't work*/
       /*height: 100%;*/
       /*flex-basis: content;*/
       /*flex-direction: column;*/
+/*
+      max-height: 300px; 
+      overflow: auto; 
+      border: 1px solid #ae2424; 
+      */
+    }
+
+    .scheduler_table {
+      overflow-x: hidden;
+      overflow-y: auto;
+      /*max-height: 100px;*/
+      width: 665px;
     }
 
     .simulator_pane {
@@ -186,6 +203,7 @@
       /*
       height: 100%;
       */
+      
     }
 
     /*
@@ -564,9 +582,31 @@
   box-shadow: 0 0.0625em 0 0.0625em rgba(0,0,0,0.075);*/
     }
 
+    .sc_table,
+    .sc_table th,
+    .sc_table td {
+      /*border: 1px solid #ccc;*/
+      border: 0px;
+      padding: 0px;  
+    }
+
     .sc_tablehead {
-  vertical-align: top;
-  text-align: center;
+      vertical-align: top;
+      text-align: center;
+    }
+
+
+.sc_tablerowhidden {
+    visibility: collapse;
+  line-height: 0; 
+}
+
+.sc_tablerowhidden tr  {
+  visibility: hidden;
+  height: 0;
+  max-height: 0;
+  padding: 0;
+  border: none;
 }
 
 .cs_commandcell {
@@ -670,6 +710,31 @@
   background-repeat: no-repeat;
 }
 
+
+.pane_close_button {
+          font-size: 10px !important;
+          font-weight: bold !important;
+          /*color: var(--body_text);*/
+          /*background-color: #7f8385 !important;*/
+          border: none !important;
+          color: rgb(0, 0, 0) !important;
+          padding: 2px 2px !important;
+          text-decoration: none !important;
+          margin: 2px 2px 2px 2px !important;
+          min-width: 18px !important;
+          border-radius: 2px !important;
+          height: 18px !important;
+          
+        }
+        
+        .pane_close_button_contaner {
+          position: absolute;
+          top: 0;
+          right: 0;
+          padding-top: 5px;
+          padding-right: 5px;
+        }
+
     /*
     .timedate {
       font-size: 10px;
@@ -681,6 +746,7 @@
     
     var _config = {};
    
+    var _aq_display_tile_size = 'small';
 
     var _lightProgramDropdown = false;
     var _pressEvent;
@@ -1017,6 +1083,7 @@
 
       // 375x724 = 271500
       if ((w * h) > 370000) { // 370000 is kind-a just guess
+        _aq_display_tile_size = "large";
         document.documentElement.style.setProperty('--tile-width', '125px');
         document.documentElement.style.setProperty('--tile_icon-height', '45px');
         document.documentElement.style.setProperty('--tile_name-height', '42px');
@@ -1025,7 +1092,10 @@
         document.documentElement.style.setProperty('--tile_status-height', '15px');
         document.documentElement.style.setProperty('--tile_grid-gap', '20px');
         document.documentElement.style.setProperty('--tile_name-lineheight', '1.4');
+      } else {
+        _aq_display_tile_size = "small";
       }
+
       if (w > h)
         _landscape = true;
       else
@@ -1317,6 +1387,54 @@
     }
 
 
+   
+    // Reduce the number of decimal places if a float is longer than a
+    // a set number of digits.  Leave any int / string alone, and ONLY reduce the decimal part of a float.
+
+    function reduct(value) {
+
+      const str = String(value);
+      const parts = str.split('.');
+
+      const integerDigits = parts[0].length;
+  
+      let fractionalDigits = 0;
+      // If the array has more than one part, a decimal point was found.
+      if (parts.length > 1) {
+        fractionalDigits = parts[1].length;
+      } else {
+        // No decimal places, return.
+        return value;
+      }
+
+      // Large tiles vs small tiles.
+      let total_digits = 3;
+      if ( _aq_display_tile_size == "large" ) {
+          total_digits = 5;
+      }
+
+      if (integerDigits + fractionalDigits <= total_digits) {
+        // Total length is less so no change
+        return value;
+      } else if (integerDigits >= total_digits) {
+        // Simply return the intiger and not decimal places.
+        return parts[0].toString();
+      } else {
+        let numFractionalDigits = total_digits - integerDigits;
+        return parts[0].toString() + "." + parts[1].substring(0, numFractionalDigits);
+      }
+      return value;
+    }
+
+    /*
+      Set any UOM that's not deg to smaller font
+    */
+    function formatUOM(uom) {
+      if (uom == "&deg;" || uom == "°") {
+        return uom;
+      }
+      return '<span class="uom_text">'+uom+'</span>';
+    }
 
     function setTileValue(id, value) {
       var ext = '';
@@ -1331,13 +1449,17 @@
           let uom;
           if ((uom = document.getElementById(id).getAttribute('UOM')) != null) {
             ext = uom;
+            //ext = '<span class="uom_text">'+uom+'</span>';
           } else if ((type = document.getElementById(id).getAttribute('type')) != null) { 
-            if (type == 'temperature' || type == 'setpoint_thermo' || type == 'setpoint_freeze' || type == 'setpoint_chiller')
+            if (type == 'temperature' || type == 'setpoint_thermo' || type == 'setpoint_freeze' || type == 'setpoint_chiller') {
               ext = '&deg;';
-            else if (type == 'setpoint_swg')
+            } else if (type == 'setpoint_swg') {
               ext = '%';
-            else if (type == 'value' && id == 'CHEM/ORP')
-              ext = '<span class="uom_text">mV</span>';
+              //ext = '<span class="uom_text">%</span>';
+            } else if (type == 'value' && id == 'CHEM/ORP') {
+              //ext = '<span class="uom_text">mV</span>';
+              ext = "mV";
+            }
             //else if (type == 'value' && id == 'CHEM/pH')
             //  ext = '<span class="uom_text">pH</span>';
           }
@@ -1366,8 +1488,12 @@
       }
       //document.getElementById(id + '_tile_icon_value').textContent = value;
       var tile;
-      if ((tile = document.getElementById(id + '_tile_icon_value')) != null)
-        tile.innerHTML = value + ext;
+      if ((tile = document.getElementById(id + '_tile_icon_value')) != null){
+        // Stupid way but testing fixing false positives from codeQL
+        //tile.innerHTML = formatUOM(ext);
+        //tile.textContent = reduct(value) + tile.textContent;
+        tile.innerHTML = reduct(value) + formatUOM(ext);
+      }
     }
 
     function setTileThresholds(id, value) {
@@ -1420,9 +1546,11 @@
       try {
         var tile = document.getElementById(id);
         if (tile.getAttribute('status') == 'on' || tile.getAttribute('status') == 'enabled') {
-          document.getElementById(id + '_status').innerHTML = text;
+          //document.getElementById(id + '_status').innerHTML = text;
+          setElementHTML(id + '_status', text);
         } else if (tile.getAttribute('status') == 'rangeoptimal' || tile.getAttribute('status') == 'rangewarning' || tile.getAttribute('status') == 'rangecritical') {
-          document.getElementById(id + '_status').innerHTML = text;
+          //document.getElementById(id + '_status').innerHTML = text;
+          setElementHTML(id + '_status', text);
         } else {
           //document.getElementById(id + '_status').innerHTML = text;
           //console.log("Tile "+id+" status is '"+document.getElementById(id).getAttribute('status')+"' not setting text to '"+text+"'");
@@ -1432,7 +1560,8 @@
     function setTileOnTextLine2(id, text) {
       try {
         if (document.getElementById(id).getAttribute('status') == 'on') {
-          document.getElementById(id + '_status_line2').innerHTML = text;
+          //document.getElementById(id + '_status_line2').innerHTML = text;
+          setElementHTML(id + '_status_line2', text);
           return true;
         } else {
           //console.log("Tile "+id+" status is '"+document.getElementById(id).getAttribute('status')+"' not setting text to '"+text+"'");
@@ -1625,17 +1754,27 @@
       }
 
       type = tile.getAttribute('type');
+     /* 
       try {
         if (type != "value" && type != "temperature") {
           //console.log("Set Text "+id+" "+" - "+type+" "+text);
           document.getElementById(id + '_status').innerHTML = text;
           // Clear line 2 status if we have it.
           document.getElementById(id + '_status_line2').innerHTML = "";
-        } else if ( status == "off" (type == "value" || type == "temperature") ) {
+        } else if ( status == "off" && (type == "value" || type == "temperature") ) {
           document.getElementById(id + '_status').innerHTML = "";
           document.getElementById(id + '_status_line2').innerHTML = "";
         }
-      } catch (e) {}
+      } catch (e) {console.log(e)}
+      */
+     
+     if (type != "value" && type != "temperature") {
+        setElementHTML(id + '_status', text);
+        setElementHTML(id + '_status_line2', "");
+      } else if ( status == "off" && (type == "value" || type == "temperature") ) {
+        setElementHTML(id + '_status', "");
+        setElementHTML(id + '_status_line2', "");
+      }
 
       if (status != null) {
         if (status == 'enabled' || status == 'flash') {
@@ -2194,6 +2333,8 @@
         } else if (type == 'scheduler') {
           // NSF BUILD SCHEDULER DEFAULTS HERE
           cs_clearSchedules();
+          setElementHTML("crontext", "");
+          setElementHTML("cronhelp", "");
           //cs_loadJSON("/api/schedules", cs_schedules,'jsonp');
           get_schedules();
         } else if (type == 'simulator') {
@@ -2372,6 +2513,18 @@
       displayMessage(message, timeout);
     }
 
+    function setElementHTML(element, html) {
+      
+      const elmnt = document.getElementById(element);
+      if (elmnt) {
+        elmnt.innerHTML = html;
+        //console.log("Call in "+element+ " "+html);
+      } else {
+        //console.log("fail in "+element+ " "+html);
+      }
+    }
+
+
     function displayMessage(message, timeoutSeconds) {
       // Check to see if we can display message
       if (_displayMsgTimeout > 0) {
@@ -2397,7 +2550,8 @@
         document.getElementById("header").classList.remove("error");
       }
 */
-      document.getElementById("message").innerHTML = message;
+      //document.getElementById("message").innerHTML = message;
+      setElementHTML("message", message);
     }
     /*********************************************************************
      *  
@@ -2408,7 +2562,8 @@
     // NSF change this import to dynamic config in future.
     //import("./cronstrue.min.js");
 
-    var CS_ROW_INDEX = 2;
+    //var CS_ROW_INDEX = 2;
+    var CS_ROW_INDEX = 0;
     var V_OFF = 0;
     var V_ON = 1;
     var V_SETPOINT = 3;
@@ -2418,16 +2573,32 @@
 
     function showScheduler(caller){
 
+      var height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+      //console.log("height = "+height+" - "+caller.id);
+
       if (typeof _enable_schedules === "undefined" || _enable_schedules != false)
       {
-        if ( parseInt(getComputedStyle(document.querySelector('.scheduler_pane')).width) > Math.max(document.documentElement.clientWidth, window.innerWidth) ) {
+        if ( parseInt(getComputedStyle(document.querySelector('.scheduler_pane')).width) > Math.max(document.documentElement.clientWidth, window.innerWidth) ||
+             height < 300 ) {
           //alert("Sorry, Scheduler won't fit on screen\nPlease use a different device");
           displayMessage("Scheduler won't fit on screen", 3);
+          //console.log("Height="+height+", computedwidth="+getComputedStyle(document.querySelector('.scheduler_pane')).width+", clientWidth="+document.documentElement.clientWidth+", innerWidth="+window.innerWidth);
           return;
         }
         import("./cronstrue.min.js");
         caller.setAttribute('type', 'scheduler');
         showTileOptions(true, caller.id);
+
+        //h=400;
+        document.getElementById("scheduler_options_pane").style.maxHeight = (height-40)+'px';
+        document.getElementById("scheduler_scrollabletable").style.maxHeight = (height-280)+'px';
+
+        const cs_table = document.getElementById('cronschedules');
+        if (cs_table) {
+          const tableObserver = new ResizeObserver(cs_synchronizeTableWidths);
+          tableObserver.observe(cs_table);
+        }
+       
       }
     }
 
@@ -2492,6 +2663,7 @@
     function cs_crontext(caller){
 
       for (let cell of caller.parentNode.parentNode.cells) {
+        
         switch (cell.firstChild.id) {
           case "min":
             min = cell.firstChild.value;
@@ -2525,12 +2697,13 @@
         //command=cs_getExtraCommand(device);
         extra = " set "+device2english(device, true)+" "+device2english(device, false)+" to "+value
       } else {
-        extra = " turn "+device2english(device, true)+" "+((value ==1) ? 'on' : 'off')
+        extra = " turn "+device2english(device, true)+" "+((command == 1) ? 'on' : 'off')
       }
       
       var cron = min + " " + hour + " " + daym + " " + month + " " + dayw
       try {
-        document.getElementById("crontext").innerHTML = "<span class='cs_crontext'>&nbsp;" + cronstrue.toString(cron) + "<font size='-1'>" + extra + "</font>&nbsp;</span>";
+        //document.getElementById("crontext").innerHTML = "<span class='cs_crontext'>&nbsp;" + cronstrue.toString(cron) + "<font size='-1'>" + extra + "</font>&nbsp;</span>";
+        setElementHTML("crontext", "<span class='cs_crontext'>&nbsp;" + cronstrue.toString(cron) + "<font size='-1'>" + extra + "</font>&nbsp;</span>");
       } catch (error) {}
 
       var html = ""
@@ -2565,17 +2738,19 @@
           "</table>";
       }
 
-      document.getElementById("cronhelp").innerHTML = html;
+      //document.getElementById("cronhelp").innerHTML = html;
+      setElementHTML("cronhelp", html);
     }
 
     function cs_clearSchedules() {
       var table = document.getElementById("cronschedules");
-      while (table.rows.length > 5) {
+      while (table.rows.length > 1) {
         table.deleteRow(CS_ROW_INDEX+1);
       }
     }
 
-      function cs_addschedule(enabled, min, hour, daym, month, dayw, device, subdev, value) {
+    function cs_addschedule(enabled, min, hour, daym, month, dayw, device, subdev, value) {
+
         var table = document.getElementById("cronschedules");
         //index = table.rows.length-ROW_INDEX;
 
@@ -2621,7 +2796,9 @@
         var element = row.querySelector('#command')
         var event = new Event('change');
         element.dispatchEvent(event);
-      }
+
+       // cs_synchronizeTableWidths();
+    }
 
         function cs_isSelected(option, val1, val2) {
           var rtn = "";
@@ -2941,8 +3118,10 @@
         var tile = document.getElementById('SWG');
         if (tile != null) {
           var sp_value = tile.getAttribute('setpoint');
-          if (sp_value == 101)
-            document.getElementById('SWG' + '_status').innerHTML = 'Boost '+data.swg_boost_msg;
+          if (sp_value == 101) {
+            //document.getElementById('SWG' + '_status').innerHTML = 'Boost '+data.swg_boost_msg;
+            setElementHTML('SWG' + '_status', 'Boost '+data.swg_boost_msg);
+          }
         }
       }
       var i = 1;
@@ -3118,7 +3297,8 @@
         }
         socket_di.onclose = function() {
           // something went wrong
-          document.getElementById("message").innerHTML = '  Connection error!  '
+          //document.getElementById("message").innerHTML = '  Connection error!  '
+          setElementHTML("message", '  Connection error!  ');
           document.getElementById("header").classList.add("error");
           // Try to reconnect every 5 seconds.
           setTimeout(function() {
@@ -3282,6 +3462,68 @@
 
         document.head.appendChild(script);
       }
+
+function cs_synchronizeTableWidths() {
+
+
+   //console.log("SET table");
+
+    const sourceTable = document.getElementById('cronschedules');
+    const destinationTable = document.getElementById('cronschedules-main');
+
+    if (!sourceTable || !destinationTable) {
+        console.error("Source or destination table not found.");
+        return;
+    }
+
+    // Optional: Force tables to obey set widths for consistency
+    //sourceTable.style.tableLayout = 'fixed';
+    //destinationTable.style.tableLayout = 'fixed';
+
+    const sourceCells = sourceTable.rows[0]?.cells;
+    const destinationCells = destinationTable.rows[0]?.cells;
+
+    if (!sourceCells || !destinationCells) {
+        console.error("Could not find the first row/cells in one of the tables.");
+        return;
+    }
+
+    //if (sourceCells.length !== destinationCells.length) {
+    if (sourceCells.length > destinationCells.length) {
+        console.error(`Width sync failed: Source has ${sourceCells.length} cells in the first row, Destination has ${destinationCells.length}.`);
+        return;
+    }
+
+    //let total=0;
+    // Iterate over the columns and apply the width
+    for (let i = 0; i < sourceCells.length; i++) {
+        // Get the computed width of the source cell
+        //const width = sourceCells[i].offsetWidth + 'px';
+        //total += sourceCells[i].getBoundingClientRect().width;
+        const width = sourceCells[i].getBoundingClientRect().width + 'px';
+
+        // Apply the exact width to the destination cell's style
+        // Setting min/max width helps ensure the browser obeys the instruction
+        destinationCells[i].style.minWidth = width;
+        destinationCells[i].style.maxWidth = width;
+        destinationCells[i].style.width = width;
+    }
+/*
+    if (sourceCells.length < destinationCells.length) {
+      // Set the remaining cell to take up space.
+      console.log("total = "+total);
+      console.log("overall = "+destinationTable.getBoundingClientRect().width );
+      let left = 680 - total  + 'px';
+      console.log("left = "+left);
+      destinationCells[sourceCells.length].style.minWidth = left;
+      destinationCells[sourceCells.length].style.maxWidth = left;
+      destinationCells[sourceCells.length].style.width = left;
+    }
+*/
+}
+
+
+
 
 /*
     function updateTimerOptions(source) {
@@ -3613,11 +3855,22 @@
     </div>
   -->
     <div id='scheduler_options' class='options hide'>
-      <div id='scheduler_options_pane' class='scheduler_pane' onclick='event.stopPropagation();'>
-        <table id="cronschedules" border="0">
-          <th colspan='10'><span id="scheduler_options_title"></span></th>
+      <div id='scheduler_options_pane' class='scheduler_pane' onclick='event.stopPropagation();' style="display: flex; position: relative;">
+        
+        <div class="pane_close_button_contaner">
+          <input class="pane_close_button options_button" type="button" id="scheduler" onclick="showTileOptions(false, this.id);;" value="x"></input>
+        </div>
+
+        <table id="cronschedules-main" class="sc_table" >
+          <tr class="sc_tablehead sc_tablerowhidden">
+            <!-- Below is hidden, but used for computed table column widths -->
+            <td>Enable</td><td>Minute</td><td>Hour</td><td>Day</td><td>Month</td><td>Day</td><td>Device</td><td>Cmd</td><td>Value</td><td>Del</td><td>&nbsp;&nbsp;&nbsp;</td>
+          </tr>
           <tr>
-             <td colspan="10" align="center" id="crontext">&nbsp</td> 
+            <th colspan='11'><span id="scheduler_options_title"></span></th>
+          </tr>
+          <tr>
+             <td colspan="11" align="center" id="crontext" style="height: 22px">&nbsp;</td> 
           </tr>
           <tr class="sc_tablehead">
               <td>Enable</td>
@@ -3630,17 +3883,30 @@
               <td>Cmd</td>
               <td>Value</td>
               <td>Del</td>
+              <td></td> <!-- scroll bar lands in this space -->
           </tr>
+          <tr>
+            <td colspan="11">
+              <div class="scheduler_table" id="scheduler_scrollabletable">
+              <table id="cronschedules" class="sc_table">
+                <tr class="sc_tablehead sc_tablerowhidden">
+                <!-- Below is hidden, but used for computed table column widths -->
+                <td>Enable</td><td>Minute</td><td>Hour</td><td>Day</td><td>Month</td><td>Day</td><td>Device</td><td>Cmd</td><td>Value</td><td>Del</td>
+                </tr>
+              </table>
+            </div>
+            </td>
           <!-- HTML will be added here -->
+          </tr>
           <tr  class="sc_tablehead">
-              <td colspan="10">
+              <td colspan="11">
                   <input type="button" class="options_button" id="Add" value="Add" onclick="cs_addschedule(1,0,0,'*','*','*','','','');">
                   &nbsp;&nbsp;&nbsp;&nbsp;
                   <input type="button" class="options_button" id="scheduler_options_close" value="Save" onclick="cs_createJSON();">
               </td>
           </tr>
           <tr>
-              <td colspan="10" id="cronhelp"></td>
+              <td colspan="11" id="cronhelp"></td>
           </tr>
         <table>
       </div>

@@ -261,9 +261,9 @@ int LED2int(aqledstate state)
   }
 }
 
-#define AUX_BUFFER_SIZE 200
+#define AUX_BUFFER_SIZE 500
 
-char *get_aux_information(aqkey *button, struct aqualinkdata *aqdata, char *buffer)
+char *get_aux_information(aqkey *button, struct aqualinkdata *aqdata, char *buffer, bool homekit)
 {
   int i;
   int length = 0;
@@ -293,7 +293,7 @@ char *get_aux_information(aqkey *button, struct aqualinkdata *aqdata, char *buff
 //printf("Button %s is ProgramableLight\n", button->name);
     for (i=0; i < aqdata->num_lights; i++) {
       if (button == aqdata->lights[i].button) {
-        if (aqdata->lights[i].lightType == LC_DIMMER2) {
+        if (aqdata->lights[i].lightType == LC_DIMMER2 ) {
           length += sprintf(buffer, ",\"type_ext\": \"light_dimmer\", \"Light_Type\":\"%d\", \"Light_Program\":\"%d\", \"Program_Name\":\"%d%%\" ",
                                   aqdata->lights[i].lightType,
                                   aqdata->lights[i].currentValue,
@@ -304,7 +304,12 @@ char *get_aux_information(aqkey *button, struct aqualinkdata *aqdata, char *buff
                                   aqdata->lights[i].currentValue,
                                   get_currentlight_mode_name(aqdata->lights[i], ALLBUTTON));
                                   //light_mode_name(aqdata->lights[i].lightType, aqdata->lights[i].currentValue, ALLBUTTON));
+
+          length += sprintf(buffer+length, ",\"light_programs\": [");
+          length += build_color_light_jsonarray(aqdata->lights[i].lightType, &buffer[length], AUX_BUFFER_SIZE-length);
+          length += sprintf(buffer+length, "]");
         }
+
         return buffer;
       }
     }
@@ -380,7 +385,7 @@ int build_device_JSON(struct aqualinkdata *aqdata, char* buffer, int size, bool 
         // We will add this VButton as a thermostat
         continue;
       }
-      get_aux_information(&aqdata->aqbuttons[i], aqdata, aux_info);
+      get_aux_information(&aqdata->aqbuttons[i], aqdata, aux_info, homekit);
       //length += sprintf(buffer+length, "{\"type\": \"switch\", \"type_ext\": \"switch_vsp\", \"id\": \"%s\", \"name\": \"%s\", \"state\": \"%s\", \"status\": \"%s\", \"int_status\": \"%d\" %s},", 
       length += sprintf(buffer+length, "{\"type\": \"switch\", \"id\": \"%s\", \"name\": \"%s\", \"state\": \"%s\", \"status\": \"%s\", \"int_status\": \"%d\" %s},", 
                                      aqdata->aqbuttons[i].name, 
@@ -659,6 +664,7 @@ int build_aqualink_aqmanager_JSON(struct aqualinkdata *aqdata, char* buffer, int
   length += sprintf(buffer+length, ",\"panel_type_full\":\"%s\"",getPanelString());
   length += sprintf(buffer+length, ",\"panel_type\":\"%s\"",getShortPanelString());
   length += sprintf(buffer+length, ",\"panel_revision\":\"%s %s\"",aqdata->panel_cpu, aqdata->panel_rev );//8157 REV MMM",
+  length += sprintf(buffer+length, ",\"panel_reported_string\":\"%s\"",aqdata->panel_string);
   
 
   

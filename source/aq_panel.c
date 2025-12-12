@@ -1453,9 +1453,13 @@ bool setDeviceState(struct aqualinkdata *aqdata, int deviceIndex, bool isON, req
   LOG(PANL_LOG, LOG_INFO, "received '%s' for '%s', turning '%s'\n", (isON == false ? "OFF" : "ON"), button->name, (isON == false ? "OFF" : "ON"));
 #ifdef AQ_PDA
   if (isPDA_PANEL) {
-      if (button->special_mask & PROGRAM_LIGHT && isPDA_IAQT) {
+      if (button->special_mask & PROGRAM_LIGHT/* && isPDA_IAQT*/) {
+        //if ( isPDA_IAQT && isIAQL_ACTIVE) {
         // AqualinkTouch in PDA mode, we can program light. (if turing off, use standard AQ_PDA_DEVICE_ON_OFF below)
-        programDeviceLightMode(aqdata, (isON?USE_LAST_VALUE:0), deviceIndex, (source==NET_MQTT?true:false), source);
+        //  programDeviceLightMode(aqdata, (isON?USE_LAST_VALUE:0), deviceIndex, (source==NET_MQTT?true:false), source);
+        //} else {
+          aq_programmer(AQ_SET_LIGHTCOLOR_MODE, button, (isON == false ? 0 : 4), true, aqdata);
+        //}
       } else {
         // If we are using AqualinkTouch with iAqualink enabled, we can send button on/off much faster using that.
         if ( isPDA_IAQT && isIAQL_ACTIVE) {
@@ -1571,9 +1575,17 @@ void programDeviceLightBrightness(struct aqualinkdata *aqdata, int value, int de
 {
   //int extra_value = false;
   
+  clight_detail *light = getProgramableLight(aqdata, deviceIndex);
+
   if (value < 0 || value > 100) {
     LOG(PANL_LOG,LOG_ERR, "Dimmer value %d is not valid, using %d\n",value,AQ_CLAMP(value,0,100));
     value = AQ_CLAMP(value,0,100);
+  }
+
+  if (light->lightType == LC_DIMMER && value !=0 && value != 25&& value != 50 && value != 75 && value != 100) {
+    // Make sure we have 0/25/50/75 for LC_DIMMER
+    LOG(PANL_LOG,LOG_DEBUG, "Dimmer value %d is not valid, rounding to nearest 25!\n",value);
+    value = dimmer_mode_to_percent(dimmer_percent_to_mode_index(value));
   }
     
   if (expectMultiple) {
@@ -1585,8 +1597,6 @@ void programDeviceLightBrightness(struct aqualinkdata *aqdata, int value, int de
     return;
   }
 
-  clight_detail *light = getProgramableLight(aqdata, deviceIndex);
-
   if  (light == NULL || (light->lightType != LC_DIMMER2 && light->lightType != LC_DIMMER)) {
     LOG(PANL_LOG,LOG_ERR, "Can not set light brightness on device '%s'\n",aqdata->aqbuttons[deviceIndex].label);
     return;
@@ -1594,6 +1604,11 @@ void programDeviceLightBrightness(struct aqualinkdata *aqdata, int value, int de
  
   if (!isRSSA_ENABLED && light->lightType == LC_DIMMER2) {
     LOG(PANL_LOG,LOG_ERR, "Light mode brightness 11 is only supported when `rssa_device_id` is set\n");
+    return;
+  }
+
+  if (isPDA_PANEL) {
+    aq_programmer(AQ_SET_LIGHTCOLOR_MODE, light->button, dimmer_percent_to_mode_index(value), false, aqdata);
     return;
   }
 
@@ -1689,6 +1704,16 @@ void programDeviceLightMode(struct aqualinkdata *aqdata, int value, int deviceIn
 
   if (light->lightType == LC_DIMMER2 || light->lightType == LC_DIMMER) {// DIMMER
     programDeviceLightBrightness(aqdata, (light->lightType== LC_DIMMER?dimmer_mode_to_percent(value):value), deviceIndex, expectMultiple, source);
+    return;
+  }
+
+  // If it's a PDA panel,
+  if (isPDA_PANEL) {
+    if (value == USE_LAST_VALUE) {
+      extra_value = true;
+      value = 1;
+    }
+    aq_programmer(AQ_SET_LIGHTCOLOR_MODE, light->button, value, extra_value, aqdata);
     return;
   }
 
@@ -1883,7 +1908,7 @@ void updateLightProgram(struct aqualinkdata *aqdata, int value, clight_detail *l
   if (value > 0 && light->lastValue != value) {
     light->lastValue = value;
     if (_aqconfig_.save_light_programming_value && light->lightType == LC_PROGRAMABLE ) {
-      LOG(PANL_LOG,LOG_NOTICE, "Writing light programming value to config for %s\n",light->button->label);
+      LOG(PANL_LOG,LOG_INFO, "Writing light programming value to config for %s\n",light->button->label);
       writeCfg(aqdata);
     }
   }

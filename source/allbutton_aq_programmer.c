@@ -583,7 +583,7 @@ void *set_allbutton_light_programmode( void *ptr )
   struct programmingThreadCtrl *threadCtrl;
   threadCtrl = (struct programmingThreadCtrl *) ptr;
   struct aqualinkdata *aqdata = threadCtrl->aqdata;
-  
+  const int seconds = 1000;
   waitForSingleThreadOrTerminate(threadCtrl, AQ_SET_LIGHTPROGRAM_MODE);
 
 
@@ -643,12 +643,14 @@ void *set_allbutton_light_programmode( void *ptr )
     // Light is on, we know the mode, we can advance to next mode without re-setting program to 1
     int cmode = ((clight_detail *)button->special_mask_ptr)->currentValue;
     if (cmode > 0) {
-      int numPrograms = get_num_light_modes(0);
-      int adv_steps = (val - cmode + numPrograms) % numPrograms;
+      int numPrograms = get_num_light_modes(0) - 1; // Need to ignore program 0=off, so reduce by 1
+      //int adv_steps = (val - cmode + numPrograms) % numPrograms;
+      int adv_steps = ((val - cmode) % numPrograms + numPrograms) % numPrograms;
       LOG(ALLB_LOG, LOG_INFO, "Advancing Light program by %d (current=%d, new=%d, total=%d)\n",adv_steps, cmode, val, numPrograms);
       if (adv_steps > 0) {
         send_cmd(button->code);
         waitfor_queue2empty();
+        delay(pmode * seconds); // 0.3 works, but using 0.4 to be safe
       }
       final_mode = val;
       val = adv_steps;
@@ -662,7 +664,7 @@ void *set_allbutton_light_programmode( void *ptr )
     //LOG(ALLB_LOG, LOG_INFO, "Not using advance mode (state=%d, usemode=%d)\n",button->led->state,useProgAdvance);
   }
 
-  const int seconds = 1000;
+  
   // Needs to start programming sequence with light on, if off we need to turn on for 15 seconds
   // before we can send the next off.
   if ( button->led->state != ON && iOn > 0) {

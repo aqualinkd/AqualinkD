@@ -45,6 +45,7 @@ bool waitForPDAMessageHighlight(struct aqualinkdata *aqdata, int highlighIndex, 
 bool waitForPDAMessageType(struct aqualinkdata *aqdata, unsigned char mtype, int numMessageReceived);
 bool waitForPDAMessageTypes(struct aqualinkdata *aqdata, unsigned char mtype1, unsigned char mtype2, int numMessageReceived);
 bool waitForPDAMessageTypesOrMenu(struct aqualinkdata *aqdata, unsigned char mtype1, unsigned char mtype2, int numMessageReceived, char *text, int line);
+bool waitForPDAMessages(struct aqualinkdata *aqdata, int numberMessages);
 bool goto_pda_menu(struct aqualinkdata *aqdata, pda_menu_type menu);
 bool wait_pda_selected_item(struct aqualinkdata *aqdata);
 bool waitForPDAnextMenu(struct aqualinkdata *aqdata);
@@ -804,6 +805,39 @@ void *set_aqualink_PDA_device_on_off( void *ptr )
 }
 #endif
 
+bool waitForLightCycleMessage(struct aqualinkdata *aqdata)
+{
+
+  waitfor_queue2empty();
+  
+  // Wait for the message to appear.
+  waitForPDAMessages(aqdata, 15);
+
+  // check the message did appear .....  PDA Menu Line 4 =      Please
+  if (rsm_strmatch(pda_m_line(4), "Please") == 0) 
+  {       
+    // Wait for it to disapear                                                                         
+    waitForPDAMessageTypes(aqdata, CMD_PDA_HIGHLIGHT, CMD_PDA_HIGHLIGHTCHARS, 60); // Long wait
+  }
+  else
+  {
+    LOG(PDA_LOG, LOG_WARNING, "PDA light Programming :- Didn't see Cycling message\n");
+    return false;
+  }
+
+  return true;
+}
+
+bool waitForLightOffMessage(struct aqualinkdata *aqdata)
+{
+  if (rsm_strmatch(pda_m_line(3),"Light will turn") == 0) {
+    waitForPDAnextMenu(aqdata);
+  } else {
+    LOG(PDA_LOG,LOG_WARNING, "PDA light Programming :- Didn't see off message\n");
+    return false;
+  }
+  return true;
+}
 
 void *set_aqualink_PDA_light_mode( void *ptr )
 {
@@ -822,8 +856,11 @@ void *set_aqualink_PDA_light_mode( void *ptr )
   struct programmerArgs *pargs = &threadCtrl->pArgs;
   aqkey *button = threadCtrl->pArgs.button;
   //unsigned char code = pargs->button->code;
-  int val = pargs->value;
-  int typ = ((clight_detail *)button->special_mask_ptr)->lightType;
+  int mode = pargs->value;
+  use_current_mode = pargs->alt_value;
+  //clight_type typ = ((clight_detail *)button->special_mask_ptr)->lightType;
+  clight_detail *light = (clight_detail *)button->special_mask_ptr;
+  clight_type typ = light->lightType;
 #else
   char *buf = (char*)threadCtrl->thread_args;
   int val = atoi(&buf[0]);
@@ -845,26 +882,14 @@ void *set_aqualink_PDA_light_mode( void *ptr )
     return ptr;
   }
 
-  clight_type lighttype = ((clight_detail *)button->special_mask_ptr)->lightType;
+  mode_name = light_mode_name(typ, mode, AQUAPDA);
 
-
-  if (val <= 0) {
-    use_current_mode = true;
-    LOG(PDA_LOG, LOG_INFO, "PDA Light Programming #: %d, on button: %s, color light type: %d, using current mode\n", val, button->label, typ);
-  } else {
-    if (lighttype == LC_DIMMER2 || LC_DIMMER2 == LC_DIMMER) {
-      mode_name = light_mode_name(typ, val-1, AQUAPDA);
-    } else {
-      mode_name = light_mode_name(typ, val, AQUAPDA);
-    }
-    use_current_mode = false;
-    if (mode_name == NULL) {
-      LOG(PDA_LOG, LOG_ERR, "PDA Light Programming #: %d, on button: %s, color light type: %d, couldn't find mode name '%s'\n", val, button->label, typ, mode_name);
+  if (mode_name == NULL) {
+      LOG(PDA_LOG, LOG_ERR, "PDA Light Programming #: Received %d, on button: %s, color light type: %d, couldn't find mode name '%s'\n", mode, button->label, typ, mode_name);
       cleanAndTerminateThread(threadCtrl);
       return ptr;
-    } else {
-      LOG(PDA_LOG, LOG_INFO, "PDA Light Programming #: %d, on button: %s, color light type: %d, name '%s'\n", val, button->label, typ, mode_name);
-    }
+  } else {
+      LOG(PDA_LOG, LOG_INFO, "PDA Light Programming #: Received %d, on button: %s, color light type: %d, name '%s'\n", mode, button->label, typ, mode_name);
   }
   
   if (! goto_pda_menu(aqdata, PM_EQUIPTMENT_CONTROL)) {
@@ -876,26 +901,80 @@ void *set_aqualink_PDA_light_mode( void *ptr )
   if ( find_pda_menu_item(aqdata, button->label, 0) ) { // Remove 1 char to account for '100%' (4 chars not the usual 3)
     LOG(PDA_LOG,LOG_INFO, "PDA Light Programming, found device '%s', changing to '%s'\n",button->label,mode_name);
     force_queue_delete(); // NSF This is a bad thing to do.  Need to fix this
+    // get the status as it would have been updated by pda.c seeing the state so we know it's accurate.
+    // BUT, it could change after next key press
+    aqledstate current_state = button->led->state;
     send_pda_cmd(KEY_PDA_SELECT);
-    waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS,15);
-    // if we get `PDA Menu Line 3 = Light will turn ` light is on and we need to press enter again.
-    // if we get `PDA Menu Line 2 =   Dimmer Power ` we need to cycle over 25%/50%/75%/100%
-    // if we get `Menu Line 0 =    Set Color` we can set color.
-    if (lighttype == LC_DIMMER2 || LC_DIMMER2 == LC_DIMMER) {
+    waitfor_queue2empty();
+    waitForPDAMessages(aqdata, 15);  // We get a number of different things here depending on light state, so simply wait 15 messages
 
-    } else {
-      if (strncasecmp(pda_m_line(3),"Light will turn", 15) == 0) {
-        send_pda_cmd(KEY_PDA_SELECT);
-        waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS,5);
+    if (typ == LC_DIMMER2 || typ == LC_DIMMER) {
+      if (mode == 0) { 
+        // We are simply turning it off, and that would have happened above, so do nothing but wait for the light turn off message
+        //waitForLightOffMessage(aqdata);
+      } else {
+        if (current_state == ON && mode > 0) { // Need to use the state BEFORE the last key press
+          // Button was on, and we are changing mode so turn it on as the previous send_pda_cmd(KEY_PDA_SELECT)
+          // would have tured it off, so turn it on
+          send_pda_cmd(KEY_PDA_SELECT);
+          waitfor_queue2empty();
+          waitForPDAMessages(aqdata, 5);
+        }
+        if (use_current_mode) {
+          char *current_mode = pda_m_hlight();
+          send_pda_cmd(KEY_PDA_SELECT);
+          mode = light_mode_index(typ, current_mode);
+          LOG(PDA_LOG,LOG_INFO, "PDA light Programming :- Current Mode = %d '%s'\n",mode,current_mode);
+          // No light cycling message at this point.
+        } else {
+          //int current = rsm_atoi(pda_m_line(4));
+          //while(current != mode_name)
+          int i = 0;
+          while(rsm_strmatch(pda_m_line(4), mode_name) != 0) {
+            send_pda_cmd(KEY_PDA_DOWN);
+            waitfor_queue2empty();
+            waitForPDAMessages(aqdata, 2);
+            if (++i > 6) {
+              LOG(PDA_LOG,LOG_INFO, "PDA light Programming :- Couldn't find %s\n",mode_name);
+            }
+          }
+          send_pda_cmd(KEY_PDA_SELECT);
+          waitfor_queue2empty();
+          waitForPDAMessages(aqdata, 5);
+        }
       }
-      if (use_current_mode && mode_name != NULL) {
+    } else {
+      // Turn off look for "Light will turn" and simply wait.
+      // Turn on to default, get light color name from menu and press select.
+      // Turn to mode, loop over mode options.
+      if (mode == 0) { // off
+        //waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_STATUS,5); // Wait for the actual text to show.
+        if (waitForLightOffMessage(aqdata)) {
+          light->button->led->state = OFF;
+        }
+      } else if (use_current_mode) { // use current
+        //waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS,15);
+        char *current_color = pda_m_hlight();
+        send_pda_cmd(KEY_PDA_SELECT);
+        // Reset the mode indet
+        mode = light_mode_index(typ, current_color);
+        LOG(PDA_LOG,LOG_INFO, "PDA light Programming :- Current Color = %d '%s'\n",mode,current_color);
+        waitForLightCycleMessage(aqdata);
+      } else { // set mode.
+        if (strncasecmp(pda_m_line(3),"Light will turn", 15) == 0) {
+          // If light is currently on, we will get this message, and need to clear it.
+          send_pda_cmd(KEY_PDA_SELECT);
+          waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS,15);
+        }
         if (find_pda_menu_item(aqdata,(char *)mode_name,strlen(mode_name))) {
           send_pda_cmd(KEY_PDA_SELECT);
+          waitForLightCycleMessage(aqdata);
         } else {
           LOG(PDA_LOG,LOG_ERR, "PDA Light Programming, could find mode '%s' for device '%s'\n",mode_name,button->label);
         }
       }
     }
+    if (mode > 0) {updateLightProgram(aqdata, mode, light);}
   } else {
     LOG(PDA_LOG,LOG_ERR, "PDA Light Programming, device '%s' not found\n",button->label);
   }
@@ -1158,9 +1237,6 @@ bool waitForPDANextMessageType(struct aqualinkdata *aqdata, unsigned char mtype,
 }
 
 
-
-
-// Wait for Message, hit return on particular menu.
 bool waitForPDAMessageTypesOrMenu(struct aqualinkdata *aqdata, unsigned char mtype1, unsigned char mtype2, int numMessageReceived, char *text, int line)
 {
   LOG(PDA_LOG,LOG_DEBUG, "waitForPDAMessageTypes  0x%02hhx or 0x%02hhx\n",mtype1,mtype2);
@@ -1200,6 +1276,21 @@ bool waitForPDAMessageTypesOrMenu(struct aqualinkdata *aqdata, unsigned char mty
 bool waitForPDAMessageTypes(struct aqualinkdata *aqdata, unsigned char mtype1, unsigned char mtype2, int numMessageReceived)
 {
   return waitForPDAMessageTypesOrMenu(aqdata, mtype1, mtype2, numMessageReceived, NULL, 0);
+}
+
+bool waitForPDAMessages(struct aqualinkdata *aqdata, int numberMessages)
+{
+  int received=0;
+
+  pthread_mutex_lock(&aqdata->active_thread.thread_mutex);
+  while( ++received <= numberMessages)
+  {
+    LOG(PDA_LOG,LOG_DEBUG, "waitForPDAMessages: %d of %d\n",received,numberMessages);
+    pthread_cond_wait(&aqdata->active_thread.thread_cond, &aqdata->active_thread.thread_mutex);
+  }
+  pthread_mutex_unlock(&aqdata->active_thread.thread_mutex);
+
+  return true;
 }
 
 /*

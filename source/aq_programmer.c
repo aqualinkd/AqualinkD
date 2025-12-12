@@ -502,6 +502,7 @@ void _aq_programmer_(program_type r_type, char *args, aqkey *button, int value, 
 
   program_type type = r_type;
 
+  //DPRINTF("**** aq_programmer() with %d - %s\n",r_type, ptypeName(type));
   // RS SerialAdapter is quickest for changing thermostat temps, so use that if enabeled.
   // VSP RPM can only be changed with oneTouch or iAquatouch so check / use those
   // VSP Program is only available with iAquatouch, so check / use that.

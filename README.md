@@ -154,7 +154,6 @@ AqualinkD will be moving over to github hosted runners for compiling, currently 
 <br>
 
 # Updates in 3.0.0 (dev)
-* WARNING V3.0 has undergone a significant amount code changes and refactoring, there may be issues.
 * Serial optimization for AqualinkD HAT.
 * Can now edit webconfig in aqmanager, added many UI customization options.
   * web/config.js is now web/config.json any custom settings will need to be migrated.
@@ -164,7 +163,7 @@ AqualinkD will be moving over to github hosted runners for compiling, currently 
   * HTTPS is for two way auth only, ie You create your own cert and load on both AqualinkD server and all client devices.
   * Example script to generate HTTPS certificates is in (./extras/generate-certs.sh)
 * Optimized updates to MQTT, web sockets & WebUI (only update when absolutely necessary)
-* Added options to force upgrades in aqmanager. (add ?upgrade or ?devupgrade to url to enable upgrade button)
+* Added option to select version to install, including dev releases.
 * MQTT Discovery for all supporting hubs (HomeAssistant Domoticz Hubitat OpenHAB etc)
 * Moved Domoticz support over to MQTT autodiscovery.
 * Change tile color & label for ph / orp & ppm tiles when values are out of optimal range.
@@ -175,12 +174,13 @@ AqualinkD will be moving over to github hosted runners for compiling, currently 
 * Changed caching of HTTP server. (Better for UI config updates)
 * Autoconfigure will now get panel size/type for panels that support PC-Dock interface.
 * Autoconfigure will *try* to work for PDA panels.
+* PDA Color light fixes.
+* PDA Dimmer lights now supported.
 * Cleaned up exit & errors when running as daemon and docker.
 * Fixed issues with external sensors and homekit.
-* Added preliminary support for Jandy Infinite water color lights
+* Added preliminary support for Jandy Infinite water color lights.
 - Need to finish off :-
   * HAT serial optimizations broke some USB serial adapters
-  * SWG not auto finding
 
   
 # Updates in 2.6.11 (Sept 14 2025)

@@ -1,32 +1,42 @@
 
 
 /*
- For manual setup, follow the below.
- For easy setup, read the online documentation
+Below is the basic premise of the file if you need to create something for a different home automation 
 
- 1) put below in aqualinkd config.json
- 
- "external_script": "/HA_tilePlugin.js"
+exampleCreateTile()
 
- 2) Configure any custom icons in aqualinkd config.json, example below 'light.back_floodlights' is HA ID:-
+function exampleCreateTile() {
+  var tile = {};
+  tile["id"] = "my.unique.id";
+  tile["name"] = "Example Switch";
+  tile["display"] = "true";   
+  tile["type"] = "switch"; // switch or value
+  tile["state"] = 'on';
+  tile["status"] = tile["state"]; // status and state are different for AqualinkD, but for purposes of a switch or sensor they are the same.
 
- "light.back_floodlights": {
-      "display": "true",
-      "on_icon": "extra/light-on.png",
-      "off_icon": "extra/light-off-grey.png"
-    },
+  // Call AqualinkD function to create the tile and add to display.
+  createTile(tile);
+  // Make sure we use our own callback for button press. (only needed for a switch)
+  var subdiv = document.getElementById(tile["id"]);
+  subdiv.setAttribute('onclick', "exampleTilePressedCallback('" + tile["id"] + "')");
+}
 
-  3) Add the HA ID's you want to the setTile function below :-
-  homeassistantAction("light.back_floodlights");
+// use this function to update the state or value of a tile
+function exampleUpdateTileStatus() {
+  // For Switch
+  setTileOn("my.unique.id", 'on'); // valid values are 'on' and 'off'
+  // For value
+  setTileValue("my.unique.id", "0.00");
+}
 
-  4) IN HOME ASSISTANT you will need to allow Cross-Origin Resource Sharing 
-     edit configuration.yaml, and add below (change aqualinkd to the machine name running aqualinkd)
-
-  http:
-    cors_allowed_origins
-      - http://aqualinkd
-
-  5) Add your HA API token & server below.
+// This will be called when a tile is clicked in the UI.
+function exampleTilePressedCallback() {
+  // Get the state of the tile
+  var state = (document.getElementById("my.unique.id").getAttribute('status') == 'off') ? 'on' : 'off';
+  // Action what needs to happen.  ie send request to home automation hub.
+  // Change / re-set the tile in teh display.
+  setTileOn("my.unique.id", state);
+}
 */
 
 // Add your HA API token
@@ -38,6 +48,7 @@ var HA_SERVER = 'http://192.168.1.255:8123';
 setupTiles();
 
 
+// Only use asunv to garantee order, also why homeassistantAction() function returns a promise.
 function setupTiles() {
   // If we have specific user agents setup, make sure one matches.
   if (_config?.HA_tilePlugin && _config?.HA_tilePlugin?.userAgents) {
@@ -197,6 +208,7 @@ function getURL(service, action) {
   }
 }
 
+
 function homeassistantAction(id, action="status") {
   var http = new XMLHttpRequest();
   if (http) {
@@ -229,6 +241,5 @@ function homeassistantAction(id, action="status") {
     http.setRequestHeader("Authorization", "Bearer "+HA_TOKEN);
     http.send('{"entity_id": "'+id+'"}');
   }
-
 }
 

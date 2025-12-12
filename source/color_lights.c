@@ -5,6 +5,7 @@
 
 //#define COLOR_LIGHTS_C_
 #include "color_lights.h"
+#include "rs_msg_utils.h"
 
 
 /*
@@ -185,8 +186,6 @@ void setColorLightsPanelVersion(uint8_t supported)
 
 bool is_valid_light_mode(clight_type type, int index)
 {
-  printf("Checking _color_light_options[%d][%d]\n",type,index);
-  
   if (type == LC_DIMMER2) {
     if (index >= 0 && index <=100) {
       return true;
@@ -198,8 +197,6 @@ bool is_valid_light_mode(clight_type type, int index)
   if (index < 0 || index > LIGHT_COLOR_OPTIONS || _color_light_options[type][index] == NULL ){
     return false;
   }
-
-  printf("result = %s\n", _color_light_options[type][index]);
 
   return true;
 }
@@ -315,6 +312,23 @@ const char *light_mode_name(clight_type type, int index, emulation_type protocol
   }
 
   return _color_light_options[type][index];
+}
+
+int light_mode_index(clight_type type, const char *name)
+{
+  for (int i=0; i < LIGHT_COLOR_OPTIONS; i++) {
+     if (_color_light_options[type][i] == NULL) {
+      return AQ_UNKNOWN;
+     }
+
+     if ( rsm_strmatch(_color_light_options[type][i], name) == 0) {
+      return i;
+     } else if (rsm_strmatch_ignore(name, _color_light_options[type][i], -1) == 0) { // Remove 1 char from check for USA! to USA.
+       return i;
+     }
+  }
+
+  return AQ_UNKNOWN;
 }
 
 

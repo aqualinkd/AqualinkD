@@ -4,6 +4,17 @@
 
 #define IAQT_MSGLEN 21
 
+
+
+// if enable_iaqualink this poll count can be increased if we sit on the device status page
+// all device status are quicker to update in enable_iaqualink, so leaves just pump/swg/chiller info to get.
+// Below are numbers that are coprime or have few common factors, so less lightly to be executed at the same time.
+#define FULL_STATUS_POLL_COUNT     199 // We did have this at 20, but put too much load on panel, (couldn't program light)
+#define DEVICE_STATUS_POLL_COUNT  43 // This must be less than FULL_STATUS_POLL_COUNT
+#define IAQALINK_STATUS_POLL_COUNT 101
+
+
+
 struct iaqt_page_button {
   char name[IAQT_MSGLEN];
   unsigned char type;    // 0x01 box, 0x08 icon wirlpool, 0x0b icon heater, 0x01 icon (main page), 0x07 light

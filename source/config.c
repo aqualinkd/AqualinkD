@@ -1753,7 +1753,10 @@ void check_print_config (struct aqualinkdata *aqdata)
     }
 
     if ( ! is_aqualink_touch_id(_aqconfig_.extended_device_id) && ! is_onetouch_id(_aqconfig_.extended_device_id))  {
-      setMASK(errors, ERR_VSP_EXTENDEDID);
+      // Ignore this error for PDA panels.  PDA needs it to read VSP. (but can;t set VSP)
+      if (_aqconfig_.device_id != 0x60) {
+        setMASK(errors, ERR_VSP_EXTENDEDID);
+      } 
       //LOG(AQUA_LOG,LOG_WARNING, "Config error, '%s' must be set for VSP's\n", CFG_N_extended_device_id_programming);
     }
   }
@@ -1774,6 +1777,15 @@ void check_print_config (struct aqualinkdata *aqdata)
       if ( !isMASK_SET(aqdata->lights[i].button->special_mask, VIRTUAL_BUTTON)) {
         LOG(AQUA_LOG,LOG_WARNING, "Config error, Light mode %d is only valid for a virtual button\n",LC_JANDYINFINATE);
       }
+    }
+    if (aqdata->lights[i].lightType  == LC_PROGRAMABLE && _aqconfig_.device_id == 0x60) {
+      LOG(AQUA_LOG,LOG_WARNING, "Config error, Light mode %d is not supported in PDA mode\n",LC_PROGRAMABLE);
+    }
+    if (aqdata->lights[i].lightType  == LC_DIMMER && _aqconfig_.device_id == 0x60) {
+      LOG(AQUA_LOG,LOG_WARNING, "Config error, Light mode %d is not supported in PDA mode\n",LC_PROGRAMABLE);
+    }
+    if (aqdata->lights[i].lightType  == LC_DIMMER2 && _aqconfig_.device_id == 0x60) {
+      LOG(AQUA_LOG,LOG_WARNING, "Config error, Light mode %d is not supported in PDA mode\n",LC_PROGRAMABLE);
     }
   }
 

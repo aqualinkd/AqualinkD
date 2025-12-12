@@ -335,6 +335,8 @@ int rsm_strmatch(const char *haystack, const char *needle)
 // Match two strings, used for button labels
 // exact character length once white space removed is used for match
 // ignore_chars will delete the last X chars from haystack.
+//              ignore_chars negative will also strip spaces from end before removing char.
+//              ignore_chars positive will remove chars from end.
 // use case insensative for match.
 // so 'spa' !- 'spa mode'
 int rsm_strmatch_ignore(const char *haystack, const char *needle, int ignore_chars)
@@ -349,12 +351,15 @@ int rsm_strmatch_ignore(const char *haystack, const char *needle, int ignore_cha
   while(isspace(*sp1)) sp1++;
   while(isspace(*sp2)) sp2++;
   while(isspace(*ep2) && (ep2 >= sp2)) ep2--;
-  if (ignore_chars > 0)
+
+  if (ignore_chars < 0) {
+    while(isspace(*ep1) && (ep1 >= sp1)) ep1--;
+    ep1 = ep1 + ignore_chars;
+  }else if (ignore_chars > 0)
     ep1 = ep1 - ignore_chars;
   else
     while(isspace(*ep1) && (ep1 >= sp1)) ep1--;
   
-
   int l1 = ep1 - sp1 +1;
   int l2 = ep2 - sp2 +1;
 

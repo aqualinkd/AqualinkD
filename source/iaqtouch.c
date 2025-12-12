@@ -823,10 +823,6 @@ void processPage(struct aqualinkdata *aqdata)
   }
 }
 
-// if enable_iaqualink this poll count can be increased if we sit on the device status page
-// all device status are quicker to update in enable_iaqualink, so leaves just pump/swg info to get.
-#define FULL_STATUS_POLL_COUNT     200 // We did have this at 20, but put too much load on panel, (couldn't program light)
-#define DEVICE_STATUS_POLL_COUNT  20 // This must be less than FULL_STATUS_POLL_COUNT
 
 //#define REQUEST_DEVICES_POLL_COUNT 30 // if _aqconfig_.enable_iaqualink=true then REQUEST_STATUS_POLL_COUNT will be used.
 
@@ -1083,7 +1079,7 @@ if not programming && poll packet {
         LOG(IAQT_LOG,LOG_ERR,"Poll count=%d, too high, looks like page is stuck\n",_pollCnt);
         _pollCnt=0;
       } else {
-        LOG(IAQT_LOG,LOG_DEBUG,"Poll count=%d, Curent Page=0x%02hhx\n",_pollCnt, _currentPage);
+        //LOG(IAQT_LOG,LOG_DEBUG,"Poll count=%d, Curent Page=0x%02hhx\n",_pollCnt, _currentPage);
       }
 
       if (_pollCnt++ > FULL_STATUS_POLL_COUNT) {

@@ -42,6 +42,7 @@ void clear_aqualinkd_light_modes();
 bool set_currentlight_value(clight_detail *light, int index);
 bool is_valid_light_mode(clight_type type, int index);
 const char* lightTypeName(clight_type type);
+int light_mode_index(clight_type type, const char *name);
 
 bool set_aqualinkd_light_mode_name(char *name, int index, bool isShow);
 const char *get_aqualinkd_light_mode_name(int index, bool *isShow);
