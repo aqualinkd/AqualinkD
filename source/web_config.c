@@ -28,6 +28,7 @@
 #define WEBCONFIGFILE "/config.json"
 void fprintf_json(FILE *fp,const char *json_string);
 
+/*
 // This should  be called dynamic web config, not webconfig to avoid confusion.
 int build_dynamic_webconfig_js(struct aqualinkdata *aqdata, char* buffer, int size)
 {
@@ -40,6 +41,7 @@ int build_dynamic_webconfig_js(struct aqualinkdata *aqdata, char* buffer, int si
 
   return length;
 }
+*/
 
 int build_dynamic_webconfig_json(struct aqualinkdata *aqdata, char* buffer, int size)
 {

@@ -34,7 +34,7 @@ typedef enum clight_type {
 //const char *light_mode_name(clight_type type, int index);
 const char *get_currentlight_mode_name(clight_detail light, emulation_type protocol);
 const char *light_mode_name(clight_type type, int index, emulation_type protocol);
-int build_color_lights_js(struct aqualinkdata *aqdata, char* buffer, int size);
+//int build_color_lights_js(struct aqualinkdata *aqdata, char* buffer, int size);
 int build_color_lights_json(struct aqualinkdata *aqdata, char* buffer, int size);
 int build_color_light_jsonarray(int index, char* buffer, int size);
 int dimmer_percent_to_mode_index(int value);

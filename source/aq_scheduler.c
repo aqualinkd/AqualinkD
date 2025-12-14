@@ -172,9 +172,12 @@ int save_schedules_js(const char* inBuf, int inSize, char* outBuf, int outSize)
   //fclose(fp);
 
   // if we created file, change the permissions
-  if (!fileexists)
-    if ( chmod(CRON_FILE, S_IRUSR | S_IWUSR ) < 0 )
+  if (!fileexists) {
+    LOG(SCHD_LOG,LOG_NOTICE, "Created %s, setting permissions\n",CRON_FILE);
+    if ( chmod(CRON_FILE, S_IRUSR | S_IWUSR ) < 0 ) {
       LOG(SCHD_LOG,LOG_ERR, "Could not change permissions on cron file %s, scheduling may not work\n",CRON_FILE);
+    }
+  }
 
   //remount_root_ro(fs);
   aq_close_file(fp, fs);

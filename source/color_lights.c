@@ -446,6 +446,7 @@ const char* lightTypeName(clight_type type)
   return "unknown";
 }
 
+/*
 // Used for dynamic config JS 
 int build_color_lights_js(struct aqualinkdata *aqdata, char* buffer, int size)
 {
@@ -474,7 +475,8 @@ int build_color_lights_js(struct aqualinkdata *aqdata, char* buffer, int size)
 
   return length;
 }
-
+*/
+// Used for dynamic config JSON
 int build_color_lights_json(struct aqualinkdata *aqdata, char* buffer, int size)
 {
   memset(&buffer[0], 0, size);
@@ -500,6 +502,13 @@ int build_color_lights_json(struct aqualinkdata *aqdata, char* buffer, int size)
     length += sprintf(buffer+length, "],");
   }
 
+  buffer[--length] = '\0';
+  length += sprintf(buffer+length, "}");
+
+  length += sprintf(buffer+length, ",\"light_types\": {");
+  for (i=0; i < NUMBER_LIGHT_COLOR_TYPES; i++) {
+    length += sprintf(buffer+length, "\"%d\": \"%s\",", i, lightTypeName(i));
+  }
   buffer[--length] = '\0';
   length += sprintf(buffer+length, "}");
 
