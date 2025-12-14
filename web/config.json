@@ -1,5 +1,4 @@
 {
-  "external_script": "/HA_tilePlugin.js",
   "background_image": {
     "url": "hk/background.jpg",
     "url_reload": 0
