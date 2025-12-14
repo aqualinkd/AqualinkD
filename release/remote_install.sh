@@ -264,7 +264,7 @@ function download_latest_development {
 
 function download_version {
   if [ "$USE_RELEASE_PKG" -eq $TRUE ]; then
-    tar_url=$(curl -fsSL "$REPO/releases" | awk 'match($0,/.*"browser_download_url": "(.*\/aqualinkd-release\.tar\.gz)".*/)' | grep $1 | awk -F '"' '{print $4}' )
+    tar_url=$(curl -fsSL "$REPO/releases" | awk 'match($0,/.*"browser_download_url": "(.*\/aqualinkd-release\.tar\.gz)".*/)' | grep $1/ | awk -F '"' '{print $4}' )
   else
     tar_url=$(curl -fsSL "$REPO/releases" | awk 'match($0,/.*"tarball_url": "(.*\/tarball\/.*)".*/)' | grep $1\" | awk -F '"' '{print $4}')
   fi
