@@ -475,6 +475,37 @@ int build_color_lights_js(struct aqualinkdata *aqdata, char* buffer, int size)
   return length;
 }
 
+int build_color_lights_json(struct aqualinkdata *aqdata, char* buffer, int size)
+{
+  memset(&buffer[0], 0, size);
+  int length = 0;
+  int i, j;
+
+  length += sprintf(buffer+length, "\"light_programs\": {");
+
+  if ( _color_light_options[0][1] == NULL || strcmp(_color_light_options[0][1], "1") == 0) {
+    length += sprintf(buffer+length, "\"0\": [],");
+    i=1;
+  } else {
+    i=0;
+  }
+   
+  for (; i < NUMBER_LIGHT_COLOR_TYPES; i++) {
+    length += sprintf(buffer+length, "\"%d\": [", i);
+    for (j=1; j < LIGHT_COLOR_OPTIONS; j++) { // Start a 1 since index 0 is blank
+      if (_color_light_options[i][j] != NULL)
+        length += sprintf(buffer+length, "\"%s%s\"%s", _color_light_options[i][j], (isShowMode(_color_light_options[i][j])?" - Show":""), (_color_light_options[i][j+1] != NULL)?",":"" );
+    }
+    //buffer[--length] = '\0';
+    length += sprintf(buffer+length, "],");
+  }
+
+  buffer[--length] = '\0';
+  length += sprintf(buffer+length, "}");
+
+  return length;
+}
+
 int build_color_light_jsonarray(int index, char* buffer, int size)
 {
   memset(&buffer[0], 0, size);

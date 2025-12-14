@@ -271,7 +271,8 @@
   "tile_settings": {
     "turn_off_sensortiles": "true",
     "show_vsp_gpm": "true",
-    "disable_off_icon_background": "true"
+    "disable_off_icon_background": "true",
+    "light_program_use_dropdown": "false"
   },
   "colors-dark-example": {
     "body_background": "#121212",

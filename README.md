@@ -179,8 +179,7 @@ AqualinkD will be moving over to github hosted runners for compiling, currently 
 * Cleaned up exit & errors when running as daemon and docker.
 * Fixed issues with external sensors and homekit.
 * Added preliminary support for Jandy Infinite water color lights.
-- Need to finish off :-
-  * HAT serial optimizations broke some USB serial adapters
+* Renamed serial_logger to rs485mon (more compliant with unix naming standards)
 
   
 # Updates in 2.6.11 (Sept 14 2025)

@@ -4,15 +4,18 @@
 <head>
   <meta http-equiv='Content-Type' content='text/html; charset=windows-1252'>
   <title>AqualinkD</title>
-  <meta name='viewport' content='width=device-width'>
+  <!-- <meta name='viewport' content='width=device-width'> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name='mobile-web-app-capable' content='yes'>
   <meta name='apple-mobile-web-app-capable' content='yes'>
   <meta name='apple-mobile-web-app-status-bar-style' content='black'>
+  
+
   <link href='aqualinkd.png' rel='apple-touch-icon'>
   <link href='aqualinkd.png' rel='icon'>
   <!--<script src='config.js'></script>-->
   <!--<script src='?command=dynamic_config'></script>-->
-  <script src='/api/dynamicconfig'></script>
+  <!--<script src='/api/dynamicconfig'></script>-->
   <style>
     :root {
       --fonts: 'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;
@@ -119,14 +122,14 @@
     .opaque {
       top: 0px;
       left: 0px;
-      filter: alpha(opacity=60);
+      filter: opacity(60%);
       opacity: 0.6;
     }
 
     .vopaque {
       top: 0px;
       left: 0px;
-      filter: alpha(opacity=40);
+      filter: opacity(40%);
       opacity: 0.4;
     }
 
@@ -239,8 +242,8 @@
 
     .hide {
       display: none;
-      filter: alpha(opacity=0);
       opacity: 0.0;
+      filter: opacity(0%);
     }
 
     .tile {
@@ -253,20 +256,20 @@
       padding: 5px;
       height: var(--tile-width);
       width: var(--tile-width);
-      filter: alpha(opacity=90);
+      filter: opacity(90%);
       opacity: 0.9;
     }
 
     .on {
       background-color: var(--tile_on_background);
       color: var(--tile_on_text);
-      filter: alpha(opacity=100);
+      filter: opacity(100%);
       opacity: 1.0;
     }
 
     .flash {
       color: var(--tile_on_text);
-      filter: alpha(opacity=100);
+      filter: opacity(90%);
       opacity: 0.9;
       -webkit-animation-name: tile-flash;
       /* Safari 4.0 - 8.0 */
@@ -374,7 +377,7 @@
       text-align: center;
       vertical-align: middle;
       line-height: var(--tile_icon-height);
-      filter: alpha(opacity=100);
+      filter: opacity(100%);
       opacity: 1.0;
     }
 
@@ -712,28 +715,28 @@
 
 
 .pane_close_button {
-          font-size: 10px !important;
-          font-weight: bold !important;
+  font-size: 10px !important;
+  font-weight: bold !important;
           /*color: var(--body_text);*/
           /*background-color: #7f8385 !important;*/
-          border: none !important;
-          color: rgb(0, 0, 0) !important;
-          padding: 2px 2px !important;
-          text-decoration: none !important;
-          margin: 2px 2px 2px 2px !important;
-          min-width: 18px !important;
-          border-radius: 2px !important;
-          height: 18px !important;
+  border: none !important;
+  color: rgb(0, 0, 0) !important;
+  padding: 2px 2px !important;
+  text-decoration: none !important;
+  margin: 2px 2px 2px 2px !important;
+  min-width: 18px !important;
+  border-radius: 2px !important;
+  height: 18px !important;
           
-        }
+}
         
-        .pane_close_button_contaner {
-          position: absolute;
-          top: 0;
-          right: 0;
-          padding-top: 5px;
-          padding-right: 5px;
-        }
+.pane_close_button_contaner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding-top: 5px;
+  padding-right: 5px;
+}
 
     /*
     .timedate {
@@ -745,6 +748,9 @@
     //'use strict';
     
     var _config = {};
+    var _dynamicconfig = {};
+
+    //'{"enable_schedules" : "false","light_programs": {"0":[], '
    
     var _aq_display_tile_size = 'small';
 
@@ -758,6 +764,7 @@
     var _scheduler_devices_json= [];
     var _tile_line_char_limit = 0;
     var _devices = [];
+    var _enable_schedules = false;
 
     var _switchOnUri;
     var _switchOffUri;
@@ -879,6 +886,10 @@
       if (! _config?.tile_settings?.link_spa_and_spa_heater) {
         _config.tile_settings.link_spa_and_spa_heater = "false";
       }
+
+      if (isConfigEnabled(_config?.tile_settings?.light_program_use_dropdown)) {
+        _lightProgramDropdown = true;
+      }
     }
 
     function isConfigEnabled(value) {
@@ -921,7 +932,6 @@
 
       setSizeSpecifics();
       populateLightProgram(-1);
-      //populateLightProgram(0);
       document.getElementById('thermostat_options').classList.remove("hide");
       document.getElementById('swg_options').classList.remove("hide");
       document.getElementById('pswitch_options').classList.remove("hide");
@@ -971,6 +981,77 @@
     }
 
     function populateLightProgram(type=0, current_mode="") {
+
+      var light_program={};
+      
+      if (type != -1) {
+        if ( typeof _dynamicconfig?.light_programs === 'undefined' || typeof _dynamicconfig?.light_programs[type] === 'undefined') {
+          console.log("WARNING: blank Ignoring call to populateLightProgram(), type="+type);
+          return;
+        } else {
+          light_program = _dynamicconfig.light_programs[type];
+        }
+      }
+ 
+      if (_lightProgramDropdown) {
+        option = document.getElementById('pswitch_option_list');
+        try {
+          option.innerHTML = '<option value="0">Light Program</option>';
+          fLen = light_program.length;
+          for (i = 0; i < fLen; i++) {
+            var opt = document.createElement('option');
+            opt.value = i + 1;
+            if (current_mode != "" && light_program[i].startsWith(current_mode)) {
+              opt.selected = true;
+            }
+            opt.innerHTML = light_program[i];
+            option.appendChild(opt);
+          }
+        } catch (e) {}
+      } else {
+        var tbody = document.getElementById('pswitch_table').getElementsByTagName('tbody')[0];
+        if (type == -1) {
+          // -1 is Just init, so create another row, just to delete later.
+          row = tbody.insertRow(2);
+          row.innerHTML = "<td align='center'>Solid Color</td><td align='center'>Light Show</td>";
+          //light_program = _light_program[0]; // Use aqualinkd light modes to set size below
+          light_program[0] = "blank";
+          light_program[1] = "blank - show";
+        }
+        var html1 = '';
+        var html2 = '';
+        var fLen = light_program.length;
+        var i;
+        var selected = "";
+        for (i = 0; i < fLen; i++) {
+          selected = "";
+          if (current_mode != "" && light_program[i].startsWith(current_mode)) {
+            selected = "checked";
+          } 
+          if (light_program[i].endsWith(" - Show"))
+            html2 = html2 + "<div class='option_radiocontainer'><label><span class='radio'><input type='radio' name='light_program' value='" + (i+1) + "' "+selected+" onchange='updatePwsitchOptions(this, "+type+");'><span class='option_radio-value' aria-hidden='true'></span></span>" + light_program[i].substr(0, (light_program[i].length - 7)) + "</label></div>";
+          else
+            html1 = html1 + "<div class='option_radiocontainer'><label><span class='radio'><input type='radio' name='light_program' value='" + (i+1) + "' "+selected+" onchange='updatePwsitchOptions(this, "+type+");'><span class='option_radio-value' aria-hidden='true'></span></span>" + light_program[i] + "</label></div>";
+        }
+        var row;
+        row = tbody.deleteRow(2);
+        row = tbody.insertRow(2);
+        if (type == 10) {
+          row.innerHTML = "<td align='center'>Dimmer</td><td align='center'></td>";
+        } else {
+          row.innerHTML = "<td align='center'>Solid Color</td><td align='center'>Light Show</td>";
+        }
+        tbody.deleteRow(3);
+        row = tbody.insertRow(3);
+        row.innerHTML = "<td align='left' valign='top'>" + html1 + "</td><td align='left' valign='top'>" + html2 + "</td>";
+      }
+    }
+/*
+    function populateLightProgram_old(type=0, current_mode="") {
+
+      console.log("WARNING: Ignoring call to populateLightProgram()");
+      return;
+
       var light_program = _light_program[type];
       
       if (_lightProgramDropdown) {
@@ -1020,7 +1101,7 @@
         row.innerHTML = "<td align='left' valign='top'>" + html1 + "</td><td align='left' valign='top'>" + html2 + "</td>";
       }
     }
-
+*/
 
     // Simply loop over each key/value in color jason array and set that property adding -- to the beginning of key
     function setColors() {
@@ -1106,6 +1187,9 @@
       */
       _tile_line_char_limit = getComputedStyle(document.documentElement).getPropertyValue('--tile_name-charlimit');
 
+      if (_lightProgramDropdown == false && h < 570) {
+        _lightProgramDropdown = true;
+      }
 
       window.addEventListener("orientationchange", function() {
         var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
@@ -1588,6 +1672,8 @@
       return -1;
     }
 
+    //function getTileS
+
     function setThermostatTile(id, value, sp_value) {
       setTileValue(id, value);
       var tile;
@@ -1941,13 +2027,15 @@
         if (typeof object.type_ext !== 'undefined' && (object.type_ext == 'switch_program' || object.type_ext == 'light_dimmer')) {
           if (typeof object.Light_Type !== 'undefined') {
             document.getElementById(object.id).setAttribute('lighttype', object.Light_Type);
-          
             if (typeof object.Light_Program !== 'undefined') {
               var light_mode = parseInt(object.Light_Program);
-              if ( object.Light_Type != "10" && object.type_ext != 'light_dimmer' ) {
+              if ( object.Light_Type != "11" && object.type_ext != 'light_dimmer' ) {
                 document.getElementById(object.id).setAttribute('spvalue', light_mode-1);
-                //console.log("Light_Program spvalue = "+document.getElementById(object.id).getAttribute('spvalue'));
+              } else if (object.Light_Type == "11") {
+                document.getElementById(object.id).setAttribute('spvalue', light_mode);
               }
+            } else {
+              //console.log("Light_Program "+object.id+" object.Light_Program is null");           
             }
           }
           // Other switch_program types (other than light_type) GO HERE 
@@ -2404,8 +2492,10 @@
           var state = oswitch?.checked;
           if (type == 'switch_program') {
             var mode=false;
+
             if (_lightProgramDropdown) {
-              if (pswitch.selectedIndex > 0) {
+              //console.log("check "+(getTileSPvalue(id)+1) +" against "+pswitch.selectedIndex);
+              if (pswitch.selectedIndex > 0 && (getTileSPvalue(id)+1) != pswitch.selectedIndex) {
                 send_light_mode(pswitch.selectedIndex, id, pswitch.options[pswitch.selectedIndex].text);
                 mode=true;
               }
@@ -2415,6 +2505,7 @@
               for (x = 0; x < radio.length; x++) {
                  if (radio[x].checked == true) {
                    //console.log("Light Current= "+(getTileSPvalue(id)+1)+" - "+getTileOnText(id)+"  Selected="+radio[x].value+" - "+document.getElementById('pswitch_option_switch_text_value').innerHTML);
+                   //console.log("check "+(getTileSPvalue(id)+1) +" against "+radio[x].value);
                    if (getTileSPvalue(id)+1 != radio[x].value) {
                      send_light_mode(radio[x].value, id, document.getElementById('pswitch_option_switch_text_value').innerHTML);
                    }
@@ -2575,14 +2666,15 @@
 
       var height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
       //console.log("height = "+height+" - "+caller.id);
+      //console.log("Height="+height+", computedwidth="+getComputedStyle(document.querySelector('.scheduler_pane')).width+", clientWidth="+document.documentElement.clientWidth+", innerWidth="+window.innerWidth);
 
       if (typeof _enable_schedules === "undefined" || _enable_schedules != false)
       {
-        if ( parseInt(getComputedStyle(document.querySelector('.scheduler_pane')).width) > Math.max(document.documentElement.clientWidth, window.innerWidth) ||
-             height < 300 ) {
-          //alert("Sorry, Scheduler won't fit on screen\nPlease use a different device");
+        //if ( parseInt(getComputedStyle(document.querySelector('.scheduler_pane')).width) > Math.max(document.documentElement.clientWidth, window.innerWidth) || height < 300 ) {
+        // Really bad check, but works.  Should probably setup CSS variables for this.
+        if ( Math.max(document.documentElement.clientWidth, window.innerWidth) < 600 || height < 300) {
+        //alert("Sorry, Scheduler won't fit on screen\nPlease use a different device");
           displayMessage("Scheduler won't fit on screen", 3);
-          //console.log("Height="+height+", computedwidth="+getComputedStyle(document.querySelector('.scheduler_pane')).width+", clientWidth="+document.documentElement.clientWidth+", innerWidth="+window.innerWidth);
           return;
         }
         import("./cronstrue.min.js");
@@ -2974,6 +3066,11 @@
      * 
      *********************************************************************/
 
+    function update_dynamicconfig(data) {
+      _dynamicconfig = data;
+      _enable_schedules = isConfigEnabled(_dynamicconfig.enable_schedules);
+    }
+
     function update_status(data) {
       //console.log("Received Update Satus");
       _aqualink_data = data;
@@ -3083,30 +3180,35 @@
           // If aqualinkd programmed light, need to convert int to text index, if not value is text
           try {
             var light_type = document.getElementById(obj.toString()).getAttribute('lighttype'); 
+            /*
             if (light_type == "0") {
-              light_mode = parseInt(data.light_program_names[obj])-1;
+              light_mode = data.light_program_names[obj];
               // For backward compatibility we could get a name here or number (number is is lights modes are in config.js vs aqualinkd.conf)
               //console.log("Light "+light_mode);
               if (! isNaN(light_mode)) {
-                light_mode_name = _light_program[light_type][light_mode];
+                //light_mode_name = _light_program[light_type][light_mode];
+                light_mode_name = _dynamicconfig?.light_programs[light_type][light_mode];
                 if (light_mode_name.endsWith(" - Show")) {
                   light_mode_name = light_mode_name.slice(0, -7);
                 }
               }
-            } else if (/*light_type == 10 ||*/ light_type == 11) {
+            } else*/ if (/*light_type == 10 ||*/ light_type == 11) {
               // Fo Dimmer Lights.
               light_mode = parseInt(light_mode_name);
               document.getElementById(obj.toString()).setAttribute('setpoint', light_mode);
             } else {
-              light_mode = _light_program[light_type].findIndex(element => element.startsWith(light_mode_name))
+              //light_mode = _light_program[light_type].findIndex(element => element.startsWith(light_mode_name));
+              light_mode = _dynamicconfig?.light_programs[light_type].findIndex(element => element.startsWith(light_mode_name));
+              
             }
-          } catch (e) { /*console.log(e);*/ }
+          } catch (e) {}
 
           if (light_mode_name != "-999%" && light_mode_name != "Off" && light_mode_name != "off")
             setTileOnText(obj.toString(),light_mode_name);
           
           try {
             document.getElementById(obj.toString()).setAttribute('spvalue', light_mode);
+            //console.log(obj.toString()+" set spvalue attribute to "+light_mode);
             //console.log("Light mode index "+light_mode+" - "+light_mode_name+" ----- "+_light_program[light_type][light_mode]);
           } catch (e) { /*console.log(e);*/ }
           
@@ -3269,6 +3371,7 @@
         socket_di.onopen = function() {
           // success!
           get_devices();
+          get_dynamicconfig();
           // Set recurring fetch every 1 minute
           if (!window.devicesInterval) {
             window.devicesInterval = setInterval(() => {get_devices();}, 60 * 1000);
@@ -3293,6 +3396,8 @@
             resetBackgroundSize();
           } else if (data.type == 'schedules') {
             cs_schedules(data);
+          } else if (data.type == 'dynamicconfig') {
+            update_dynamicconfig(data);
           }
         }
         socket_di.onclose = function() {
@@ -3320,6 +3425,13 @@
     function get_status() {
       var msg = {
         uri: "status"
+      };
+      socket_di.send(JSON.stringify(msg));
+    }
+
+    function get_dynamicconfig() {
+      var msg = {
+        uri: "dynamicconfig"
       };
       socket_di.send(JSON.stringify(msg));
     }
@@ -3430,7 +3542,8 @@
 
     function updatePwsitchOptions(source, light_type) {
       if (source.type == 'radio') {
-        var modename = _light_program[light_type][source.value-1];
+        //var modename = _light_program[light_type][source.value-1];
+        var modename = _dynamicconfig?.light_programs[light_type][source.value-1]; 
         if (modename.endsWith(" - Show"))
           modename = modename.substr(0, (modename.length - 7));
         document.getElementById('pswitch_option_switch_text_value').innerHTML = modename;
@@ -3685,7 +3798,7 @@ function cs_synchronizeTableWidths() {
           <tr>
             <td colspan='2' align='center'>
               <select id='pswitch_option_list' class='options_selector'>
-                <option value="0">Pool Light Program</option>
+                <option value="0">Light Program</option>
               </select>
             </td>
           </tr>

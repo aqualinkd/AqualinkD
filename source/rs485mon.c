@@ -27,13 +27,13 @@
 #include <time.h>
 
 #include "rs_devices.h"
-#include "serial_logger.h"
+#include "rs485mon.h"
 #include "aq_serial.h"
 #include "utils.h"
 #include "packetLogger.h"
 #include "rs_msg_utils.h"
 
-#ifdef SERIAL_LOGGER
+#ifdef RS485MON
   // Make us look like config.c when we load config.h so we get globals.
   #define CONFIG_C
 #endif
@@ -43,7 +43,7 @@
 #define PACKET_MAX 1200
 #define PROBE_CYCLES 2
 
-#define VERSION "serial_logger V2.11"
+#define VERSION "rs485mon V2.12"
 
 /*
 typedef enum used {
@@ -92,10 +92,10 @@ bool _playback_file = false;
 
 int sl_timespec_subtract (struct timespec *result, const struct timespec *x, const struct timespec *y);
 
-int _serial_logger(int rs_fd, char *port_name, int logPackets, int logLevel, bool panleProbe, bool rsSerialSpeedTest, bool errorMonitor, bool printAllIDs, bool timePackets);
+int _rs485mon(int rs_fd, char *port_name, int logPackets, int logLevel, bool panleProbe, bool rsSerialSpeedTest, bool errorMonitor, bool printAllIDs, bool timePackets);
 
 
-#ifdef SERIAL_LOGGER
+#ifdef RS485MON
 void broadcast_log(char *msg){
   // Do nothing, just for utils.c to work.
 }
@@ -109,7 +109,7 @@ bool isAqualinkDStopping() {
   return !_keepRunning;
 }
 #else
-int serial_logger (int rs_fd, char *port_name, int logLevel, int slogger_packets, char *slogger_ids) 
+int rs485mon (int rs_fd, char *port_name, int logLevel, int slogger_packets, char *slogger_ids) 
 {
   int packets=PACKET_MAX;
   unsigned int n;
@@ -140,11 +140,11 @@ int serial_logger (int rs_fd, char *port_name, int logLevel, int slogger_packets
   }
 
   if (slogger_packets > 0)
-    LOG(SLOG_LOG, LOG_NOTICE, "Running serial logger with %d pakets, loglevel %s\n",packets,elevel2text(logLevel>=LOG_NOTICE?logLevel:LOG_NOTICE) );
+    LOG(SLOG_LOG, LOG_NOTICE, "Running rs485mon with %d pakets, loglevel %s\n",packets,elevel2text(logLevel>=LOG_NOTICE?logLevel:LOG_NOTICE) );
   else
-    LOG(SLOG_LOG, LOG_NOTICE, "Running serial logger (complete poll cycle), loglevel %s\n",elevel2text(logLevel>=LOG_NOTICE?logLevel:LOG_NOTICE) );
+    LOG(SLOG_LOG, LOG_NOTICE, "Running rs485mon (complete poll cycle), loglevel %s\n",elevel2text(logLevel>=LOG_NOTICE?logLevel:LOG_NOTICE) );
 
-  return _serial_logger(rs_fd,  port_name, packets, (logLevel>=LOG_NOTICE?logLevel:LOG_NOTICE), true, false, false, false, false);
+  return _rs485mon(rs_fd,  port_name, packets, (logLevel>=LOG_NOTICE?logLevel:LOG_NOTICE), true, false, false, false, false);
 }
 
 #endif
@@ -529,7 +529,7 @@ bool filterMatch(unsigned char ID, unsigned char *packet_buffer, bool failNoFilt
   return true;
 }
 
-#ifdef SERIAL_LOGGER
+#ifdef RS485MON
 
 void printHex(char *pk, int length)
 {
@@ -745,19 +745,19 @@ int main(int argc, char *argv[]) {
 
   startPacketLogger();
 
-  _serial_logger(rs_fd, argv[1], logPackets, logLevel, panleProbe, rsSerialSpeedTest, errorMonitor, printAllIDs, timePackets);
+  _rs485mon(rs_fd, argv[1], logPackets, logLevel, panleProbe, rsSerialSpeedTest, errorMonitor, printAllIDs, timePackets);
 
   stopPacketLogger();
 
   close_serial_port(rs_fd);
 }
 
-#endif // SERIAL_LOGGER
+#endif // RS485MON
 
 
 
 
-int _serial_logger(int rs_fd, char *port_name, int logPackets, int logLevel, bool panleProbe, bool rsSerialSpeedTest, bool errorMonitor, bool printAllIDs, bool timePackets) {
+int _rs485mon(int rs_fd, char *port_name, int logPackets, int logLevel, bool panleProbe, bool rsSerialSpeedTest, bool errorMonitor, bool printAllIDs, bool timePackets) {
   int packet_length;
   int last_packet_length = 0;
   unsigned char packet_buffer[AQ_MAXPKTLEN];
@@ -874,7 +874,7 @@ int _serial_logger(int rs_fd, char *port_name, int logPackets, int logLevel, boo
           }
         }
         //LOG(SLOG_LOG, LOG_DEBUG_SERIAL, "Received Packet for ID 0x%02hhx of type %s\n", packet_buffer[PKT_DEST], get_packet_type(packet_buffer, packet_length));
-#ifdef SERIAL_LOGGER
+#ifdef RS485MON
         if (logLevel > LOG_NOTICE)
           printPacket(lastID, packet_buffer, packet_length, timePackets?extra_message:NULL);
 #else
@@ -944,7 +944,7 @@ int _serial_logger(int rs_fd, char *port_name, int logPackets, int logLevel, boo
 
     }
 
-#ifndef SERIAL_LOGGER
+#ifndef RS485MON
     if(received_packets%100==0) {
       LOG(SLOG_LOG, LOG_NOTICE, "Read %d of %s%d packets\n", received_packets, probeCycle?"(max)":"" ,logPackets);
     }
@@ -961,7 +961,7 @@ int _serial_logger(int rs_fd, char *port_name, int logPackets, int logLevel, boo
         received_packets = 0;
       }
     } else if (logLevel < LOG_DEBUG) {
-#ifdef SERIAL_LOGGER
+#ifdef RS485MON
       advance_cursor();
 #endif
     }

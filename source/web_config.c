@@ -41,6 +41,20 @@ int build_dynamic_webconfig_js(struct aqualinkdata *aqdata, char* buffer, int si
   return length;
 }
 
+int build_dynamic_webconfig_json(struct aqualinkdata *aqdata, char* buffer, int size)
+{
+  memset(&buffer[0], 0, size);
+  int length = 0;
+
+  length += sprintf(buffer+length, "{ \"type\": \"dynamicconfig\", \"enable_schedules\" : \"%s\",",(_aqconfig_.enable_scheduler)?"true":"false");
+
+  length += build_color_lights_json(aqdata, &buffer[length], size-length);
+
+  length += sprintf(buffer+length, "}");
+
+  return length;
+}
+
 
 
 char* find_nth_char(const char* str, int character, int n) {

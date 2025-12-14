@@ -178,7 +178,7 @@ char *generate_mqtt_id() {
     if (i < MQTT_ID_LEN) {
       ID[i++] = '_';
       const net_iface *info = get_first_valid_interface();
-      if (info->rawmac != NULL)
+      if (info->rawmac[0] != '\0')
         sprintf(&ID[i], "%.*s", (MQTT_ID_LEN-i), info->rawmac);
       else
         sprintf(&ID[i], "%.*d", (MQTT_ID_LEN-i), getpid());

@@ -358,10 +358,10 @@ const char *logmask2name(logmask_t from)
       return "Simulator: ";
     break;
     case SLOG_LOG:
-      return "Serial Log:";
+      return "RS485mon:  ";
     break;
     case IAQL_LOG:
-      return "iAqualink2: ";
+      return "iAqualink2:";
     break;
     case AQUA_LOG:
     default:

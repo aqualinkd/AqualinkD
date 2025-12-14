@@ -1142,7 +1142,7 @@ uriAtype action_URI(request_source from, const char *URI, int uri_length, float 
     return uActioned; 
     */
   } else if (strncmp(ri1, "seriallogger", 12) == 0 && from == NET_WS) { // Only valid from websocket.
-    LOG(NET_LOG,LOG_NOTICE, "Received request to run serial_logger!\n");
+    LOG(NET_LOG,LOG_NOTICE, "Received request to run rs485mon!\n");
     //LOG(NET_LOG,LOG_NOTICE, "Received request ri1=%s, ri2=%s, ri3=%s value=%f\n",ri1,ri2,ri3,value);
     _aqualink_data->slogger_packets = round(value);
     if (ri2 != NULL) {
@@ -1156,7 +1156,7 @@ uriAtype action_URI(request_source from, const char *URI, int uri_length, float 
     } else {
       _aqualink_data->slogger_debug = false;
     }
-    //LOG(NET_LOG,LOG_NOTICE, "Received request to run serial_logger (%d,%s,%s)!\n",
+    //LOG(NET_LOG,LOG_NOTICE, "Received request to run rs485mon (%d,%s,%s)!\n",
     //                        _aqualink_data->slogger_packets,
     //                        _aqualink_data->slogger_ids[0]!='\0'?_aqualink_data->slogger_ids:" ", 
     //                        _aqualink_data->slogger_debug?"debug":"" ); 
@@ -1676,9 +1676,14 @@ void action_web_request(struct mg_connection *nc, struct mg_http_message *http_m
         {
           char message[JSON_BUFFER_SIZE];
           DEBUG_TIMER_START(&tid2);
+          /*
           build_dynamic_webconfig_js(_aqualink_data, message, JSON_BUFFER_SIZE);
           DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_webconfig_js took");
           mg_http_reply(nc, 200, CONTENT_JS, message);
+          */
+          build_dynamic_webconfig_json(_aqualink_data, message, JSON_BUFFER_SIZE);
+          DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_webconfig_json took");
+          mg_http_reply(nc, 200, CONTENT_JSON, message);
         }
         break;
         case uSchedules:
@@ -1820,6 +1825,15 @@ void action_websocket_request(struct mg_connection *nc, struct mg_ws_message *wm
       char message[JSON_BUFFER_SIZE];
       build_aqualink_status_JSON(_aqualink_data, message, JSON_BUFFER_SIZE);
       DEBUG_TIMER_STOP(tid, NET_LOG, "action_websocket_request() build_aqualink_status_JSON took");
+      ws_send(nc, message);
+    }
+    break;
+    case uDynamicconf:
+    {
+      char message[JSON_BUFFER_SIZE];
+      DEBUG_TIMER_START(&tid2);
+      build_dynamic_webconfig_json(_aqualink_data, message, JSON_BUFFER_SIZE);
+      DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_webconfig_json took");
       ws_send(nc, message);
     }
     break;

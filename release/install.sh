@@ -10,6 +10,7 @@ PARENT_COMMAND=$(ps -o comm= $PPID 2>/dev/null)
 SERVICE="aqualinkd"
 
 BIN="aqualinkd"
+RS485BIN="rs485mon"
 CFG="aqualinkd.conf"
 SRV="aqualinkd.service"
 DEF="aqualinkd"
@@ -22,7 +23,10 @@ DEFLocation="/etc/default"
 WEBLocation="/var/www/aqualinkd/"
 MDNSLocation="/etc/avahi/services/"
 
+REQUIRED_GLIBC_VERSION="2.31"
+
 SOURCEBIN=$BIN
+SOURCERS485BIN=$RS485BIN
 
 LOG_SYSTEMD=1   # 1=false in bash, 0=true
 REMOUNT_RO=1
@@ -34,7 +38,10 @@ _logfile=""
 _frommake=$FALSE
 _ignorearch=$FALSE
 _nosystemd=$FALSE
+
 _ignoreglibc=$FALSE
+_installrs485mon=$TRUE
+
 
 log()
 {
@@ -75,6 +82,7 @@ while [[ $# -gt 0 ]]; do
       if [[ -n "$1" ]]; then
         _ignorearch=$TRUE
         SOURCEBIN=$BIN-$1
+        SOURCERS485BIN=$RS485BIN-$1
       else
         log "--arch requires parameter eg. ( --arch armhf | --arch arm64 )"
       fi
@@ -162,6 +170,7 @@ if [ "$PARENT_COMMAND" != "make" ] && [ "$_frommake" -eq $FALSE ] && [ "$_ignore
   # Need to check BINEXISTS
   if [ -f $BUILD/$SOURCEBIN$BINEXT ]; then
     SOURCEBIN=$BIN$BINEXT
+    SOURCERS485BIN=$RS485BIN$BINEXT
   elif [ -f $BUILD/$SOURCEBIN ]; then
     # Not good
     log "Can't find correct aqualinkd binary for $ARCH, '$BUILD/$SOURCEBIN$BINEXT' using '$BUILD/$SOURCEBIN' ";
@@ -177,9 +186,10 @@ fi
 ## New for V3.0 check GLIBC version.
 if [ "$_ignoreglibc" -eq $FALSE ]; then 
   # Check glib-c version.
-  REQUIRED_GLIBC_VERSION="2.31"
-  REQUIRED_GLIBC_MAJOR=2
-  REQUIRED_GLIBC_MINOR=31
+  # Extract the part BEFORE the first dot
+  REQUIRED_GLIBC_MAJOR="${REQUIRED_GLIBC_VERSION%.*}"
+  # Extract the part AFTER the first dot
+  REQUIRED_GLIBC_MINOR="${REQUIRED_GLIBC_VERSION#*.}"
 
   CURRENT_GLIBC_VERSION_STRING=$(ldd --version 2>/dev/null | head -n 1 | awk '{print $NF}')
 
@@ -218,6 +228,9 @@ if [ "$1" == "clean" ]; then
   systemctl disable $SERVICE > /dev/null 2>&1
   if [ -f $BINLocation/$BIN ]; then
     rm -f $BINLocation/$BIN
+  fi
+  if [ -f $BINLocation/$RS485BIN ]; then
+    rm -f $BINLocation/$RS485BIN
   fi
   if [ -f $SRVLocation/$SRV ]; then
     rm -f $SRVLocation/$SRV
@@ -275,7 +288,12 @@ fi
 # copy files to locations, but only copy cfg if it doesn;t already exist
 
 cp $BUILD/$SOURCEBIN $BINLocation/$BIN
+
 cp $BUILD/$SRV $SRVLocation/$SRV
+
+if [ "$_installrs485mon" -eq $TRUE ]; then 
+  cp $BUILD/$SOURCERS485BIN $BINLocation/$RS485BIN
+fi
 
 if [ -f $CFGLocation/$CFG ]; then
   log "AqualinkD config exists, did not copy new config, you may need to edit existing! $CFGLocation/$CFG"

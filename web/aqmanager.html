@@ -2,2531 +2,2304 @@
 <html lang='en'>
 
 <head>
-    <meta http-equiv='Content-Type' content='text/html; charset=windows-1252'>
-    <title>AqualinkD Managment Console</title>
-    <meta name='viewport' content='width=device-width'>
-    <meta name='apple-mobile-web-app-capable' content='yes'>
-    <meta name='apple-mobile-web-app-status-bar-style' content='black'>
-    <meta name='apple-mobile-web-app-status-bar-style' content='black'>
-    <link href="aqualinkd.png" rel="apple-touch-icon">
-    <link href="aqualinkd.png" rel="icon">
-    <script type="text/javascript" src="confighelp.js"></script>
-    <style>
-        :root {
-            --max-config-height: 870px;
-            --max-config-table-height: 730px;
-            --aqualinkd-scale: 0.75;
-            --aqualinkd-container: 265px; 
-            --aqualinkd-iframe: 350px; /* Seems backwards, but the way the iframe scales the iframe need to be the same amount bigger 350*0.75*/
-            --grid-width: 300px; /* Width of left column */
-            --logcontainer-height: 510px; /* This will get changed on page load */
-            --logcontainer-width: 1040px; /* This will get changed on page load */
-        }
-        html {}
+  <title>AqualinkD Management Console</title>
+  <meta http-equiv='Content-Type' content='text/html; charset=windows-1252'>
+  <meta name='viewport' content='width=device-width'>
+  <meta name='apple-mobile-web-app-capable' content='yes'>
+  <meta name='apple-mobile-web-app-status-bar-style' content='black'>
+  <meta name='apple-mobile-web-app-status-bar-style' content='black'>
+  <link href="aqualinkd.png" rel="apple-touch-icon">
+  <link href="aqualinkd.png" rel="icon">
+  <script type="text/javascript" src="confighelp.js"></script>
+  <style>
+  :root {
+    --max-config-height: 870px;
+    --max-config-table-height: 730px;
+    --aqualinkd-scale: 0.75;
+    --aqualinkd-container: 265px;
+    --aqualinkd-iframe: 350px;
+    /* Seems backwards, but the way the iframe scales the iframe need to be the same amount bigger 350*0.75*/
+    --grid-width: 300px;
+    /* Width of left column */
+    --logcontainer-height: 510px;
+    /* This will get changed on page load */
+    --logcontainer-width: 1040px;
+    /* This will get changed on page load */
+  }
 
-        body {
-            font-family: 'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;
-            font-weight: 300;
-            background-color: white;
-            color: #000000;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
+  /* html {} */
+  body {
+    font-family: 'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;
+    font-weight: 300;
+    background-color: white;
+    color: #000000;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
 
-        .wrapper {
-            display: grid;
-            /*grid-template-columns: 300px 1fr;*/
-            grid-template-columns: var(--grid-width) 1fr;
-            /*grid-gap: 1rem;*/
-            grid-gap: 0px;
-        }
+  .wrapper {
+    display: grid;
+    /*grid-template-columns: 300px 1fr;*/
+    grid-template-columns: var(--grid-width) 1fr;
+    /*grid-gap: 1rem;*/
+    grid-gap: 0px;
+  }
 
-        .inner {
-            /*padding: 1rem;*/
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            /*border: 1px solid red;*/
-            align-items: flex-start;
-            margin-top: 10px;
-            margin-left: 5px;
-            margin-right: 0px;
-            margin-bottom: 0px;
-        }
+  .inner {
+    /*padding: 1rem;*/
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /*border: 1px solid red;*/
+    align-items: flex-start;
+    margin-top: 10px;
+    margin-left: 5px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+  }
 
-        .aqualinkd {
-            grid-column: 1 / -1;
-            width: 133%;
-            /*width: 100%;*/
-            height: var(--aqualinkd-container); /* Iframe is set to 350px in the HTML so scale it back here */
-            /*transform: scale(0.75);*/
-            transform: scale(var(--aqualinkd-scale)); 
-            transform-origin: 0 0;
-        }
+  .aqualinkd {
+    grid-column: 1 / -1;
+    width: 133%;
+    /*width: 100%;*/
+    height: var(--aqualinkd-container);
+    /* Iframe is set to 350px in the HTML so scale it back here */
+    /*transform: scale(0.75);*/
+    transform: scale(var(--aqualinkd-scale));
+    transform-origin: 0 0;
+  }
 
-        .aqualinkd_iframe {
-            width: 100% ;
-            height: var(--aqualinkd-iframe);
-            /* transform scale also scales the whole iframe, so make the with 133% larger 133 * 0.75 = 100 */
-            /*
+  .aqualinkd_iframe {
+    width: 100%;
+    height: var(--aqualinkd-iframe);
+    /* transform scale also scales the whole iframe, so make the with 133% larger 133 * 0.75 = 100 */
+    /*
             width: 133%;
             transform: scale(0.75); 
             transform-origin: 0 0;*/
-        }
+  }
 
-        .commands {
-            /*padding: 1rem;*/
+  .commands {
+    /*padding: 1rem;*/
+    /*display: grid;*/
+    align-items: center;
+    justify-content: center;
+    /*border: 1px solid red;*/
+    /*row-gap: 10px;*/
+    /*overflow-y: scroll; this only works if we know the height, we can caculate but not important at moment */
+  }
 
-            /*display: grid;*/
-            align-items: center;
-            justify-content: center;
-            /*border: 1px solid red;*/
-            /*row-gap: 10px;*/
-            /*overflow-y: scroll; this only works if we know the height, we can caculate but not important at moment */
-        }
-
-        .configpopup {
-          top: 10px;
-      /*left: 10px;*/
-          position: fixed;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          width: 100vw;
-      /*
+  .configpopup {
+    top: 10px;
+    /*left: 10px;*/
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    /*
       height: 100%;
       */
-        }
+  }
 
-        /*
-        .loglevelstitle {
-            background-color: rgb(221, 221, 221);
-        }
+  /*
+  .loglevelstitle {
+    background-color: rgb(221, 221, 221);
+  }
 
-        .debugmaskstitle {
-            background-color: rgb(221, 221, 221);
-        }
+  .debugmaskstitle {
+    background-color: rgb(221, 221, 221);
+  }
 */
+  table {
+    background-color: rgb(221, 221, 221);
+    padding: 10px;
+  }
 
-        table {
-            background-color: rgb(221, 221, 221);
-            padding: 10px;
-        }
-/*
-        th {
-            background-color: white;
-        }
+  /*
+  th {
+    background-color: white;
+  }
 */
-        #title {
-            background-color: rgb(200, 200, 200);
-            font-weight: 600;
-        }
+  #title {
+    background-color: rgb(200, 200, 200);
+    font-weight: 600;
+  }
 
-        input[type=button],
-        input[type=submit],
-        input[type=reset] {
-            /*background-color: rgb(165, 165, 165);*/
-            /*background-color: #4CAAD9;*/
-            background-color: #9b9b9b;
-            border: none;
-            color: rgb(0, 0, 0);
-            padding: 2px 2px;
-            text-decoration: none;
-            margin: 2px 2px 2px 2px;
-            min-width: 70px;
-            border-radius: 6px;
-            height: 20px;
-            /*max-width: 120px;*/
-        }
+  input[type=button],
+  input[type=submit],
+  input[type=reset] {
+    /*background-color: rgb(165, 165, 165);*/
+    /*background-color: #4CAAD9;*/
+    background-color: #9b9b9b;
+    border: none;
+    color: rgb(0, 0, 0);
+    padding: 2px 2px;
+    text-decoration: none;
+    margin: 2px 2px 2px 2px;
+    min-width: 70px;
+    border-radius: 6px;
+    height: 20px;
+    /*max-width: 120px;*/
+  }
 
-        .disablebutton {
-            background-color: #ccc !important;
-            color: #777 !important;
-        }
+  .disablebutton {
+    background-color: #ccc !important;
+    color: #777 !important;
+  }
 
-        .disabletoggle {
-            color: #777 !important;
-        }
+  .disabletoggle {
+    color: #777 !important;
+  }
 
-        .statusmsg {
-          font-size: clamp(0.2rem, 1vw, 1rem);
-          white-space: nowrap; /* Keep text on a single line */
-          overflow: hidden;
-          text-overflow: ellipsis;
-          /*text-overflow: clip;*/
-          width: var(--aqualinkd-container);
-          display:inline-block;
-        }
+  .statusmsg {
+    font-size: clamp(0.2rem, 1vw, 1rem);
+    white-space: nowrap;
+    /* Keep text on a single line */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /*text-overflow: clip;*/
+    width: var(--aqualinkd-container);
+    display: inline-block;
+  }
 
-        .error {
-            background-color: rgb(255, 0, 0) !important;
-            font-weight: 600;
-        }
+  .error {
+    background-color: rgb(255, 0, 0) !important;
+    font-weight: 600;
+  }
 
-        .logmsgerror {
-            color: rgb(255, 0, 0) !important;
-        }
+  .logmsgerror {
+    color: rgb(255, 0, 0) !important;
+  }
 
-        .logmsgwarning {
-            color: rgb(255, 204, 0) !important;
-        }
+  .logmsgwarning {
+    color: rgb(255, 204, 0) !important;
+  }
 
-        .newversion {
-            background-color: rgb(148, 195, 233) !important;
-        }
+  .newversion {
+    background-color: rgb(148, 195, 233) !important;
+  }
 
-        .hidden {
-            display: none;
-        }
+  .hidden {
+    display: none;
+  }
 
-        .commands {
-            vertical-align: top;
-        }
+  .commands {
+    vertical-align: top;
+  }
 
-        .loglevels {}
+  .loglevels {}
 
-        .logcontainer {
-            font-family: monospace;
-            /*height: 510px;*//* This was size before scaling aqualinkd iframe*/
-            /*height: 650px;*/
-            height: var(--logcontainer-height);
-            /*width: 100%;*/
-            /*width: 500px;*/
-            width: var(--logcontainer-width);
-            /*width: calc(100% - 300px);*/
-            overflow: auto;
-            overflow-x: auto;
-            display: flex;
-            /*flex-direction: column-reverse;*/
-            flex-direction: column;
-            background-color: #2b2b2b;
-            color: white;
-            white-space: pre;
-        }
+  .logcontainer {
+    font-family: monospace;
+    /*height: 510px;*/
+    /* This was size before scaling aqualinkd iframe*/
+    /*height: 650px;*/
+    height: var(--logcontainer-height);
+    /*width: 100%;*/
+    /*width: 500px;*/
+    width: var(--logcontainer-width);
+    /*width: calc(100% - 300px);*/
+    overflow: auto;
+    overflow-x: auto;
+    display: flex;
+    /*flex-direction: column-reverse;*/
+    flex-direction: column;
+    background-color: #2b2b2b;
+    color: white;
+    white-space: pre;
+  }
 
-        .logline {
-          margin-left: 2px;
-          font-size: small;
-        }
+  .logline {
+    margin-left: 2px;
+    font-size: small;
+  }
 
-        .toggle {
-            cursor: pointer;
-            display: inline-block;
-            margin: 1px 1px 1px 1px;
+  .toggle {
+    cursor: pointer;
+    display: inline-block;
+    margin: 1px 1px 1px 1px;
+  }
 
-        }
+  .logtoggle {
+    width: 130px;
+  }
 
-        .logtoggle {
-            width: 130px;
-        }
+  .toggle-switch {
+    display: inline-block;
+    /*background: #ccc;*/
+    background: #ebebeb;
+    border-radius: 16px;
+    width: 35px;
+    height: 18px;
+    position: relative;
+    vertical-align: middle;
+    transition: background 0.25s;
+  }
 
-        .toggle-switch {
-            display: inline-block;
-            /*background: #ccc;*/
-            background: #ebebeb;
-            border-radius: 16px;
-            width: 35px;
-            height: 18px;
-            position: relative;
-            vertical-align: middle;
-            transition: background 0.25s;
-        }
+  .toggle-switch:before,
+  .toggle-switch:after {
+    content: "";
+  }
 
-        .toggle-switch:before,
-        .toggle-switch:after {
-            content: "";
-        }
+  .toggle-switch:before {
+    display: block;
+    /*background: linear-gradient(to bottom, #fff 0%, #ccc 100%);*/
+    /*background: linear-gradient(to bottom, #fff 0%, #e6e6e6 100%);*/
+    background: linear-gradient(to bottom, #fff 0%, #979696 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+    width: 15px;
+    height: 15px;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: left 0.25s;
+  }
 
-        .toggle-switch:before {
-            display: block;
-            /*background: linear-gradient(to bottom, #fff 0%, #ccc 100%);*/
-            /*background: linear-gradient(to bottom, #fff 0%, #e6e6e6 100%);*/
-            background: linear-gradient(to bottom, #fff 0%, #979696 100%);
-            border-radius: 50%;
-            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
-            width: 15px;
-            height: 15px;
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            transition: left 0.25s;
-        }
+  .toggle:hover .toggle-switch:before {
+    /*background: linear-gradient(to bottom, #fff 0%, #fff 100%);*/
+    /*background: linear-gradient(to bottom, #979696 0%, #fff 100%);*/
+    background: linear-gradient(to bottom, #e7e7e7 0%, #747373 100%);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  }
 
-        .toggle:hover .toggle-switch:before {
-            /*background: linear-gradient(to bottom, #fff 0%, #fff 100%);*/
-            /*background: linear-gradient(to bottom, #979696 0%, #fff 100%);*/
-            background: linear-gradient(to bottom, #e7e7e7 0%, #747373 100%);
-            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
-        }
+  .toggle-checkbox:checked+.toggle-switch {
+    /*background: #56c080;*/
+    background: #4CAAD9;
+    /*background: #8e8e8e;*/
+  }
 
-        .toggle-checkbox:checked+.toggle-switch {
-            /*background: #56c080;*/
-            background: #4CAAD9;
-            /*background: #8e8e8e;*/
-        }
+  .toggle-checkbox:checked+.toggle-switch:before {
+    left: 19px;
+  }
 
-        .toggle-checkbox:checked+.toggle-switch:before {
-            left: 19px;
-        }
+  .toggle-checkbox {
+    position: absolute;
+    visibility: hidden;
+  }
 
-        .toggle-checkbox {
-            position: absolute;
-            visibility: hidden;
-        }
+  .toggle-label {
+    margin-left: 5px;
+    position: relative;
+    top: 2px;
+  }
 
-        .toggle-label {
-            margin-left: 5px;
-            position: relative;
-            top: 2px;
-        }
+  .collapsible {
+    background-color: #777;
+    color: white;
+    cursor: pointer;
+    /*padding: 18px;*/
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 16px;
+  }
 
+  .collapsible:after {
+    content: '\002B';
+    color: white;
+    font-weight: bold;
+    float: right;
+    margin-left: 5px;
+  }
 
-        .collapsible {
-            background-color: #777;
-            color: white;
-            cursor: pointer;
-            /*padding: 18px;*/
-            width: 100%;
-            border: none;
-            text-align: left;
-            outline: none;
-            font-size: 16px;
-        }
+  .active:after {
+    content: "\2212";
+  }
 
-        .collapsible:after {
-            content: '\002B';
-            color: white;
-            font-weight: bold;
-            float: right;
-            margin-left: 5px;
-        }
+  .content {
+    display: grid;
+    /*padding: 0 18px;*/
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+    /*background-color: #f1f1f1;*/
+    background-color: rgb(211, 211, 211, 211);
+    font-size: 14px;
+  }
 
-        .active:after {
-            content: "\2212";
-        }
+  /* FOR CONFIG PUPUP */
+  .config_options {
+    top: 10px;
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    /*height: 100vw;*/
+  }
 
-        .content {
-            display: grid;
-            /*padding: 0 18px;*/
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.2s ease-out;
-            /*background-color: #f1f1f1;*/
-            background-color: rgb(211,211,211,211);
-            font-size: 14px;
-        }
+  .config_pane_scrollable {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: var(--max-config-table-height);
+    resize: vertical;
+  }
 
-        /* FOR CONFIG PUPUP */
+  .config_pane_scrollable table {
+    /*background-color: #e7e7e7;*/
+    background-color: #f0f0f0;
+  }
 
-        .config_options {
-            top: 10px;
-            position: fixed;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100vw;
-            
-            /*height: 100vw;*/
-        }
-        
-        .config_pane_scrollable {
-          overflow-x: hidden;
-          overflow-y: auto;
-          max-height: var(--max-config-table-height);
-          resize: vertical;
+  .config_options_pane {
+    position: relative;
+    /* required for top right close button only */
+    background-color: var(--options_pane_background);
+    border: 2px solid var(--options_pane_bordercolor);
+    border-radius: 10px;
+    justify-content: center;
+    align-items: center;
+    width: 700px;
+    max-height: var(--max-config-height);
+    /*
+    overflow-y: auto;
+    */
+    overflow-x: hidden;
+    overflow-y: hidden;
+  }
+
+  /*
+  .config_options_added {
+    background-color: white;
+  }
+  */
+  .web_config_options {
+    top: 10px;
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    /*height: 100vw;*/
+  }
+
+  /*
+  .web_config_options_pane {
+    position: relative; 
+    background-color: var(--options_pane_background);
+    border: 2px solid var(--options_pane_bordercolor);
+    border-radius: 20px;
+    justify-content: center;
+    align-items: center;
+    width: 700px;
           
-        }
-        .config_pane_scrollable table {
-          /*background-color: #e7e7e7;*/
-          background-color: #f0f0f0;
-        }
-        .config_options_pane {
-            position: relative; /* required for top right close button only */
-            background-color: var(--options_pane_background);
-            border: 2px solid var(--options_pane_bordercolor);
-            border-radius: 10px;
-            justify-content: center;
-            align-items: center;
-            width: 700px;
-            /*max-height: 870px;*/
-            max-height: var(--max-config-height);
-            /*
-            overflow-x: hidden;
-            overflow-y: auto;*/
-            overflow-x: hidden;
-            overflow-y: hidden;
-        }
-        /*
-        .config_options_added {
-            background-color: white;
-        }
-        */
-        .web_config_options {
-            top: 10px;
-            position: fixed;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100vw;      
-            /*height: 100vw;*/
-        }
-        /*
-        .web_config_options_pane {
-            position: relative; 
-            background-color: var(--options_pane_background);
-            border: 2px solid var(--options_pane_bordercolor);
-            border-radius: 20px;
-            justify-content: center;
-            align-items: center;
-            width: 700px;
-          
-            max-height: var(--max-config-height);
+    max-height: var(--max-config-height);
             
-            overflow-x: hidden;
-            overflow-y: hidden;
-        }*/
-        .web_config_textarea {
-          width:90%; 
-          /*height:700px;*/
-          height:var(--web-config-textarea-height);
-          box-sizing: border-box; 
-          resize: vertical;
+    overflow-x: hidden;
+    overflow-y: hidden;
+  }*/
+
+  .web_config_textarea {
+    width: 90%;
+    /*height:700px;*/
+    height: var(--web-config-textarea-height);
+    box-sizing: border-box;
+    resize: vertical;
+  }
+
+  .hide {
+    display: none;
+    opacity: 0.0;
+    /*filter: alpha(opacity=0);*/
+    filter: opacity(0%);
+  }
+
+  .config_option_deletebutton {
+    font-size: 10px !important;
+    font-weight: bold !important;
+    /*color: var(--body_text);*/
+    /*background-color: #7f8385 !important;*/
+    border: none !important;
+    color: rgb(0, 0, 0) !important;
+    padding: 2px 2px !important;
+    text-decoration: none !important;
+    margin: 2px 2px 2px 2px !important;
+    min-width: 18px !important;
+    border-radius: 5px !important;
+    height: 18px !important;
+  }
+
+  .config_pane_close_button {
+    font-size: 10px !important;
+    font-weight: bold !important;
+    /*color: var(--body_text);*/
+    /*background-color: #7f8385 !important;*/
+    border: none !important;
+    color: rgb(0, 0, 0) !important;
+    padding: 2px 2px !important;
+    text-decoration: none !important;
+    margin: 2px 2px 2px 2px !important;
+    min-width: 18px !important;
+    border-radius: 2px !important;
+    height: 18px !important;
+  }
+
+  .config_pane_close_button_contaner {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding-top: 5px;
+    padding-right: 10px;
+  }
+
+  .valid_json {
+    background-color: var(--options_pane_background);
+  }
+
+  .invalid_json {
+    background-color: rgb(255, 100, 0);
+  }
+
+  .textarea-container {
+    display: flex;
+    /* Or display: grid; grid-template-columns: 1fr 1fr; */
+    gap: 0px;
+    /* Optional: adds space between textareas */
+  }
+
+  .web_config_textarea {
+    width: 90%;
+    /*height:700px;*/
+    height: var(--web-config-textarea-height);
+    box-sizing: border-box;
+    /*resize: vertical;*/
+    resize: none;
+    outline: none;
+    font-family: monospace;
+  }
+
+  .web_config_numbers {
+    width: 5%;
+    height: var(--web-config-textarea-height);
+    box-sizing: border-box;
+    resize: vertical;
+    overflow: hidden;
+    resize: none;
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: right;
+    font-family: monospace;
+  }
+
+  .configTable {
+    border-collapse: collapse;
+  }
+
+  #alertOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+
+  #alertCustomDialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /*background-color: rgb(240, 240, 240);*/
+    background-color: #2b2b2b;
+    color: #ffffff;
+    padding: 20px;
+    border: 1px solid #989898;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  /*
+  .helptxt {
+    font-size: x-small;  
+  }
+  */
+
+  </style>
+  <script type='text/javascript'>
+  //'use strict';
+  var _panel_size = 6;
+  var _panel_set = 0;
+  var _currentVersion = 0;
+  var _latestVersionAvailable = 0;
+  var _rssd_logmask = 0;
+  const RSSD_MASK_ID = 512; // Must match RSSD_LOG in utils.c
+  var _addedBlankLightProgram = false;
+  var _addedBlankSensor = false;
+  var _addedBlankVirtualButton = false;
+  const _webConfigFile = "/config.json";
+  let _AlertsShown = {};
+  var _config = {};
+  const VERSION_URL = "https://api.github.com/repos/aqualinkd/AqualinkD/releases"
+  const WEB_CONFIG_DEFAULT = "https://raw.githubusercontent.com/aqualinkd/AqualinkD/refs/heads/master/web/config.json"
+  let _aqualinkVersions = {};
+  const _urlParams = new URLSearchParams(window.location.search);
+  // if loading confighelp.js failes, create a blank variable that it creates.
+  if(typeof _confighelp === 'undefined') {
+    var _confighelp = {};
+  }
+
+  function init_collapsible() {
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+    for(i = 0; i < coll.length; i++) {
+      coll[i].addEventListener("click", function() {
+        this.classList.toggle("active");
+        var content = this.nextElementSibling;
+        //console.log(content);
+        if(content.style.maxHeight) {
+          content.style.maxHeight = null;
+        } else {
+          content.style.maxHeight = content.scrollHeight + "px";
         }
+      });
+    }
+    // open up the system information collapsable content
+    document.getElementById("systembutton").dispatchEvent(new Event('click'));
+    // disable the download log button on startup
+    //disablebutton("downloadlog");
+    //disabletoggle("logfile");
+    //disabletoggle("seriallog");
+  }
 
-        .hide {
-            display: none;
-            filter: alpha(opacity=0);
-            opacity: 0.0;
+  function disablebutton(id) {
+    //console.log("disable " + id);
+    var button = document.getElementById(id);
+    if(button) {
+      button.disabled = true;
+      button.classList.add("disablebutton");
+    }
+  }
+
+  function enablebutton(id) {
+    //console.log("enable " + id);
+    var button = document.getElementById(id);
+    if(button) {
+      button.disabled = false;
+      button.classList.remove("disablebutton");
+    }
+  }
+
+  function setbuttontext(id, text) {
+    //console.log("enable " + id);
+    var button = document.getElementById(id);
+    if(button) {
+      button.value = text;
+    }
+  }
+
+  function disabletoggle(id) {
+    disablebutton(id);
+    try {
+      document.getElementById(id).parentNode.classList.add("disabletoggle");
+    } catch (e) {
+      console.log("error " + e)
+    }
+  }
+
+  function enabletoggle(id) {
+    enablebutton(id);
+    try {
+      document.getElementById(id).parentNode.classList.remove("disabletoggle");
+    } catch (e) {
+      console.log("error " + e)
+    }
+  }
+
+  function tohex(value) {
+    var rtn = parseInt(value).toString(16);
+    if(rtn.length <= 1) return "0x0" + rtn;
+    else return "0x" + rtn;
+  }
+
+  function todec(value) {
+    let number = parseInt(value, 16);
+    return number;
+  }
+  var _last_message_element = null;
+  var _log_element_count = 0;
+  const LOGS2DISPLAY = 500;
+  var _log_div_pressed = -1;
+
+  function update_log_message(message) {
+    if(_log_div_pressed == -1) {
+      document.getElementById("logs").addEventListener("mousedown", function(e) {
+        _log_div_pressed = true;
+      })
+      document.getElementById("logs").addEventListener("mouseup", function(e) {
+        _log_div_pressed = false;
+      })
+      _log_div_pressed = false;
+    }
+    //console.log(message);
+    var element = document.createElement("div");
+    element.classList.add("logline");
+    if(message.startsWith("Error:")) {
+      element.classList.add("logmsgerror");
+    }
+    if(message.startsWith("Warning:")) {
+      element.classList.add("logmsgwarning");
+    }
+    var logcontainer = document.getElementById("logs");
+    if(_log_element_count >= LOGS2DISPLAY) {
+      try {
+        logcontainer.firstElementChild.remove();
+      } catch (e) {
+        _log_element_count++;
+      }
+    } else {
+      _log_element_count++;
+    }
+    element.appendChild(document.createTextNode(message));
+    logcontainer.appendChild(element);
+    _last_message_element = element;
+    if(_log_div_pressed == false) {
+      logcontainer.scrollTop = logcontainer.scrollHeight - logcontainer.clientHeight;
+    }
+  }
+
+  function setloglevel(caller) {
+    //console.log(caller.id);
+    var id = parseInt(caller.id.split('_')[1]);
+    var msg = {
+      uri: "setloglevel",
+      value: id
+    };
+    send_command(msg);
+  }
+
+  function setlogmask(caller) {
+    //console.log(caller.id);
+    var id = parseInt(caller.id.split('_')[1]);
+    var addremove = "";
+    if(caller.checked) {
+      addremove = "addlogmask";
+    } else {
+      addremove = "removelogmask";
+    }
+    var msg = {
+      uri: addremove,
+      value: id
+    };
+    // If it's RSSD logmask, and we have filter, append that to the uri.
+    if(caller.id == _rssd_logmask) {
+      var filter = document.getElementById("rssd_filter").value;
+      if(filter) {
+        if(addremove == "addlogmask") {
+          msg.uri = msg.uri + "/" + filter;
         }
+      }
+    }
+    send_command(msg);
+  }
 
-        .config_option_deletebutton {
-          font-size: 10px !important;
-          font-weight: bold !important;
-          /*color: var(--body_text);*/
-          /*background-color: #7f8385 !important;*/
-            border: none !important;
-            color: rgb(0, 0, 0) !important;
-            padding: 2px 2px !important;
-            text-decoration: none !important;
-            margin: 2px 2px 2px 2px !important;
-            min-width: 18px !important;
-            border-radius: 5px !important;
-            height: 18px !important;
+  function requestFileDownload(caller) {
+    var msg = {};
+    if(caller.id == "downloadlog") {
+      //window.location = '/api/debug/download';
+      downloadFile('/api/logfile/download', "aqualinkd.log", document.getElementById("logsize").value);
+      return;
+    } else if(caller.id == "downloadconfig") {
+      downloadFile('/api/config/download', "aqualinkd.conf");
+      return;
+    }
+    send_command(msg);
+  }
+
+  function downloadFile(filePath, fname, lines = 0) {
+    //console.log("Lines=" + lines);
+    var link = document.createElement('a');
+    link.href = filePath + "/" + lines;
+    //link.download = filePath.substr(filePath.lastIndexOf('/') + 1);
+    link.download = fname
+    link.click();
+    // Can't get a form post to cleanly download, and "a download" above can only do get. So add value
+    /*
+     var form = document.createElement('form');
+     form.setAttribute("style", "display: none;");
+     form.method='POST';
+     form.action=filePath;
+     form.target='aqd'; // Set trget to iframe "aqd"(aqualinkd), this stops WS for resetting
+     element=document.createElement('INPUT');
+     element.name='value';
+     element.value=lines;
+     form.appendChild(element);
+     document.body.appendChild(form);
+     form.submit();
+     */
+  }
+
+  function settoggle(id, onoff) {
+    var element = document.getElementById(id);
+    if(onoff == "on") {
+      element.checked = true;
+      //console.log("set " + element.id + " on");
+    } else {
+      element.checked = false;
+      //console.log("set " + element.id + " off");
+    }
+  }
+
+  function checkboxClick(caller) {
+    try {
+      if(caller.id == "slog_debug") {
+        if(caller.checked) {
+          document.getElementById("slog_ids").disabled = true;
+        } else {
+          document.getElementById("slog_ids").disabled = false;
         }
-
-        .config_pane_close_button {
-          font-size: 10px !important;
-          font-weight: bold !important;
-          /*color: var(--body_text);*/
-          /*background-color: #7f8385 !important;*/
-          border: none !important;
-          color: rgb(0, 0, 0) !important;
-          padding: 2px 2px !important;
-          text-decoration: none !important;
-          margin: 2px 2px 2px 2px !important;
-          min-width: 18px !important;
-          border-radius: 2px !important;
-          height: 18px !important;
-          
+      } else if(caller.id == "slog_poll_cycle") {
+        if(caller.checked) {
+          document.getElementById("slog_packets").disabled = true;
+        } else {
+          document.getElementById("slog_packets").disabled = false;
         }
-        
-        .config_pane_close_button_contaner {
-          position: absolute;
-          top: 0;
-          right: 0;
-          padding-top: 5px;
-          padding-right: 10px;
+      }
+    } catch (Error) {}
+  }
+
+  function editconfig(caller) {
+    var msg = {
+      uri: "config"
+    };
+    send_command(msg);
+  }
+
+  function saveconfig(caller) {
+    var json_ordered = {
+      uri: "config/set",
+      values: {}
+    };
+    //console.log(_config);
+    for(var obj in _config) {
+      if(_config[obj].value !== undefined) {
+        if(_config[obj].value) {
+          json_ordered.values[obj] = _config[obj].value;
+        } else if(_config[obj].allow_blank !== undefined && _config[obj].allow_blank == "yes") {
+          //console.log("----- Add Blank value for "+ obj+"\n");
+          json_ordered.values[obj] = "";
         }
-
-        .valid_json {
-          background-color: var(--options_pane_background);
-        }
-        .invalid_json {
-          background-color: rgb(255, 100, 0);
-        }
-        
-        .textarea-container {
-          display: flex; /* Or display: grid; grid-template-columns: 1fr 1fr; */
-          gap: 0px; /* Optional: adds space between textareas */
-        }
-        .web_config_textarea {
-          width:90%; 
-          /*height:700px;*/
-          height:var(--web-config-textarea-height);
-          box-sizing: border-box; 
-          /*resize: vertical;*/
-          resize: none;
-          outline: none;
-          font-family: monospace;
-        }
-        .web_config_numbers {
-          width:5%; 
-          height:var(--web-config-textarea-height);
-          box-sizing: border-box; 
-          resize: vertical;
-          overflow: hidden;
-          resize: none;
-          background: transparent;
-          border: none;
-          outline: none;
-          text-align: right;
-          font-family: monospace;
-        }
-        .configTable {
-          border-collapse: collapse;
-        }
-
-        
-
-        #alertOverlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-color: rgba(0, 0, 0, 0.5); 
-          z-index: 999;
-        }
-
-        #alertCustomDialog {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          /*background-color: rgb(240, 240, 240);*/
-          background-color: #2b2b2b;
-          color: #ffffff;
-          padding: 20px;
-          border: 1px solid #989898;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-          z-index: 1000;
-          border-radius: 10px;
-          text-align: center;
-        }
-
-        
-        /*
-        .helptxt {
-            font-size: x-small;  
-        }
-        */
-        /*
-        tr{
-            border-bottom: 1px solid black;
-        }
-            */
-    </style>
-
-    <script type='text/javascript'>
-       //'use strict';
-
-        var _panel_size = 6;
-        var _panel_set = 0;
-        var _currentVersion = 0;
-        var _latestVersionAvailable = 0;
-        var _rssd_logmask = 0;
-        const RSSD_MASK_ID = 512;  // Must match RSSD_LOG in utils.c
-
-        var _addedBlankLightProgram = false;
-        var _addedBlankSensor = false;
-        var _addedBlankVirtualButton = false;
-
-        const _webConfigFile = "/config.json";
-        let _AlertsShown = {};
-        var _config = {};
-
-        const VERSION_URL = "https://api.github.com/repos/aqualinkd/AqualinkD/releases"
-        const WEB_CONFIG_DEFAULT = "https://raw.githubusercontent.com/aqualinkd/AqualinkD/refs/heads/master/web/config.json"
-        let _aqualinkVersions = {};
-
-        const _urlParams = new URLSearchParams(window.location.search);
-
-
-        // if loading confighelp.js failes, create a blank variable that it creates.
-        if (typeof _confighelp === 'undefined') {
-          var _confighelp = {};
-        }
-
-        function init_collapsible() {
-            var coll = document.getElementsByClassName("collapsible");
-            var i;
-
-            for (i = 0; i < coll.length; i++) {
-                coll[i].addEventListener("click", function () {
-                    this.classList.toggle("active");
-                    
-                    var content = this.nextElementSibling;
-                    //console.log(content);
-                    if (content.style.maxHeight) {
-                        content.style.maxHeight = null;
-                    } else {
-                        content.style.maxHeight = content.scrollHeight + "px";
-                    }
-                });
-            }
-
-            // open up the system information collapsable content
-            document.getElementById("systembutton").dispatchEvent(new Event('click'));
-
-            // disable the download log button on startup
-            //disablebutton("downloadlog");
-            //disabletoggle("logfile");
-            //disabletoggle("seriallog");
-        }
-
-        function disablebutton(id) {
-            //console.log("disable " + id);
-            var button = document.getElementById(id);
-            if (button) {
-                button.disabled = true;
-                button.classList.add("disablebutton");
-            }
-        }
-        function enablebutton(id) {
-            //console.log("enable " + id);
-            var button = document.getElementById(id);
-            if (button) {
-                button.disabled = false;
-                button.classList.remove("disablebutton");
-            }
-        }
-        function setbuttontext(id, text) {
-            //console.log("enable " + id);
-            var button = document.getElementById(id);
-            if (button) {
-                button.value = text;
-            }
-        }
-        function disabletoggle(id) {
-            disablebutton(id);
-            try {
-                document.getElementById(id).parentNode.classList.add("disabletoggle");
-            } catch (e) { console.log("error " + e) }
-        }
-        function enabletoggle(id) {
-            enablebutton(id);
-            try {
-                document.getElementById(id).parentNode.classList.remove("disabletoggle");
-            } catch (e) { console.log("error " + e) }
-        }
-
-        function tohex(value) {
-            var rtn = parseInt(value).toString(16);
-            if (rtn.length <= 1)
-                return "0x0" + rtn;
-            else
-                return "0x" + rtn;
-        }
-        function todec(value) {
-            let number = parseInt(value, 16);
-            return number;
-        }
-
-        var _last_message_element = null;
-        var _log_element_count = 0;
-        const LOGS2DISPLAY = 500;
-        var _log_div_pressed = -1;
-
-        function update_log_message(message) {
-            if (_log_div_pressed == -1) {
-              document.getElementById("logs").addEventListener("mousedown", function (e) {_log_div_pressed = true;})
-              document.getElementById("logs").addEventListener("mouseup", function (e) {_log_div_pressed = false;})
-              _log_div_pressed = false;
-            }
-            //console.log(message);
-            var element = document.createElement("div");
-            element.classList.add("logline");
-
-            if (message.startsWith("Error:")) {
-                element.classList.add("logmsgerror");
-            }
-            if (message.startsWith("Warning:")) {
-                element.classList.add("logmsgwarning");
-            }
-
-            var logcontainer = document.getElementById("logs");
-
-            if (_log_element_count >= LOGS2DISPLAY) {
-                try {
-                    logcontainer.firstElementChild.remove();
-                } catch (e) {
-                    _log_element_count++;
-                }
-            } else {
-                _log_element_count++;
-            }
-
-            element.appendChild(document.createTextNode(message));
-            logcontainer.appendChild(element);
-            _last_message_element = element;
-
-            if (_log_div_pressed == false) {
-              logcontainer.scrollTop = logcontainer.scrollHeight - logcontainer.clientHeight;
-            }
-        }
-
-        /* Below needs flex-direction: column-reverse; set in CSS .logcontainer */
-        /*
-        function OLD_update_log_message_OLD(message) {
-            var element = document.createElement("div");
-            if (message.startsWith("Error:")) {
-                element.classList.add("logmsgerror");
-            }
-            var logcontainer = document.getElementById("logs");
-            if (_log_element_count >= LOGS2DISPLAY) {
-                try {
-                    logcontainer.lastElementChild.remove();
-                } catch (e) {
-                    _log_element_count++;
-                }
-            } else {
-                _log_element_count++;
-            }
-            element.appendChild(document.createTextNode(message));
-            logcontainer.insertBefore(element, _last_message_element);
-            _last_message_element = element;
-        }
-        */
-/*
-        function update_status(data) {
-        }
-*/
-        function setloglevel(caller) {
-            //console.log(caller.id);
-            var id = parseInt(caller.id.split('_')[1]);
-            var msg = {
-                uri: "setloglevel",
-                value: id
-            };
-            send_command(msg);
-        }
-        function setlogmask(caller) {
-            //console.log(caller.id);
-            var id = parseInt(caller.id.split('_')[1]);
-            var addremove = "";
-            if (caller.checked) {
-                addremove = "addlogmask";
-            } else {
-                addremove = "removelogmask";
-            }
-
-            var msg = {
-                uri: addremove,
-                value: id
-            };
-
-            // If it's RSSD logmask, and we have filter, append that to the uri.
-            if (caller.id == _rssd_logmask ) {
-              var filter = document.getElementById("rssd_filter").value;
-              if (filter) {
-                if (addremove ==  "addlogmask") {
-                    msg.uri = msg.uri + "/" + filter;
-                }
-              }
-            }
-            send_command(msg);
-        }
-        function requestFileDownload(caller) {
-            var msg = {};
-
-            if (caller.id == "downloadlog") {
-                //window.location = '/api/debug/download';
-              downloadFile('/api/logfile/download', "aqualinkd.log", document.getElementById("logsize").value);
-              return;
-            } else if ( caller.id == "downloadconfig") {
-              downloadFile('/api/config/download', "aqualinkd.conf");
-              return;
-            }
-
-            send_command(msg);
-        }
-
-        function downloadFile(filePath, fname, lines=0) {
-            //console.log("Lines=" + lines);
-
-            var link = document.createElement('a');
-            link.href = filePath + "/" + lines;
-            //link.download = filePath.substr(filePath.lastIndexOf('/') + 1);
-            link.download = fname
-            link.click();
-            // Can't get a form post to cleanly download, and "a download" above can only do get. So add value
-            /*
-             var form = document.createElement('form');
-             form.setAttribute("style", "display: none;");
-             form.method='POST';
-             form.action=filePath;
-             form.target='aqd'; // Set trget to iframe "aqd"(aqualinkd), this stops WS for resetting
-             element=document.createElement('INPUT');
-             element.name='value';
-             element.value=lines;
-             form.appendChild(element);
-             document.body.appendChild(form);
-             form.submit();
-             */
-
-        }
-
-        function settoggle(id, onoff) {
-            var element = document.getElementById(id);
-            if (onoff == "on") {
-                element.checked = true;
-                //console.log("set " + element.id + " on");
-            } else {
-                element.checked = false;
-                //console.log("set " + element.id + " off");
-            }
-        }
-
-        function checkboxClick(caller) {
-            try {
-                if (caller.id == "slog_debug") {
-                    if (caller.checked) {
-                        document.getElementById("slog_ids").disabled = true;
-                    } else {
-                        document.getElementById("slog_ids").disabled = false;
-                    }
-                }
-                else if (caller.id == "slog_poll_cycle") {
-                  if (caller.checked) {
-                        document.getElementById("slog_packets").disabled = true;
-                    } else {
-                        document.getElementById("slog_packets").disabled = false;
-                    }
-                }
-            } catch (Error) { }
-        }
-
-        function editconfig(caller) {
-          var msg = {
-            uri: "config"
-          };
-          send_command(msg);
-        }
-
-        function saveconfig(caller) {
-          var json_ordered = {
-            uri: "config/set",
-            values: {}
-          };
-
-          //console.log(_config);
-
-          for (var obj in _config) {
-            if (_config[obj].value !== undefined) {
-              if (_config[obj].value) {
-                json_ordered.values[obj] = _config[obj].value;
-              } else if (_config[obj].allow_blank !== undefined && _config[obj].allow_blank == "yes") {
-                //console.log("----- Add Blank value for "+ obj+"\n");
-                json_ordered.values[obj] = "";
-              }
-            } else if (obj.toString().startsWith("button_") || obj.toString().startsWith("virtual_button_") || obj.toString().startsWith("sensor_") ) {
-              for (var obj1 in _config[obj]) {
-                if (obj1.toString() != "advanced") {
-                  if (_config[obj][obj1].value) {
-                    json_ordered.values[obj1] = _config[obj][obj1].value;
-                  }
-                }
-              }
+      } else if(obj.toString().startsWith("button_") || obj.toString().startsWith("virtual_button_") || obj.toString().startsWith("sensor_")) {
+        for(var obj1 in _config[obj]) {
+          if(obj1.toString() != "advanced") {
+            if(_config[obj][obj1].value) {
+              json_ordered.values[obj1] = _config[obj][obj1].value;
             }
           }
-          //console.log(json_ordered);
-          send_command(json_ordered);
-          closeconfig();
         }
+      }
+    }
+    //console.log(json_ordered);
+    send_command(json_ordered);
+    closeconfig();
+  }
 
-        function clearconfigtable() {
-          const configtable = document.getElementById("config_table");
-          while (configtable.rows.length > 2) {
-            configtable.deleteRow(2); // Delete the first data row (index 1)
+  function clearconfigtable() {
+    const configtable = document.getElementById("config_table");
+    while(configtable.rows.length > 0) {
+      configtable.deleteRow(0);
+    }
+  }
+
+  function closeconfig() {
+    clearconfigtable();
+    document.getElementById("config_options").classList.add("hide");
+    document.getElementById("config_options_pane").classList.add("hide");
+  }
+
+  function resetConfig(caller) {
+    clearconfigtable();
+    populateconfigtable();
+  }
+
+  function showConfig(data) {
+    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    //console.log("Height="+h);
+    document.documentElement.style.setProperty('--max-config-height', (h - 30) + 'px');
+    document.documentElement.style.setProperty('--max-config-table-height', (h - 140) + 'px');
+    document.getElementById("config_options").classList.remove("hide");
+    document.getElementById("config_options_pane").classList.remove("hide");
+    populateconfigtable(data);
+  }
+
+  function addConfigRow(hideLineSeperator, data, obj, row = -1, deletable = false) {
+    const configtable = document.getElementById("config_table");
+    const newRow = configtable.insertRow(row);
+    /*
+    if (row==null) {
+      const newRow = configtable.insertRow();
+    } else {
+      newRow = row;
+    }*/
+    if(!hideLineSeperator) {
+      //newRow.style.borderBottom = "1px solid black";
+      newRow.style.borderTop = "1px solid black";
+    }
+    //console.log(data[obj]["valid values"]+" == "+ obj["valid values"]);
+    //console.log(data[obj].value+" == "+ obj.value);
+    const cell1 = newRow.insertCell();
+    const cell2 = newRow.insertCell();
+    const cell3 = newRow.insertCell();
+    cell1.textContent = obj.toString();
+    cell1.style.paddingLeft = "20px";
+    cell3.textContent = " ";
+    // Add DELETE button deletable
+    if(deletable) {
+      cell3.innerHTML = '<input type="button" class="config_option_deletebutton" id="delete" key="' + obj.toString() + '" value="X" onclick="deleteCfgOption(this);">';
+    }
+    var input;
+    if(data[obj]["valid values"] !== undefined) {
+      //console.log(data[obj]["valid values"]);
+      //const 
+      input = document.createElement("select");
+      const array = data[obj]["valid values"];
+      for(var i = 0; i < array.length; i++) {
+        var option = document.createElement("option");
+        option.value = array[i];
+        option.text = array[i];
+        if(array[i].toUpperCase() == data[obj].value.toUpperCase()) {
+          option.selected = true;
+        }
+        input.setAttribute('key', obj.toString());
+        input.addEventListener('change', cfgValueChanged);
+        input.appendChild(option);
+      }
+      input.addEventListener('change', cfgValueChanged);
+      //if (data[obj].force_restart == "yes") {
+      //    input.addEventListener('click', cfgAlertForceRestart);
+      // }
+      cell2.appendChild(input);
+    } else if(data[obj].type == "string") {
+      //const 
+      input = document.createElement("input");
+      input.type = "text";
+      if(data[obj].value != "(null)") {
+        input.value = data[obj].value;
+      }
+      input.setAttribute('key', obj.toString());
+      input.addEventListener('change', cfgValueChanged);
+      //if (data[obj].force_restart == "yes") {
+      //    input.addEventListener('click', cfgAlertForceRestart);
+      //}
+      cell2.appendChild(input);
+    } else if(data[obj].type == "int") {
+      //const 
+      input = document.createElement("input");
+      input.type = "number";
+      if(data[obj].value != -999) {
+        input.value = data[obj].value;
+      }
+      input.size = 4;
+      input.step = 1;
+      input.setAttribute('key', obj.toString());
+      input.addEventListener('change', cfgValueChanged);
+      //if (data[obj].force_restart == "yes") {
+      //    input.addEventListener('click', cfgAlertForceRestart);
+      //}
+      cell2.appendChild(input);
+    } else if(data[obj].type == "float") {
+      //const 
+      input = document.createElement("input");
+      input.type = "number";
+      input.value = data[obj].value;
+      input.size = 4;
+      input.step = 0.01;
+      input.setAttribute('key', obj.toString());
+      input.addEventListener('change', cfgValueChanged);
+      //if (data[obj].force_restart == "yes") {
+      //    input.addEventListener('click', cfgAlertForceRestart);
+      //}
+      cell2.appendChild(input);
+    } else if(data[obj].type == "hex") {
+      //const 
+      input = document.createElement("input");
+      input.type = "text";
+      input.value = data[obj].value;
+      input.size = 4;
+      input.setAttribute('key', obj.toString());
+      input.addEventListener('change', cfgValueChanged);
+      //if (data[obj].force_restart == "yes") {
+      //    input.addEventListener('click', cfgAlertForceRestart);
+      //}
+      cell2.appendChild(input);
+    } else {
+      cell2.textContent = data[obj].value;
+    }
+    // Set any generic stuff.
+    if(typeof input !== "undefined") {
+      if(data[obj].force_restart == "yes") {
+        input.addEventListener('click', cfgAlertForceRestart);
+      }
+      if(data[obj].greyed_out == "yes") {
+        console.log("GREYED OUT");
+        console.log(newRow);
+        newRow.style.opacity = '0.4'; // Sets 40% opacity
+        input.enabled = false;
+        input.disabled = true;
+      }
+    }
+  }
+
+  function addButtonOptionRow(key = 0, isVirtual) {
+    //if ( isVirtual == true && key == 0 ) {
+    //  if (_addedBlankVirtualButton == true) {
+    //    return;
+    //  }
+    //  key = 1
+    //}
+    const buttonTypelist = ["pumpIndex", "pumpID", "pumpType", "pumpName", "pumpMaxSpeed", "pumpMinSpeed", "lightMode"];
+    const virtButtonTypelist = ["pumpIndex", "pumpID", "pumpType", "pumpName", "pumpMaxSpeed", "pumpMinSpeed", "lightMode", "onetouchID", "altLabel"];
+    const configtable = document.getElementById("config_table");
+    const newRow = configtable.insertRow();
+    var cell1 = newRow.insertCell();
+    var cell2 = newRow.insertCell();
+    var cell3 = newRow.insertCell();
+    cell1.style.paddingLeft = "20px";
+    cell1.style.fontSize = "small";
+    cell2.style.fontSize = "small";
+    cell3.style.fontSize = "small";
+    var blist = isVirtual ? virtButtonTypelist : buttonTypelist;
+    var options = "";
+    for(const index in blist) {
+      if(!_config[key][key + "_" + blist[index]]) {
+        options = options + '<option value="' + blist[index] + '">' + blist[index] + '</option>';
+      }
+    }
+    cell1.innerHTML = 'Add <select id="add_button_type"><option value="" selected="true"></option>' + options + '</select>';
+    cell1.setAttribute('button_key', key);
+    cell1.addEventListener('change', cfgAddButtonOption);
+    //if ( isVirtual == true ){
+    //  _addedBlankVirtualButton = true; 
+    //}
+  }
+
+  function addLightProgramRow(num = 0, row = -1) {
+    //console.log("addLightProgramRow( "+num+" )");
+    if(num == 0) {
+      if(_addedBlankLightProgram == true) {
+        return;
+      }
+      //num = 1
+    }
+    if(num >= _config.max_light_programs) {
+      console.log("MAX LIGHTS REACHED");
+      _addedBlankLightProgram = true;
+      return;
+    }
+    const configtable = document.getElementById("config_table");
+    if(num == 0) {
+      var newRow = configtable.insertRow();
+      var cell1 = newRow.insertCell();
+      cell1.colSpan = 3;
+      cell1.style.fontSize = "small";
+      cell1.style.paddingLeft = "5px";
+      cell1.innerHTML = "Custom Light Programs";
+      cell1.style.borderTop = "1px solid black";
+    }
+    var newRow = configtable.insertRow(row);
+    var cell1 = newRow.insertCell();
+    var cell2 = newRow.insertCell();
+    var cell3 = newRow.insertCell();
+    cell1.style.paddingLeft = "20px";
+    const key = 'light_program_' + String(num + 1).padStart(2, '0')
+    cell1.innerHTML = 'Add ' + key;
+    cell1.setAttribute('label', key);
+    const input = document.createElement("input");
+    input.type = "text";
+    //input.setAttribute('light_program_key', key);
+    input.setAttribute('key', key);
+    input.addEventListener('change', cfgAddLightProgram);
+    //input.addEventListener('change', cfgValueUnhide);
+    cell2.appendChild(input);
+    //cell1.setAttribute('button_key', key);
+    //cell1.addEventListener('change', cfgAddButtonOption);
+    _addedBlankLightProgram = true;
+  }
+
+  function addVirtualButtonRow(num = 0, row = -1) {
+    if(num == 0) {
+      if(_addedBlankVirtualButton == true) {
+        return;
+      }
+    }
+    num++;
+    if(num >= _config.max_vbuttons) {
+      console.log("MAX VIRTUAL BUTTONS REACHED");
+      _addedBlankVirtualButton = true;
+      return;
+    }
+    const virtButtonTypelist = ["pumpIndex", "pumpID", "pumpType", "pumpName", "pumpMaxSpeed", "pumpMinSpeed", "lightMode", "onetouchID", "altLabel"];
+    const configtable = document.getElementById("config_table");
+    const vbname = "virtual_button_" + String(num).padStart(2, '0');
+    const vblabel = vbname + "_label";
+    
+    var newRow = configtable.insertRow();
+    var cell1 = newRow.insertCell();
+    cell1.colSpan = 3;
+    cell1.style.fontSize = "small";
+    cell1.style.paddingLeft = "5px";
+    cell1.innerHTML = vbname + " ( <b>Aux_V" + num + "</b> )";
+    cell1.style.borderTop = "1px solid black";
+
+    newRow = configtable.insertRow();
+    //newRow.style.borderTop = "1px solid black";
+    var cell1 = newRow.insertCell();
+    var cell2 = newRow.insertCell();
+    var cell3 = newRow.insertCell();
+    cell1.style.paddingLeft = "20px";
+    cell1.textContent = vblabel;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.setAttribute('key', vblabel);
+    //input.addEventListener('change', cfgValueChanged);
+    input.addEventListener('change', cfgValueUnhide);
+    cell2.appendChild(input);
+    ///////////
+    
+    newRow = configtable.insertRow();
+    //newRow.style.hide = true;
+    newRow.style.display = 'none';
+    cell1 = newRow.insertCell();
+    cell2 = newRow.insertCell();
+    cell3 = newRow.insertCell();
+    
+    cell1.style.paddingLeft = "20px";
+    
+    cell1.style.fontSize = "small";
+    cell2.style.fontSize = "small";
+    cell3.style.fontSize = "small";
+    
+    var options = "";
+    for(const index in virtButtonTypelist) {
+      options = options + '<option value="' + virtButtonTypelist[index] + '">' + virtButtonTypelist[index] + '</option>';
+    }
+    cell1.innerHTML = 'Add <select id="add_button_type"><option value="" selected="true"></option>' + options + '</select>';
+    cell1.setAttribute('button_key', vbname);
+    cell1.addEventListener('change', cfgAddButtonOption);
+    _addedBlankVirtualButton = true;
+  }
+
+  function cfgValueUnhide(event) {
+    var key = event.srcElement.getAttribute('key');
+    var value = event.srcElement.value;
+    if(key.startsWith("virtual_button_")) {
+      var js = {};
+      var jso = {};
+      js.value = value;
+      js.type = "string";
+      js.advanced = "no";
+      jso[key] = js;
+      _config[key.slice(0, 17)] = jso;
+      console.log(_config);
+    }
+    //console.log("cfgValueUnhide key="+key+" value="+value);
+    event.target.removeEventListener('change', cfgValueUnhide);
+    event.target.addEventListener('change', cfgValueChanged);
+    // Show the next table row.
+    event.target.parentNode.parentNode.nextSibling.style.display = '';
+    // If sensor show next 2 rows.
+    if(key.startsWith("sensor_")) {
+      event.srcElement.parentNode.parentNode.childNodes[0].innerHTML = key;
+      event.target.parentNode.parentNode.nextSibling.nextSibling.style.display = '';
+      event.target.parentNode.parentNode.nextSibling.nextSibling.nextSibling.style.display = '';
+    }
+    //console.log(event);
+  }
+
+  function deleteCfgOption(event) {
+    // Rebuild whole config table, or just delete single row.
+    // Rebuild table is better.
+    let rebuild = true;
+    //var id = event.srcElement.getAttribute('id');
+    var key = event.getAttribute('key');
+    let deleted = false;
+    //var value = event.srcElement.value;
+    //console.log(event.parentNode.parentNode);
+    //console.log("deleteCfgOption - "+key);
+    //console.log(_config[key]);
+    //console.log(_config);
+    if(!rebuild) {
+      const configtable = document.getElementById("config_table");
+      for(let i = 0; i < configtable.rows.length; i++) {
+        //console.log(configtable.rows[i].cells[2]);
+        try {
+          if(configtable.rows[i].cells[2].childNodes[0].getAttribute('key') == key) {
+            //configtable.deleteRow(i);
+            deleted = true;
           }
-        }
-
-        function closeconfig() {
-          clearconfigtable();
-
-          document.getElementById("config_options").classList.add("hide");
-          document.getElementById("config_options_pane").classList.add("hide");
-        }
-
-        function resetConfig(caller) {
-          clearconfigtable();
-          populateconfigtable();
-        }
-
-        function showConfig(data) {
-          var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-          //console.log("Height="+h);
-          document.documentElement.style.setProperty('--max-config-height', (h-30)+'px');
-          document.documentElement.style.setProperty('--max-config-table-height', (h-140)+'px');
-
-          document.getElementById("config_options").classList.remove("hide");
-          document.getElementById("config_options_pane").classList.remove("hide");
-
-          populateconfigtable(data);
-        }
-
-        function addConfigRow(hideLineSeperator, data, obj, row=-1, deletable=false) {
-            const configtable = document.getElementById("config_table");
-
-            const newRow = configtable.insertRow(row);
-            /*
-            if (row==null) {
-              const newRow = configtable.insertRow();
-            } else {
-              newRow = row;
-            }*/
-
-            if (!hideLineSeperator) {
-                //newRow.style.borderBottom = "1px solid black";
-                newRow.style.borderTop = "1px solid black";
-            }
-//console.log(data[obj]["valid values"]+" == "+ obj["valid values"]);
-//console.log(data[obj].value+" == "+ obj.value);
-
-            const cell1 = newRow.insertCell();
-            const cell2 = newRow.insertCell();
-            const cell3 = newRow.insertCell();
-
-            cell1.textContent = obj.toString();
-
-            cell1.style.paddingLeft = "20px";
-            cell3.textContent = " ";
-
-            // Add DELETE button deletable
-            
-            if (deletable) {
-              cell3.innerHTML = '<input type="button" class="config_option_deletebutton" id="delete" key="'+obj.toString()+'" value="X" onclick="deleteCfgOption(this);">';
-            }
-
-            var input;
-
-            if (data[obj]["valid values"] !== undefined) {
-                //console.log(data[obj]["valid values"]);
-                //const 
-                input = document.createElement("select");
-                const array = data[obj]["valid values"];
-                for (var i = 0; i < array.length; i++) {
-                    var option = document.createElement("option");
-                    option.value = array[i];
-                    option.text = array[i];
-                    if (array[i].toUpperCase() == data[obj].value.toUpperCase()) {
-                        option.selected = true;
-                    }
-                    input.setAttribute('key', obj.toString());
-                    input.addEventListener('change', cfgValueChanged);
-                    input.appendChild(option);
-                }
-                input.addEventListener('change', cfgValueChanged);
-                //if (data[obj].force_restart == "yes") {
-                //    input.addEventListener('click', cfgAlertForceRestart);
-               // }
-                cell2.appendChild(input);
-            } else if (data[obj].type == "string") {
-                //const 
-                input = document.createElement("input");
-                input.type = "text";
-                if (data[obj].value != "(null)") {
-                    input.value = data[obj].value;
-                }
-                input.setAttribute('key', obj.toString());
-                input.addEventListener('change', cfgValueChanged);
-                //if (data[obj].force_restart == "yes") {
-                //    input.addEventListener('click', cfgAlertForceRestart);
-                //}
-                cell2.appendChild(input);
-            } else if (data[obj].type == "int") {
-                //const 
-                input = document.createElement("input");
-                input.type = "number";
-                if (data[obj].value != -999) {
-                    input.value = data[obj].value;
-                }
-                input.size = 4;
-                input.step = 1;
-                input.setAttribute('key', obj.toString());
-                input.addEventListener('change', cfgValueChanged);
-                //if (data[obj].force_restart == "yes") {
-                //    input.addEventListener('click', cfgAlertForceRestart);
-                //}
-                cell2.appendChild(input);
-            } else if (data[obj].type == "float") {
-                //const 
-                input = document.createElement("input");
-                input.type = "number";
-                input.value = data[obj].value;
-                input.size = 4;
-                input.step = 0.01;
-                input.setAttribute('key', obj.toString());
-                input.addEventListener('change', cfgValueChanged);
-                //if (data[obj].force_restart == "yes") {
-                //    input.addEventListener('click', cfgAlertForceRestart);
-                //}
-                cell2.appendChild(input);
-            } else if (data[obj].type == "hex") {
-                //const 
-                input = document.createElement("input");
-                input.type = "text";
-                input.value = data[obj].value;
-                input.size = 4;
-                input.setAttribute('key', obj.toString());
-                input.addEventListener('change', cfgValueChanged);
-                //if (data[obj].force_restart == "yes") {
-                //    input.addEventListener('click', cfgAlertForceRestart);
-                //}
-                cell2.appendChild(input);
-            } else {
-                cell2.textContent = data[obj].value;
-            }
-
-            // Set any generic stuff.
-            if (typeof input !== "undefined") {
-              if (data[obj].force_restart == "yes") {
-                input.addEventListener('click', cfgAlertForceRestart);
-              }
-              if (data[obj].greyed_out == "yes") {
-                console.log("GREYED OUT");
-                console.log(newRow);
-                newRow.style.opacity = '0.4'; // Sets 40% opacity
-                input.enabled = false;
-                input.disabled = true;
-              }
-            }
-        }
-
-        
-
-        function addButtonOptionRow(key=0, isVirtual) {
-            //if ( isVirtual == true && key == 0 ) {
-            //  if (_addedBlankVirtualButton == true) {
-            //    return;
-            //  }
-            //  key = 1
-            //}
-
-            const buttonTypelist = ["pumpIndex", "pumpID", "pumpType", "pumpName", "pumpMaxSpeed", "pumpMinSpeed", "lightMode"];
-            const virtButtonTypelist = ["pumpIndex", "pumpID", "pumpType", "pumpName", "pumpMaxSpeed", "pumpMinSpeed", "lightMode", "onetouchID", "altLabel"];
-
-            const configtable = document.getElementById("config_table");
-            const newRow = configtable.insertRow();
-
-            var cell1 = newRow.insertCell();
-            var cell2 = newRow.insertCell();
-            var cell3 = newRow.insertCell();
-
-            cell1.style.paddingLeft = "20px";
-
-            cell1.style.fontSize = "small";
-            cell2.style.fontSize = "small";
-            cell3.style.fontSize = "small";
-            
-            var blist = isVirtual?virtButtonTypelist:buttonTypelist;
-            var options = "";
-
-            for (const index in blist ) {
-              if (!_config[key][key+"_"+blist[index]]) {
-                options=options+'<option value="'+blist[index]+'">'+blist[index]+'</option>';
-              }
-            }
- 
-            cell1.innerHTML = 'Add <select id="add_button_type"><option value="" selected="true"></option>'+options+'</select>';
-            cell1.setAttribute('button_key', key);
-            cell1.addEventListener('change', cfgAddButtonOption);
-
-            //if ( isVirtual == true ){
-            //  _addedBlankVirtualButton = true; 
-            //}
-        }
-
-        function addLightProgramRow(num=0, row=-1){
-//console.log("addLightProgramRow( "+num+" )");
-            if ( num == 0 ) {
-              if (_addedBlankLightProgram == true) {
-                return;
-              }
-              //num = 1
-            }
-
-            if (num >= _config.max_light_programs) {
-                console.log("MAX LIGHTS REACHED");
-                _addedBlankLightProgram = true;
-                return;
-            }
-
-            const configtable = document.getElementById("config_table");
-            
-            if (num == 0) {
-              var newRow = configtable.insertRow();
-              var cell1 = newRow.insertCell();
-              cell1.colSpan = 3;
-              cell1.style.fontSize = "small";
-              cell1.style.paddingLeft = "5px";
-              cell1.innerHTML = "Custom Light Programs";
-              cell1.style.borderTop = "1px solid black";
-            }
-
-            var newRow = configtable.insertRow(row);
-            var cell1 = newRow.insertCell();
-            var cell2 = newRow.insertCell();
-            var cell3 = newRow.insertCell();
-
-            cell1.style.paddingLeft = "20px";
-            const key = 'light_program_'+String(num+1).padStart(2, '0')
-            cell1.innerHTML = 'Add '+key;
-            cell1.setAttribute('label', key);
-
-            const input = document.createElement("input");
-            input.type = "text";
-            //input.setAttribute('light_program_key', key);
-            input.setAttribute('key', key);
-            input.addEventListener('change', cfgAddLightProgram);
-            //input.addEventListener('change', cfgValueUnhide);
-            cell2.appendChild(input);
-            //cell1.setAttribute('button_key', key);
-            //cell1.addEventListener('change', cfgAddButtonOption);
-
-            _addedBlankLightProgram = true;
-        }
-
-       
-        function addVirtualButtonRow(num=0, row=-1){
-          if ( num == 0 ) {
-            if (_addedBlankVirtualButton == true) {
-              return;
-            }
-          }
-
-          num++;
-
-          if (num >= _config.max_vbuttons) {
-            console.log("MAX VIRTUAL BUTTONS REACHED");
-            _addedBlankVirtualButton = true;
-            return;
-          }
-
-          const virtButtonTypelist = ["pumpIndex", "pumpID", "pumpType", "pumpName", "pumpMaxSpeed", "pumpMinSpeed", "lightMode", "onetouchID", "altLabel"];
-
-          const configtable = document.getElementById("config_table");
-
-          const vbname="virtual_button_"+String(num).padStart(2, '0');
-          const vblabel=vbname+"_label";
-
-          var newRow = configtable.insertRow();
-          var cell1 = newRow.insertCell();
-          cell1.colSpan = 3;
-          cell1.style.fontSize = "small";
-          cell1.style.paddingLeft = "5px";
-          cell1.innerHTML = vbname + " ( <b>Aux_V"+num+"</b> )";
-          cell1.style.borderTop = "1px solid black";
-
-          newRow = configtable.insertRow();
-          //newRow.style.borderTop = "1px solid black";
-          var cell1 = newRow.insertCell();
-          var cell2 = newRow.insertCell();
-          var cell3 = newRow.insertCell();
-          cell1.style.paddingLeft = "20px";
-          cell1.textContent = vblabel;
-
-          const input = document.createElement("input");
-          input.type = "text";
-          input.setAttribute('key', vblabel);
-          //input.addEventListener('change', cfgValueChanged);
-          input.addEventListener('change', cfgValueUnhide);
-          cell2.appendChild(input);
-
-          ///////////
-
-          newRow = configtable.insertRow();
-          //newRow.style.hide = true;
-          newRow.style.display = 'none'; 
-          cell1 = newRow.insertCell();
-          cell2 = newRow.insertCell();
-          cell3 = newRow.insertCell();
-
-          cell1.style.paddingLeft = "20px";
-
-          cell1.style.fontSize = "small";
-          cell2.style.fontSize = "small";
-          cell3.style.fontSize = "small";
-
-          var options = "";
-
-          for (const index in virtButtonTypelist ) {
-            options=options+'<option value="'+virtButtonTypelist[index]+'">'+virtButtonTypelist[index]+'</option>';
-          }
- 
-          cell1.innerHTML = 'Add <select id="add_button_type"><option value="" selected="true"></option>'+options+'</select>';
-          cell1.setAttribute('button_key', vbname);
-          cell1.addEventListener('change', cfgAddButtonOption);
-
-          _addedBlankVirtualButton = true;
-        }
-
-        function cfgValueUnhide(event) {
-          var key = event.srcElement.getAttribute('key');
-          var value = event.srcElement.value;
-
-          if (key.startsWith("virtual_button_") ) {
-            var js = {};
-            var jso = {};
-            js.value=value;
-            js.type="string";
-            js.advanced="no";
-            jso[key] = js;
-            _config[key.slice(0, 17)] = jso;
-            console.log(_config);
-          }
-
-          //console.log("cfgValueUnhide key="+key+" value="+value);
-
-          event.target.removeEventListener('change', cfgValueUnhide);
-          event.target.addEventListener('change', cfgValueChanged);
-
-          // Show the next table row.
-          event.target.parentNode.parentNode.nextSibling.style.display = '';
-
-          // If sensor show next 2 rows.
-          if (key.startsWith("sensor_") ) {
-            event.srcElement.parentNode.parentNode.childNodes[0].innerHTML = key;
-            event.target.parentNode.parentNode.nextSibling.nextSibling.style.display = '';
-            event.target.parentNode.parentNode.nextSibling.nextSibling.nextSibling.style.display = '';
-          }
-          
-          //console.log(event);
-        }
-
-        function deleteCfgOption(event) {
-          
-          // Rebuild whole config table, or just delete single row.
-          // Rebuild table is better.
-          let rebuild = true;
-
-          //var id = event.srcElement.getAttribute('id');
-          var key = event.getAttribute('key');
-          let deleted = false;
-          //var value = event.srcElement.value;
-
-          //console.log(event.parentNode.parentNode);
-          //console.log("deleteCfgOption - "+key);
-          //console.log(_config[key]);
-          //console.log(_config);
-
-          if (!rebuild) {
-           const configtable = document.getElementById("config_table");
-           for (let i = 0; i < configtable.rows.length; i++) {
-            //console.log(configtable.rows[i].cells[2]);
-            try{
-              if(configtable.rows[i].cells[2].childNodes[0].getAttribute('key') == key) {
-                //configtable.deleteRow(i);
-                deleted = true;
-              }
-            } catch (e){}
-           }
-          } else {
-            deleted=true;
-          }
-
-          //event.parentNode.parentNode.style.display = 'none'; 
-
-          if (deleted && key.startsWith("virtual_button") && key.endsWith("_label")) {
-            //console.log(key.slice(0, 17));
-            delete _config[key.slice(0, 17)];
-            // Delete the whole entity
-          } else if (deleted && key.startsWith("virtual_button")) {
-            delete _config[key.slice(0, 17)][key];
-          } else if (deleted && key.startsWith("button")) {
-            delete _config[key.slice(0, 9)][key];
-            //console.log(key.slice(0, 9));
-          } else if (deleted && key.startsWith("sensor")) {
-            //console.log(key.slice(0, 9));
-            delete _config[key.slice(0, 9)][key];
-          } else if (deleted && key.startsWith("light_program_")) {
-            //console.log(key.slice(0, 9));
-            delete _config[key];
-          }
-          
-          if (rebuild) {
-            resetConfig(null);
-          }
-
-          console.log(_config);
-        }
-
-        function addSensorRow(num=0, row=-1){
-            if ( num == 0 ) {
-              if (_addedBlankSensor == true) {
-                return;
-              }
-              //num = 1
-            }
-
-            if (num >= _config.max_sensors) {
-                console.log("MAX SENSORS REACHED");
-                _addedBlankSensor = true;
-                return;
-            }
-            
-            const configtable = document.getElementById("config_table");
-           
-            if (num == 0) {
-              var newRow = configtable.insertRow();
-              var cell1 = newRow.insertCell();
-              cell1.colSpan = 3;
-              cell1.style.fontSize = "small";
-              cell1.style.paddingLeft = "5px";
-              cell1.innerHTML = "Sensors";
-              cell1.style.borderTop = "1px solid black";
-            }
-
-            var newRow = configtable.insertRow(row);
-
-            if (num != 0) {
-              newRow.style.borderTop = "1px solid black";
-            }
-
-            const key = 'sensor_'+String(num+1).padStart(2, '0');
-
-            // Add sensor_xx_path row
-            var cell1 = newRow.insertCell();
-            var cell2 = newRow.insertCell();
-            //var cell3 = newRow.insertCell();
-//console.log("num="+num+" String="+String(num+1)+" Key="+key);
-            cell1.style.paddingLeft = "20px";
-            cell1.innerHTML = "<small>Add</small> "+key+"_path";
-
-            var input = document.createElement("input");
-            input.type = "text";
-            input.setAttribute('key', key+"_path");
-            input.setAttribute('root_key', key);
-            input.id = key+"_path";
-            input.addEventListener('change', cfgAddSensor);
-            input.addEventListener('change', cfgValueUnhide);
-            cell2.appendChild(input);
-
-            // Add sensor_xx_label row
-            if (row != -1){row++};
-            newRow = configtable.insertRow(row);
-            newRow.style.display = 'none'; 
-            cell1 = newRow.insertCell();
-            cell2 = newRow.insertCell();
-            //cell3 = newRow.insertCell();
-            cell1.style.paddingLeft = "20px";
-            cell1.innerHTML = key+"_label";
-
-            input = document.createElement("input");
-            input.type = "text";
-            input.setAttribute('key', key+"_label");
-            input.setAttribute('root_key', key);
-            input.id = key+"_label";
-            input.addEventListener('change', cfgAddSensor);
-            cell2.appendChild(input);
-
-            // Add sensor_xx_factor row
-            if (row != -1){row++};
-            newRow = configtable.insertRow(row);
-            newRow.style.display = 'none'; 
-            cell1 = newRow.insertCell();
-            cell2 = newRow.insertCell();
-            //cell3 = newRow.insertCell();
-            cell1.style.paddingLeft = "20px";
-            cell1.innerHTML = key+"_factor";
-
-            input = document.createElement("input");
-            input.type = "number";
-            input.size = 4;
-            input.step = 0.01;
-            input.setAttribute('key', key+"_factor");
-            input.setAttribute('root_key', key);
-            input.id = key+"_factor";
-            input.addEventListener('change', cfgAddSensor);
-            cell2.appendChild(input);
-
-            // Add sensor_xx_uom row
-            if (row != -1){row++};
-            newRow = configtable.insertRow(row);
-            newRow.style.display = 'none'; 
-            cell1 = newRow.insertCell();
-            cell2 = newRow.insertCell();
-            cell1.style.paddingLeft = "20px";
-            cell1.innerHTML = key+"_uom";
-
-            input = document.createElement("input");
-            input.type = "text";
-            input.setAttribute('key', key+"_uom");
-            input.setAttribute('root_key', key);
-            input.id = key+"_uom";
-            input.addEventListener('change', cfgAddSensor);
-            cell2.appendChild(input);
-
-            _addedBlankSensor = true;
-        }
-
-        function cfgAddButtonOption(event) {
-
-           var type = event.srcElement.value;
-           var key = event.srcElement.parentNode.getAttribute('button_key');
-
-           for (var obj in _config) {
-             if (obj.toString() == key) {   
-                var js = {};
-                js.advanced = "no";
-                switch(type) {
-                  case "pumpIndex":
-                  case "lightMode":
-                  case "onetouchID":
-                  case "pumpMaxSpeed":
-                  case "pumpMinSpeed":
-                    js.type = "int";
-                  break;
-                  case "pumpID":
-                    js.type = "hex";
-                  break;
-                  case "pumpType":
-                    js.type = "string";
-                    //let validvalues = ["BLANK", "JANDY ePUMP", "Pentair VS", "Pentair VF"];
-                    //js['valid values'] = validvalues;
-                  break;
-                  case "pumpName":
-                  case "altLabel":
-                    js.type = "string";
-                  break;
-                }
-                js.value = "";
-                _config[obj][key+"_"+type] = js;
-                break;
-             }
-           }
-
-           const configtable = document.getElementById("config_table");
-           for (let i = 0; i < configtable.rows.length; i++) {
-             if(configtable.rows[i].cells[0].getAttribute('button_key') !== null) {
-                if(configtable.rows[i].cells[0].getAttribute('button_key') == key) {
-                  addConfigRow(true, _config[obj], key+"_"+type, i, true);
-                  break;
-                }
-              }
-            }  
-        }
-
-        function cfgAddLightProgram(event){
-            var value = event.srcElement.value;
-            var key = event.srcElement.getAttribute('key');
-            //console.log(key + " = "+ value);
-
-            event.srcElement.parentNode.parentNode.childNodes[0].innerHTML = key;
-            //event.target.innerHTML = key;
-
-            //event.srcElement.parentNode.parentNode.childNodes[1].childNodes[0].removeEventListener('change', cfgAddLightProgram);
-            //event.srcElement.parentNode.parentNode.childNodes[1].childNodes[0].addEventListener('change', cfgValueChanged);
-            event.target.removeEventListener('change', cfgAddLightProgram);
-            event.target.addEventListener('change', cfgValueChanged);
-
-            var js = {};
-            js.advanced = "yes";
+        } catch (e) {}
+      }
+    } else {
+      deleted = true;
+    }
+    //event.parentNode.parentNode.style.display = 'none'; 
+    if(deleted && key.startsWith("virtual_button") && key.endsWith("_label")) {
+      //console.log(key.slice(0, 17));
+      delete _config[key.slice(0, 17)];
+      // Delete the whole entity
+    } else if(deleted && key.startsWith("virtual_button")) {
+      delete _config[key.slice(0, 17)][key];
+    } else if(deleted && key.startsWith("button")) {
+      delete _config[key.slice(0, 9)][key];
+      //console.log(key.slice(0, 9));
+    } else if(deleted && key.startsWith("sensor")) {
+      //console.log(key.slice(0, 9));
+      delete _config[key.slice(0, 9)][key];
+    } else if(deleted && key.startsWith("light_program_")) {
+      //console.log(key.slice(0, 9));
+      delete _config[key];
+    }
+    if(rebuild) {
+      resetConfig(null);
+    }
+    console.log(_config);
+  }
+
+  function addSensorRow(num = 0, row = -1) {
+    if(num == 0) {
+      if(_addedBlankSensor == true) {
+        return;
+      }
+      //num = 1
+    }
+    if(num >= _config.max_sensors) {
+      console.log("MAX SENSORS REACHED");
+      _addedBlankSensor = true;
+      return;
+    }
+    const configtable = document.getElementById("config_table");
+    if(num == 0) {
+      var newRow = configtable.insertRow();
+      var cell1 = newRow.insertCell();
+      cell1.colSpan = 3;
+      cell1.style.fontSize = "small";
+      cell1.style.paddingLeft = "5px";
+      cell1.innerHTML = "Sensors";
+      cell1.style.borderTop = "1px solid black";
+    }
+    var newRow = configtable.insertRow(row);
+    if(num != 0) {
+      newRow.style.borderTop = "1px solid black";
+    }
+    const key = 'sensor_' + String(num + 1).padStart(2, '0');
+    // Add sensor_xx_path row
+    var cell1 = newRow.insertCell();
+    var cell2 = newRow.insertCell();
+    //var cell3 = newRow.insertCell();
+    //console.log("num="+num+" String="+String(num+1)+" Key="+key);
+    cell1.style.paddingLeft = "20px";
+    cell1.innerHTML = "<small>Add</small> " + key + "_path";
+    var input = document.createElement("input");
+    input.type = "text";
+    input.setAttribute('key', key + "_path");
+    input.setAttribute('root_key', key);
+    input.id = key + "_path";
+    input.addEventListener('change', cfgAddSensor);
+    input.addEventListener('change', cfgValueUnhide);
+    cell2.appendChild(input);
+    // Add sensor_xx_label row
+    if(row != -1) {
+      row++
+    };
+    newRow = configtable.insertRow(row);
+    newRow.style.display = 'none';
+    cell1 = newRow.insertCell();
+    cell2 = newRow.insertCell();
+    //cell3 = newRow.insertCell();
+    cell1.style.paddingLeft = "20px";
+    cell1.innerHTML = key + "_label";
+    input = document.createElement("input");
+    input.type = "text";
+    input.setAttribute('key', key + "_label");
+    input.setAttribute('root_key', key);
+    input.id = key + "_label";
+    input.addEventListener('change', cfgAddSensor);
+    cell2.appendChild(input);
+    // Add sensor_xx_factor row
+    if(row != -1) {
+      row++
+    };
+    newRow = configtable.insertRow(row);
+    newRow.style.display = 'none';
+    cell1 = newRow.insertCell();
+    cell2 = newRow.insertCell();
+    //cell3 = newRow.insertCell();
+    cell1.style.paddingLeft = "20px";
+    cell1.innerHTML = key + "_factor";
+    input = document.createElement("input");
+    input.type = "number";
+    input.size = 4;
+    input.step = 0.01;
+    input.setAttribute('key', key + "_factor");
+    input.setAttribute('root_key', key);
+    input.id = key + "_factor";
+    input.addEventListener('change', cfgAddSensor);
+    cell2.appendChild(input);
+    // Add sensor_xx_uom row
+    if(row != -1) {
+      row++
+    };
+    newRow = configtable.insertRow(row);
+    newRow.style.display = 'none';
+    cell1 = newRow.insertCell();
+    cell2 = newRow.insertCell();
+    cell1.style.paddingLeft = "20px";
+    cell1.innerHTML = key + "_uom";
+    input = document.createElement("input");
+    input.type = "text";
+    input.setAttribute('key', key + "_uom");
+    input.setAttribute('root_key', key);
+    input.id = key + "_uom";
+    input.addEventListener('change', cfgAddSensor);
+    cell2.appendChild(input);
+    _addedBlankSensor = true;
+  }
+
+  function cfgAddButtonOption(event) {
+    var type = event.srcElement.value;
+    var key = event.srcElement.parentNode.getAttribute('button_key');
+    for(var obj in _config) {
+      if(obj.toString() == key) {
+        var js = {};
+        js.advanced = "no";
+        switch (type) {
+          case "pumpIndex":
+          case "lightMode":
+          case "onetouchID":
+          case "pumpMaxSpeed":
+          case "pumpMinSpeed":
+            js.type = "int";
+            break;
+          case "pumpID":
+            js.type = "hex";
+            break;
+          case "pumpType":
             js.type = "string";
-            js.value = value;
-            _config[key] = js;
-            //console.log(_config);
-            const configtable = document.getElementById("config_table");
-            for (let i = 0; i < configtable.rows.length; i++) {
-              if(configtable.rows[i].cells[0].getAttribute('label') !== null) {
-                //console.log(configtable.rows[i].cells[0].innerHTML+" test= "+key);
-                if(configtable.rows[i].cells[0].getAttribute('label') == key) {
-                  addLightProgramRow(parseInt(key.match(/[0-9]+/)), i+1);
-                  break;
-                }
-              }
-           }
+            //let validvalues = ["BLANK", "JANDY ePUMP", "Pentair VS", "Pentair VF"];
+            //js['valid values'] = validvalues;
+            break;
+          case "pumpName":
+          case "altLabel":
+            js.type = "string";
+            break;
         }
-
-        function cfgAddSensor(event){
-            var value = event.srcElement.value;
-            var key = event.srcElement.getAttribute('key');
-            var root_key = event.srcElement.getAttribute('root_key');
-            //console.log(key + " = "+ value);
-
-            //event.srcElement.parentNode.parentNode.childNodes[1].childNodes[0].removeEventListener('change', cfgAddLightProgram);
-            //event.srcElement.parentNode.parentNode.childNodes[1].childNodes[0].addEventListener('change', cfgValueChanged);
-            event.target.removeEventListener('change', cfgAddSensor);
-            event.target.addEventListener('change', cfgValueChanged);
-            
-            var js = {};
-            js.advanced = "yes";
-            if (key.endsWith("_factor")) {
-              js.type = "float";
-            } else {
-              js.type = "string";
-            }
-            js.value = value;
-            
-            //_config[key] = js;
-
-            if (_config[root_key]) {
-                //console.log("Json exists");
-                _config[root_key][key] = js;
-            } else {
-                //console.log("Json not exists");
-                jsobj={};
-                jsobj.advanced="yes";
-                jsobj[key] = js;
-                _config[root_key] = jsobj
-            }
-
-            //console.log(_config);
-            // If all 3 have an entry, add another sensor
-            if ( (document.getElementById(root_key+"_path").value) &&
-                 (document.getElementById(root_key+"_label").value) &&
-                 (document.getElementById(root_key+"_factor").value) &&
-                 (document.getElementById(root_key+"_uom").value)) {
-              
-              const configtable = document.getElementById("config_table");
-              //console.log("Searching for key "+key+" | root key "+root_key);
-              var found=false;
-              for (let i = 0; i < configtable.rows.length; i++) {
-                try{
-                  if ( root_key === configtable.rows[i].cells[0].innerHTML.substring(0, root_key.length )  ) {
-                    //console.log("Found "+configtable.rows[i].cells[0].innerHTML);
-                    found = true;
-                  } else if (found == true) {
-                    //console.log("Should Add add element here index="+i+" name="+configtable.rows[i].cells[0].innerHTML);
-                    addSensorRow( parseInt(key.match(/[0-9]+/)), i);
-                    break;
-                  }
-                } catch (e){}
-              }
-            }
-            
+        js.value = "";
+        _config[obj][key + "_" + type] = js;
+        break;
+      }
+    }
+    const configtable = document.getElementById("config_table");
+    for(let i = 0; i < configtable.rows.length; i++) {
+      if(configtable.rows[i].cells[0].getAttribute('button_key') !== null) {
+        if(configtable.rows[i].cells[0].getAttribute('button_key') == key) {
+          addConfigRow(true, _config[obj], key + "_" + type, i, true);
+          break;
         }
+      }
+    }
+  }
 
-     function isNumber(n) { return !isNaN(parseFloat(n)) && !isNaN(n - 0) }
+  function cfgAddLightProgram(event) {
+    var value = event.srcElement.value;
+    var key = event.srcElement.getAttribute('key');
+    //console.log(key + " = "+ value);
+    event.srcElement.parentNode.parentNode.childNodes[0].innerHTML = key;
+    //event.target.innerHTML = key;
+    //event.srcElement.parentNode.parentNode.childNodes[1].childNodes[0].removeEventListener('change', cfgAddLightProgram);
+    //event.srcElement.parentNode.parentNode.childNodes[1].childNodes[0].addEventListener('change', cfgValueChanged);
+    event.target.removeEventListener('change', cfgAddLightProgram);
+    event.target.addEventListener('change', cfgValueChanged);
+    var js = {};
+    js.advanced = "yes";
+    js.type = "string";
+    js.value = value;
+    _config[key] = js;
+    //console.log(_config);
+    const configtable = document.getElementById("config_table");
+    for(let i = 0; i < configtable.rows.length; i++) {
+      if(configtable.rows[i].cells[0].getAttribute('label') !== null) {
+        //console.log(configtable.rows[i].cells[0].innerHTML+" test= "+key);
+        if(configtable.rows[i].cells[0].getAttribute('label') == key) {
+          addLightProgramRow(parseInt(key.match(/[0-9]+/)), i + 1);
+          break;
+        }
+      }
+    }
+  }
 
-        function populateconfigtable(data=null) {
-          _addedBlankLightProgram = false;
-          _addedBlankSensor = false;
-          _addedBlankVirtualButton = false;
-
-          const configtable = document.getElementById("config_table");
-              
-          var showAdvanced = document.getElementById("show_advanced").checked;
-          //console.log (data);
-          if (data != null)
-            _config = data;
-
-          var lastKey = "";
-          //var lastBtnNum = 0;
-          //var lastSenNum = 0;
-          //var vBtnCnt = 0;
-          var maxSensor = 0;
-          var maxLightProgramName = 0;
-          
-          for (var obj in _config) {
-            var hideLineSeperator = false;
-
-            if (!showAdvanced && _config[obj].advanced == "yes") {
-              continue;
-            }
-            // Basic groupings by first letter change
-            if ( lastKey.charAt(0) == obj.toString().charAt(0) ) {
-              hideLineSeperator = true;
-            }
-            // More advanced groupings
-            if (obj.toString().includes("device_id") && lastKey.includes("device_id") ) {
-              hideLineSeperator = true;
-            } else if (obj.toString().includes("light_program_") ) {
-              hideLineSeperator = true;
-              if (obj.toString().includes("light_program_01") ) {
-                hideLineSeperator = false;
-              }
-              const num = parseInt(obj.toString().match(/[0-9]+/));
-              if (num > maxLightProgramName)
-                maxLightProgramName = num;
-
-            }
-
-            if (_confighelp[obj.toString()] !== undefined) {
-              //console.log("FOUND HELP");
-              //console.log(_confighelp[obj.toString()]);
-              const newRow = configtable.insertRow();
-              const cell1 = newRow.insertCell();
-              cell1.colSpan = 3;
-              cell1.style.fontSize = "x-small";
-              cell1.textContent=_confighelp[obj.toString()];
-              if (! hideLineSeperator) {
-                //newRow.style.borderBottom = "1px solid black";
-                newRow.style.borderTop = "1px solid black";
-                hideLineSeperator = true;
-              }
-            }
-
-            if (lastKey.startsWith("light_program_") && ! obj.toString().startsWith("light_program_") ) {
-              addLightProgramRow(parseInt(lastKey.match(/[0-9]+/)));
-            } else if (lastKey.startsWith("sensor_") && ! obj.toString().startsWith("sensor_") ) {
-              if (isNumber(lastKey.match(/[0-9]+/))) {
-                addSensorRow(parseInt(lastKey.match(/[0-9]+/)));
-              }
-            } else if (lastKey.startsWith("virtual_button_") && ! obj.toString().startsWith("virtual_button_") ) {
-              addVirtualButtonRow(parseInt(lastKey.match(/[0-9]+/)));
-            }
-
-            if (_config[obj].value !== undefined) {
-              if (obj.toString().startsWith("light_program_") ) {
-                //console.log(obj.toString());
-                let num = parseInt(lastKey.match(/[0-9]+/));
-                num++;
-                //console.log("check for light_program_"+String(num+1).padStart(2, '0'));
-                //console.log("check for light_program_"+num);
-                if ( !('light_program_'+String(num+1).padStart(2, '0') in _config)) {
-                  addConfigRow(hideLineSeperator, _config, obj, -1, true);
-                } else {
-                  addConfigRow(hideLineSeperator, _config, obj);
-                } 
-              } else {
-                addConfigRow(hideLineSeperator, _config, obj);
-              }
-            } else if (obj.toString().startsWith("button_") || obj.toString().startsWith("virtual_button_") ) {
-                var hide=false;
-                for (var obj1 in _config[obj]) {
-                  if (obj1.toString() == "default") {
-                    const newRow = configtable.insertRow();
-                    const cell1 = newRow.insertCell();
-                    cell1.colSpan = 3;
-                    cell1.style.fontSize = "small";
-                    cell1.style.paddingLeft = "5px";
-                    cell1.innerHTML = obj.toString() + " ( <b>" +_config[obj]["default"] + "</b> )";
-                    cell1.style.borderTop = "1px solid black";
-                    hide=true;
-                  } else if (obj1.toString() != "advanced") {
-                    if ( obj1.toString().endsWith("_label") && !obj1.toString().startsWith("virtual_button")) {
-                      addConfigRow(hide, _config[obj], obj1);
-                    } else {
-                      addConfigRow(hide, _config[obj], obj1, -1, true);
-                    }
-                    hide=true;
-                  }
-                }
-                addButtonOptionRow(obj.toString(), !obj.toString().startsWith("button_"));
-            } else if (obj.toString().startsWith("sensor_")) {
-                var hide=false;
-                for (var obj1 in _config[obj]) {
-                  if (obj1.toString() != "advanced") {
-                    addConfigRow(hide, _config[obj], obj1, -1, true);
-                    hide=true;
-                  }
-                }
-            } else {
-              //console.log("UNDIFINED " + obj.toString() + " = " + _config[obj].value);
-            }
-            
-            lastKey = obj.toString();
+  function cfgAddSensor(event) {
+    var value = event.srcElement.value;
+    var key = event.srcElement.getAttribute('key');
+    var root_key = event.srcElement.getAttribute('root_key');
+    //console.log(key + " = "+ value);
+    //event.srcElement.parentNode.parentNode.childNodes[1].childNodes[0].removeEventListener('change', cfgAddLightProgram);
+    //event.srcElement.parentNode.parentNode.childNodes[1].childNodes[0].addEventListener('change', cfgValueChanged);
+    event.target.removeEventListener('change', cfgAddSensor);
+    event.target.addEventListener('change', cfgValueChanged);
+    var js = {};
+    js.advanced = "yes";
+    if(key.endsWith("_factor")) {
+      js.type = "float";
+    } else {
+      js.type = "string";
+    }
+    js.value = value;
+    //_config[key] = js;
+    if(_config[root_key]) {
+      //console.log("Json exists");
+      _config[root_key][key] = js;
+    } else {
+      //console.log("Json not exists");
+      jsobj = {};
+      jsobj.advanced = "yes";
+      jsobj[key] = js;
+      _config[root_key] = jsobj
+    }
+    //console.log(_config);
+    // If all 3 have an entry, add another sensor
+    if((document.getElementById(root_key + "_path").value) && (document.getElementById(root_key + "_label").value) && (document.getElementById(root_key + "_factor").value) && (document.getElementById(root_key + "_uom").value)) {
+      const configtable = document.getElementById("config_table");
+      //console.log("Searching for key "+key+" | root key "+root_key);
+      var found = false;
+      for(let i = 0; i < configtable.rows.length; i++) {
+        try {
+          if(root_key === configtable.rows[i].cells[0].innerHTML.substring(0, root_key.length)) {
+            //console.log("Found "+configtable.rows[i].cells[0].innerHTML);
+            found = true;
+          } else if(found == true) {
+            //console.log("Should Add add element here index="+i+" name="+configtable.rows[i].cells[0].innerHTML);
+            addSensorRow(parseInt(key.match(/[0-9]+/)), i);
+            break;
           }
+        } catch (e) {}
+      }
+    }
+  }
 
-          if (showAdvanced) {
-            addLightProgramRow();
-            addSensorRow();
+  function isNumber(n) {
+    return !isNaN(parseFloat(n)) && !isNaN(n - 0)
+  }
+
+  function populateconfigtable(data = null) {
+    _addedBlankLightProgram = false;
+    _addedBlankSensor = false;
+    _addedBlankVirtualButton = false;
+    const configtable = document.getElementById("config_table");
+    var showAdvanced = document.getElementById("show_advanced").checked;
+    //console.log (data);
+    if(data != null) _config = data;
+    var lastKey = "";
+    //var lastBtnNum = 0;
+    //var lastSenNum = 0;
+    //var vBtnCnt = 0;
+    var maxSensor = 0;
+    var maxLightProgramName = 0;
+    for(var obj in _config) {
+      var hideLineSeperator = false;
+      if(!showAdvanced && _config[obj].advanced == "yes") {
+        continue;
+      }
+      // Basic groupings by first letter change
+      if(lastKey.charAt(0) == obj.toString().charAt(0)) {
+        hideLineSeperator = true;
+      }
+      // More advanced groupings
+      if(obj.toString().includes("device_id") && lastKey.includes("device_id")) {
+        hideLineSeperator = true;
+      } else if(obj.toString().includes("light_program_")) {
+        hideLineSeperator = true;
+        if(obj.toString().includes("light_program_01")) {
+          hideLineSeperator = false;
+        }
+        const num = parseInt(obj.toString().match(/[0-9]+/));
+        if(num > maxLightProgramName) maxLightProgramName = num;
+      }
+      if(_confighelp[obj.toString()] !== undefined) {
+        //console.log("FOUND HELP");
+        //console.log(_confighelp[obj.toString()]);
+        const newRow = configtable.insertRow();
+        const cell1 = newRow.insertCell();
+        cell1.colSpan = 3;
+        cell1.style.fontSize = "x-small";
+        cell1.textContent = _confighelp[obj.toString()];
+        if(!hideLineSeperator) {
+          //newRow.style.borderBottom = "1px solid black";
+          newRow.style.borderTop = "1px solid black";
+          hideLineSeperator = true;
+        }
+      }
+      if(lastKey.startsWith("light_program_") && !obj.toString().startsWith("light_program_")) {
+        addLightProgramRow(parseInt(lastKey.match(/[0-9]+/)));
+      } else if(lastKey.startsWith("sensor_") && !obj.toString().startsWith("sensor_")) {
+        if(isNumber(lastKey.match(/[0-9]+/))) {
+          addSensorRow(parseInt(lastKey.match(/[0-9]+/)));
+        }
+      } else if(lastKey.startsWith("virtual_button_") && !obj.toString().startsWith("virtual_button_")) {
+        addVirtualButtonRow(parseInt(lastKey.match(/[0-9]+/)));
+      }
+      if(_config[obj].value !== undefined) {
+        if(obj.toString().startsWith("light_program_")) {
+          //console.log(obj.toString());
+          let num = parseInt(lastKey.match(/[0-9]+/));
+          num++;
+          //console.log("check for light_program_"+String(num+1).padStart(2, '0'));
+          //console.log("check for light_program_"+num);
+          if(!('light_program_' + String(num + 1).padStart(2, '0') in _config)) {
+            addConfigRow(hideLineSeperator, _config, obj, -1, true);
+          } else {
+            addConfigRow(hideLineSeperator, _config, obj);
           }
-          addVirtualButtonRow();
-
+        } else {
+          addConfigRow(hideLineSeperator, _config, obj);
         }
-
-       
-
-        function cfgAlertForceRestart(event) {
-            var value = event.srcElement.value;
-            var key = event.srcElement.getAttribute('key');
-            if (key === undefined || key === null) {
-              key = event.srcElement.parentNode.getAttribute('key');
-            }
-            if ( _AlertsShown[key] == undefined || _AlertsShown[key] == false) {
-              _AlertsShown[key] = true;
-              if ("force_restart_msg" in _config[key]) {
-                //alert(_config[key].force_restart_msg);
-                timedAlert(_config[key].force_restart_msg, 0);
-              } else {
-                //alert("If you change "+key+" You will need to restart AqualinkD after saving config!");
-                timedAlert("If you change "+key+" You will need to restart AqualinkD after saving config!", 5);
-              }
-            }
-        }
-
-        function cfgValueChanged(event) {
-          var key = event.srcElement.getAttribute('key');
-          var value = event.srcElement.value;
-
-          //console.log("Config set '"+key+"'' to '"+value+"'");
-
-          try {
-            _config[key].value = value;
-          } catch (exception) {
-            //console.log("Error setting cfg '"+key+"' to '"+value+"'");
-            if (key.startsWith("button_") ) {
-              _config[key.slice(0, 9)][key].value = value
-            } else if (key.startsWith("virtual_button_") ) {
-              _config[key.slice(0, 17)][key].value = value
-            } else if (key.startsWith("sensor_") ) {
-              _config[key.slice(0, 9)][key].value = value
+      } else if(obj.toString().startsWith("button_") || obj.toString().startsWith("virtual_button_")) {
+        var hide = false;
+        for(var obj1 in _config[obj]) {
+          if(obj1.toString() == "default") {
+            const newRow = configtable.insertRow();
+            const cell1 = newRow.insertCell();
+            cell1.colSpan = 3;
+            cell1.style.fontSize = "small";
+            cell1.style.paddingLeft = "5px";
+            cell1.innerHTML = obj.toString() + " ( <b>" + _config[obj]["default"] + "</b> )";
+            cell1.style.borderTop = "1px solid black";
+            hide = true;
+          } else if(obj1.toString() != "advanced") {
+            if(obj1.toString().endsWith("_label") && !obj1.toString().startsWith("virtual_button")) {
+              addConfigRow(hide, _config[obj], obj1);
             } else {
-              console.log("Error setting cfg '"+key+"' to '"+value+"'");
+              addConfigRow(hide, _config[obj], obj1, -1, true);
             }
+            hide = true;
           }
-          //console.log(_config);
         }
+        addButtonOptionRow(obj.toString(), !obj.toString().startsWith("button_"));
+      } else if(obj.toString().startsWith("sensor_")) {
+        var hide = false;
+        for(var obj1 in _config[obj]) {
+          if(obj1.toString() != "advanced") {
+            addConfigRow(hide, _config[obj], obj1, -1, true);
+            hide = true;
+          }
+        }
+      } else {
+        //console.log("UNDIFINED " + obj.toString() + " = " + _config[obj].value);
+      }
+      lastKey = obj.toString();
+    }
+    if(showAdvanced) {
+      addLightProgramRow();
+      addSensorRow();
+    }
+    addVirtualButtonRow();
+  }
 
-        function update_status(data) {
-            /*
+  function cfgAlertForceRestart(event) {
+    var value = event.srcElement.value;
+    var key = event.srcElement.getAttribute('key');
+    if(key === undefined || key === null) {
+      key = event.srcElement.parentNode.getAttribute('key');
+    }
+    if(_AlertsShown[key] == undefined || _AlertsShown[key] == false) {
+      _AlertsShown[key] = true;
+      if("force_restart_msg" in _config[key]) {
+        //alert(_config[key].force_restart_msg);
+        timedAlert(_config[key].force_restart_msg, 0);
+      } else {
+        //alert("If you change "+key+" You will need to restart AqualinkD after saving config!");
+        timedAlert("If you change " + key + " You will need to restart AqualinkD after saving config!", 5);
+      }
+    }
+  }
+
+  function cfgValueChanged(event) {
+    var key = event.srcElement.getAttribute('key');
+    var value = event.srcElement.value;
+    //console.log("Config set '"+key+"'' to '"+value+"'");
+    try {
+      _config[key].value = value;
+    } catch (exception) {
+      //console.log("Error setting cfg '"+key+"' to '"+value+"'");
+      if(key.startsWith("button_")) {
+        _config[key.slice(0, 9)][key].value = value
+      } else if(key.startsWith("virtual_button_")) {
+        _config[key.slice(0, 17)][key].value = value
+      } else if(key.startsWith("sensor_")) {
+        _config[key.slice(0, 9)][key].value = value
+      } else {
+        console.log("Error setting cfg '" + key + "' to '" + value + "'");
+      }
+    }
+    //console.log(_config);
+  }
+
+  function update_status(data) {
+    /*
               read panel_message, panel_type, version, aqualinkd_version
  
             */
-           /*
-            if (data['aqualinkd_version']) {
-                document.getElementById("aqualinkdversion").innerHTML = data['aqualinkd_version'];
-                if (data['aqualinkd_version'] == _latestVersionAvailable ) {
-                    document.getElementById("latesversionavailable").classList.add("hidden");
-                } else {
-                    document.getElementById("latesversionavailable").classList.add("newversion");
-                }
+    /*
+     if (data['aqualinkd_version']) {
+         document.getElementById("aqualinkdversion").innerHTML = data['aqualinkd_version'];
+         if (data['aqualinkd_version'] == _latestVersionAvailable ) {
+             document.getElementById("latesversionavailable").classList.add("hidden");
+         } else {
+             document.getElementById("latesversionavailable").classList.add("newversion");
+         }
 
-                //const upgrade = _urlParams.get('upgrade');
-                //console.log("upgrade = "+upgrade);
+         //const upgrade = _urlParams.get('upgrade');
+         //console.log("upgrade = "+upgrade);
 
-                if ( isNewerVersion(_latestVersionAvailable, data['aqualinkd_version'] ) || _urlParams.get('upgrade') != null) {
-                    enablebutton("upgrade");
-                } else {
-                    disablebutton("upgrade");
-                }
-            }*/
-           //alert(data.type+" r="+data.panel_revision+", t="+data.panel_type);
-            if (data['version']) {
-                document.getElementById("panelversion").textContent = data['version'];
-            }
-            else if (data['panel_revision']) {
-              document.getElementById("panelversion").textContent = data['panel_revision'];
-            }
+         if ( isNewerVersion(_latestVersionAvailable, data['aqualinkd_version'] ) || _urlParams.get('upgrade') != null) {
+             enablebutton("upgrade");
+         } else {
+             disablebutton("upgrade");
+         }
+     }*/
+    //alert(data.type+" r="+data.panel_revision+", t="+data.panel_type);
+    if(data['version']) {
+      document.getElementById("panelversion").textContent = data['version'];
+    } else if(data['panel_revision']) {
+      document.getElementById("panelversion").textContent = data['panel_revision'];
+    }
+    if(data['panel_type']) {
+      document.getElementById("paneltype").textContent = data['panel_type'];
+    }
+    if(data['status']) {
+      update_status_message(data['status']);
+    }
+    /*
+    if (data['status'] == " ") {
+        document.getElementById("statusmsg").innerHTML = "Connected";
+    } else if (data['status'] != " ") {
+        document.getElementById("statusmsg").innerHTML = data['status'];
+    }
+    */
+  }
+  async function showWebConfig() {
+    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    //console.log("Height="+h);
+    document.documentElement.style.setProperty('--max-config-height', (h - 50) + 'px');
+    document.documentElement.style.setProperty('--web-config-textarea-height', (h - 180) + 'px');
+    document.getElementById("web_config_options").classList.remove("hide");
+    document.getElementById("web_config_options_pane").classList.remove("hide");
+    // Link the scroll for the two text areas.
+    const textarea1 = document.getElementById('webconfig-json-input');
+    const textarea2 = document.getElementById('web_config_numbers');
+    textarea1.addEventListener('scroll', () => {
+      textarea2.scrollTop = textarea1.scrollTop;
+      textarea2.scrollLeft = textarea1.scrollLeft;
+    });
+    /* // web_config_numbers doesn't have a scroll bar, so no need.
+              textarea2.addEventListener('scroll', () => {
+                textarea1.scrollTop = textarea2.scrollTop;
+                textarea1.scrollLeft = textarea2.scrollLeft;
+              });*/
+    const jsonInput = document.getElementById('webconfig-json-input');
+    try {
+      // Fetch the file from the specified path (make sure config.json exists)
+      const response = await fetch(_webConfigFile, {
+        cache: 'no-store'
+      });
+      if(!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // Get the response as plain text
+      const configText = await response.text();
+      // Populate the textarea
+      jsonInput.value = configText;
+      jsonInput.placeholder = "Enter or edit your JSON here...";
+      webconfig_validateAndDisplay(); // Optional: Validate immediately upon loading
+    } catch (error) {
+      console.error('There was a problem fetching the config file:', error);
+      jsonInput.value = ''; // Clear placeholder
+      jsonInput.placeholder = "Could not load " + _webConfigFile + ". Enter JSON manually.";
+      const resultArea = document.getElementById('validation-result');
+      resultArea.classList.add('invalid');
+      resultArea.textContent = 'Error: Could not load ' + _webConfigFile + ' from server.';
+    }
+    //populateconfigtable(data);
+  }
 
-            if (data['panel_type']) {
-                document.getElementById("paneltype").textContent = data['panel_type'];
-            }
-            if (data['status']) {
-                update_status_message(data['status']);
-            }
-            
-            /*
-            if (data['status'] == " ") {
-                document.getElementById("statusmsg").innerHTML = "Connected";
-            } else if (data['status'] != " ") {
-                document.getElementById("statusmsg").innerHTML = data['status'];
-            }
-            */
+  function closeWebConfig() {
+    clearconfigtable();
+    document.getElementById("web_config_options").classList.add("hide");
+    document.getElementById("web_config_options_pane").classList.add("hide");
+  }
+
+  function saveWebConfig() {
+    if(!webconfig_validateAndDisplay()) {
+      //alert("bad web config, please validate");
+      aqdAlert("bad web config, please validate");
+      return;
+    }
+    const jsonInput = document.getElementById('webconfig-json-input');
+    const jsonString = jsonInput.value;
+    const jsonObject = JSON.parse(jsonString);
+    var json_ordered = {
+      uri: "webconfig/set",
+      values: jsonObject
+    };
+    send_command(json_ordered);
+    closeWebConfig();
+  }
+  // Function to validate and display the JSON
+  function webconfig_validateAndDisplay() {
+    const jsonInput = document.getElementById('webconfig-json-input');
+    const resultArea = document.getElementById('validation-result');
+    const jsonString = jsonInput.value;
+    // Clear previous results
+    resultArea.className = '';
+    resultArea.textContent = '';
+    try {
+      // Attempt to parse the string into a JavaScript object
+      const jsonObject = JSON.parse(jsonString);
+      // If parsing succeeds, format the JSON nicely (pretty print)
+      const prettyJsonString = JSON.stringify(jsonObject, null, 2);
+      addWebConfigLineNumber(prettyJsonString);
+      // Update the text area with the pretty-printed JSON
+      jsonInput.value = prettyJsonString;
+      // Display success message
+      resultArea.classList.add('valid_json');
+      resultArea.textContent = 'JSON is VALID.';
+      return true;
+    } catch (error) {
+      // If parsing fails, catch the error
+      addWebConfigLineNumber(jsonString);
+      // Display error message
+      resultArea.classList.add('invalid_json');
+      // The error object provides useful information about where the syntax error is
+      resultArea.textContent = 'JSON is INVALID: ' + error.message;
+    }
+    return false;
+  }
+
+  function countLines(str) {
+    // Split the string by common line break sequences:
+    // \r\n (Windows), \r (old Mac), or \n (Unix/Linux)
+    const lines = str.split(/\r\n|\r|\n/);
+    return lines.length;
+  }
+
+  function addWebConfigLineNumber(str) {
+    const lineNumbers = document.getElementById('web_config_numbers');
+    const total = countLines(str) + 50;
+    let numberString = "";
+    // Start at line number 2 so the JSON error line numbers match
+    for(let i = 1; i <= total; i++) {
+      numberString += i + "\n";
+    }
+    lineNumbers.value = numberString;
+  }
+  async function updateWebConfigFromMaster() {
+    let masterJSON;
+    // Get new master
+    const jsonInput = document.getElementById('webconfig-json-input');
+    const resultArea = document.getElementById('validation-result');
+    // Clear previous results
+    resultArea.className = '';
+    resultArea.textContent = '';
+    try {
+      // Fetch the file from the specified path (make sure config.json exists)
+      // BELOW file should be from github. File with any new config keys in it
+      const response = await fetch(WEB_CONFIG_DEFAULT, {
+        cache: 'no-store'
+      });
+      if(!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // Get the response as plain text
+      const configText = await response.text();
+      //masterJSON = JSON.parse(configText)
+      // Populate the textarea
+      jsonInput.value = configText;
+      jsonInput.placeholder = "Enter or edit your JSON here...";
+      webconfig_validateAndDisplay();
+    } catch (error) {
+      alert("Error loading master cfg " + error);
+    }
+    // Now get local
+    /* This will merge the 2 files 
+    try{
+       
+    const jsonInput = document.getElementById('webconfig-json-input');
+    const jsonString = jsonInput.value;
+    var webcfgJSON = JSON.parse(jsonString);
+
+    webcfgJSON = mergeMissingKeysRecursive(webcfgJSON, masterJSON);
+
+    jsonInput.value = JSON.stringify(webcfgJSON);
+    alert(jsonInput.value);
+    webconfig_validateAndDisplay();
+    } catch (error) {
+      alert("Error "+error);
+    }
+    */
+  }
+
+  function mergeMissingKeysRecursive(target, source) {
+    // Ensure we are dealing with actual objects at this level
+    if(typeof target !== 'object' || target === null || typeof source !== 'object' || source === null) {
+      return target;
+    }
+    // Iterate over all keys in the source object
+    for(const key in source) {
+      if(Object.hasOwn(source, key)) {
+        const sourceValue = source[key];
+        const targetValue = target[key];
+        // If the source value is a nested object and the target value is also 
+        // a nested object (and not an array or null), recurse.
+        if(typeof sourceValue === 'object' && sourceValue !== null && !Array.isArray(sourceValue) && typeof targetValue === 'object' && targetValue !== null && !Array.isArray(targetValue)) {
+          // Recursively merge the nested objects
+          target[key] = mergeMissingKeysRecursive(targetValue, sourceValue);
+        } else if(targetValue === undefined) {
+          // Otherwise, if the key is missing entirely in the target, add it
+          target[key] = sourceValue;
+          // console.log("Added missing key:", key);
         }
+        // If the key already exists and is not an object pair ready for recursion, it is ignored (target takes precedence).
+      }
+    }
+    return target;
+  }
 
+  function update_status_message(message, error = false) {
+    try {
+      if(error || message.substring(0, 5).toLowerCase() == "error") document.getElementById("statusmsg").classList.add("error");
+      else document.getElementById("statusmsg").classList.remove("error");
+      if(message == " ") {
+        document.getElementById("statusmsg").innerHTML = "Connected";
+      } else if(message != " ") {
+        document.getElementById("statusmsg").innerHTML = message;
+      }
+    } catch (Error) {}
+  }
 
-        async function showWebConfig() {
-          var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-          //console.log("Height="+h);
-          document.documentElement.style.setProperty('--max-config-height', (h-50)+'px');
+  function delayedVersionCheck(currentVersion, call = 0) {
+    //console.log("DELAY VERSION call="+call+" - "+currentVersion+". latest "+_latestVersionAvailable);
+    if(_latestVersionAvailable == 0) {
+      if(call > 5) {
+        console.log("ERROR getting latest Aqualinkd version information");
+        return;
+      }
+      setTimeout(function() {
+        delayedVersionCheck(currentVersion, ++call);
+      }, 100);
+    } else {
+      //console.log("VERSION call="+call+" - "+currentVersion+". latest "+_latestVersionAvailable);
+      if(isNewerVersion(_latestVersionAvailable, currentVersion) || _urlParams.get('upgrade') != null) {
+        enablebutton("upgrade");
+        setbuttontext("upgrade", "Update AqualinkD");
+      } else {
+        //disablebutton("upgrade");
+        enablebutton("upgrade");
+        setbuttontext("upgrade", "Check for Updates");
+      }
+    }
+  }
 
-          document.documentElement.style.setProperty('--web-config-textarea-height', (h-180)+'px');
-
-          document.getElementById("web_config_options").classList.remove("hide");
-          document.getElementById("web_config_options_pane").classList.remove("hide");
-
-          // Link the scroll for the two text areas.
-          const textarea1 = document.getElementById('webconfig-json-input');
-          const textarea2 = document.getElementById('web_config_numbers');
-          textarea1.addEventListener('scroll', () => {
-            textarea2.scrollTop = textarea1.scrollTop;
-            textarea2.scrollLeft = textarea1.scrollLeft;
-          });/* // web_config_numbers doesn't have a scroll bar, so no need.
-          textarea2.addEventListener('scroll', () => {
-            textarea1.scrollTop = textarea2.scrollTop;
-            textarea1.scrollLeft = textarea2.scrollLeft;
-          });*/
-
-          const jsonInput = document.getElementById('webconfig-json-input');
-            
-            try {
-                // Fetch the file from the specified path (make sure config.json exists)
-                const response = await fetch(_webConfigFile, { cache: 'no-store' });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                // Get the response as plain text
-                const configText = await response.text();
-                
-                // Populate the textarea
-                jsonInput.value = configText;
-                jsonInput.placeholder = "Enter or edit your JSON here...";
-                webconfig_validateAndDisplay(); // Optional: Validate immediately upon loading
-                
-            } catch (error) {
-                console.error('There was a problem fetching the config file:', error);
-                jsonInput.value = ''; // Clear placeholder
-                jsonInput.placeholder = "Could not load "+_webConfigFile+". Enter JSON manually.";
-                const resultArea = document.getElementById('validation-result');
-                resultArea.classList.add('invalid');
-                resultArea.textContent = 'Error: Could not load '+_webConfigFile+' from server.';
-            }
-          //populateconfigtable(data);
+  function setAqManagerOptions(data) {
+    /*
+      read deamonized logging2file logfilename debugmasks[] loglevels[]
+      if logfilename=NULL we can turn on/off logging to file.
+      logging2file will tell us if it's currently on or off
+    */
+    try {
+      document.getElementById("aqualinkdversion").innerHTML = data['aqualinkd_version'];
+    } catch (e) {}
+    if(data['deamonized'] == 'off') {
+      //console.log("deamonized=" + data['deamonized'] + " Need to rename Restart to Reload");
+      disablebutton("restart");
+      disablebutton("upgrade");
+    } else {
+      enablebutton("restart");
+      if(data['aqualinkd_version']) {
+        _currentVersion = data['aqualinkd_version'];
+        //document.getElementById("aqualinkdversion").innerHTML = data['aqualinkd_version'];
+        if(data['aqualinkd_version'] == _latestVersionAvailable) {
+          document.getElementById("latesversionavailable").classList.add("hidden");
+        } else {
+          document.getElementById("latesversionavailable").classList.add("newversion");
         }
-
-        function closeWebConfig() {
-          clearconfigtable();
-
-          document.getElementById("web_config_options").classList.add("hide");
-          document.getElementById("web_config_options_pane").classList.add("hide");
+        delayedVersionCheck(data['aqualinkd_version']);
+        if(_urlParams.get('upgrade') != null) {
+          enablebutton("upgrade");
         }
-
-        function saveWebConfig() {
-          if (!webconfig_validateAndDisplay()) {
-            //alert("bad web config, please validate");
-            aqdAlert("bad web config, please validate");
-            return;
-          }
-
-          const jsonInput = document.getElementById('webconfig-json-input');
-          const jsonString = jsonInput.value;
-          const jsonObject = JSON.parse(jsonString);
-  
-          var json_ordered = {
-            uri: "webconfig/set",
-            values: jsonObject
-          };
-          send_command(json_ordered);
-          closeWebConfig();
-        }
-
-        // Function to validate and display the JSON
-        function webconfig_validateAndDisplay() {
-            const jsonInput = document.getElementById('webconfig-json-input');
-            const resultArea = document.getElementById('validation-result');
-            const jsonString = jsonInput.value;
-            
-            // Clear previous results
-            resultArea.className = '';
-            resultArea.textContent = '';
-
-            try {
-                // Attempt to parse the string into a JavaScript object
-                const jsonObject = JSON.parse(jsonString);
-
-                // If parsing succeeds, format the JSON nicely (pretty print)
-                const prettyJsonString = JSON.stringify(jsonObject, null, 2);
-                
-                addWebConfigLineNumber(prettyJsonString);
-                // Update the text area with the pretty-printed JSON
-                jsonInput.value = prettyJsonString;
-                
-                // Display success message
-                resultArea.classList.add('valid_json');
-                resultArea.textContent = 'JSON is VALID.';
-
-                return true;
-            } catch (error) {
-                // If parsing fails, catch the error
-                addWebConfigLineNumber(jsonString);
-                // Display error message
-                resultArea.classList.add('invalid_json');
-                // The error object provides useful information about where the syntax error is
-                resultArea.textContent = 'JSON is INVALID: ' + error.message;
-            }
-            return false;
-        }
-
-        function countLines(str) {
-          // Split the string by common line break sequences:
-          // \r\n (Windows), \r (old Mac), or \n (Unix/Linux)
-          const lines = str.split(/\r\n|\r|\n/);
-          return lines.length;
-        }
-
-        function addWebConfigLineNumber(str) {
-          const lineNumbers = document.getElementById('web_config_numbers');
-          const total = countLines(str) + 50;
-          
-          let numberString = "";
-
-          // Start at line number 2 so the JSON error line numbers match
-          for (let i = 1; i <= total; i++) {
-              numberString += i + "\n";
-          }
-          lineNumbers.value = numberString;
-        }
-
-        async function updateWebConfigFromMaster() {
-          let masterJSON;
-          // Get new master
-          const jsonInput = document.getElementById('webconfig-json-input');
-
-          const resultArea = document.getElementById('validation-result');
-          // Clear previous results
-          resultArea.className = '';
-          resultArea.textContent = '';
-
-          try {
-                // Fetch the file from the specified path (make sure config.json exists)
-                // BELOW file should be from github. File with any new config keys in it
-                const response = await fetch(WEB_CONFIG_DEFAULT, { cache: 'no-store' });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                // Get the response as plain text
-                const configText = await response.text();
-                //masterJSON = JSON.parse(configText)
-                // Populate the textarea
-                jsonInput.value = configText;
-                jsonInput.placeholder = "Enter or edit your JSON here...";
-                webconfig_validateAndDisplay();
-            } catch (error) {
-              alert("Error loading master cfg "+error);
-            }
-          // Now get local
-          /* This will merge the 2 files 
-          try{
-             
-          const jsonInput = document.getElementById('webconfig-json-input');
-          const jsonString = jsonInput.value;
-          var webcfgJSON = JSON.parse(jsonString);
-
-          webcfgJSON = mergeMissingKeysRecursive(webcfgJSON, masterJSON);
-
-          jsonInput.value = JSON.stringify(webcfgJSON);
-          alert(jsonInput.value);
-          webconfig_validateAndDisplay();
-          } catch (error) {
-            alert("Error "+error);
-          }
-          */
-        }
-
-        function mergeMissingKeysRecursive(target, source) {
-          // Ensure we are dealing with actual objects at this level
-          if (typeof target !== 'object' || target === null || typeof source !== 'object' || source === null) {
-            return target;
-          }
-          // Iterate over all keys in the source object
-          for (const key in source) {
-            if (Object.hasOwn(source, key)) {
-              const sourceValue = source[key];
-              const targetValue = target[key];
-
-            // If the source value is a nested object and the target value is also 
-            // a nested object (and not an array or null), recurse.
-              if (
-                typeof sourceValue === 'object' && sourceValue !== null && !Array.isArray(sourceValue) &&
-                typeof targetValue === 'object' && targetValue !== null && !Array.isArray(targetValue)
-              ) {
-                // Recursively merge the nested objects
-                target[key] = mergeMissingKeysRecursive(targetValue, sourceValue);
-              } else if (targetValue === undefined) {
-                // Otherwise, if the key is missing entirely in the target, add it
-                target[key] = sourceValue;
-                // console.log("Added missing key:", key);
-              }
-            // If the key already exists and is not an object pair ready for recursion, it is ignored (target takes precedence).
-            }
-          }
-          return target;
-        }
-
-
-        function update_status_message(message, error = false) {
-            try {
-                if (error || message.substring(0, 5).toLowerCase() == "error")
-                    document.getElementById("statusmsg").classList.add("error");
+      }
+    }
+    if(data['config_editor'] == 'yes') {
+      enablebutton("editconfig");
+    } else {
+      disablebutton("editconfig");
+      // This is disabled during startup, so get again if disabled
+      setTimeout(function() {
+        start_manager();
+      }, 10000);
+    }
+    /*
+                if (data['logfilename'] == "(null)")
+                    enabletoggle("logfile");
                 else
-                    document.getElementById("statusmsg").classList.remove("error");
-
-                if (message == " ") {
-                    document.getElementById("statusmsg").innerHTML = "Connected";
-                } else if (message != " ") {
-                    document.getElementById("statusmsg").innerHTML = message;
+                    disabletoggle("logfile");
+    */
+    /*
+                if (data['logfileready'] == "on") {
+                    enablebutton("downloadlog");
+                    enablebutton("cleanlog");
+                } else {
+                    disablebutton("downloadlog");
+                    disablebutton("cleanlog");
                 }
-            } catch (Error) { }
-        }
-
-        function delayedVersionCheck(currentVersion, call=0) {
-          //console.log("DELAY VERSION call="+call+" - "+currentVersion+". latest "+_latestVersionAvailable);
-          if (_latestVersionAvailable == 0) {
-            if (call > 5) {
-              console.log("ERROR getting latest Aqualinkd version information");
-              return;
-            }
-            setTimeout(function() {
-              delayedVersionCheck(currentVersion, ++call);
-            }, 100);
-          } else {
-            //console.log("VERSION call="+call+" - "+currentVersion+". latest "+_latestVersionAvailable);
-            
-            if ( isNewerVersion(_latestVersionAvailable, currentVersion ) || _urlParams.get('upgrade') != null) {
-              enablebutton("upgrade");
-              setbuttontext("upgrade", "Update AqualinkD");
-            } else {
-              //disablebutton("upgrade");
-              enablebutton("upgrade");
-              setbuttontext("upgrade", "Check for Updates");
+    */
+    var eCommands = document.getElementById("loglevels");
+    for(var obj in data['loglevels']) {
+      //console.log(data['loglevels'][obj].name);
+      var element_id = "loglevel_" + data['loglevels'][obj].id;
+      var element = document.getElementById(element_id);
+      if(!element) {
+        element = document.createElement('label');
+        element.classList.add('toggle');
+        element.classList.add('logtoggle');
+        element.innerHTML = '<input class="toggle-checkbox" type="checkbox" id="' + element_id + '" onclick="setloglevel(this);">' + '<div class="toggle-switch"></div>' + '<span class="toggle-label">' + data['loglevels'][obj].name + '</span>';
+        eCommands.appendChild(element);
+      }
+      settoggle(element_id, data['loglevels'][obj].set);
+    }
+    var eCommands = document.getElementById("debugmasks");
+    for(var obj in data['debugmasks']) {
+      var element_id = "debugmask_" + data['debugmasks'][obj].id;
+      var element = document.getElementById(element_id);
+      if(!element) {
+        element = document.createElement('label');
+        element.classList.add('toggle');
+        element.classList.add('logtoggle');
+        element.innerHTML = '<input class="toggle-checkbox" type="checkbox" id="' + element_id + '" onclick="setlogmask(this);">' + '<div class="toggle-switch"></div>' + '<span class="toggle-label">' + data['debugmasks'][obj].name + '</span>';
+        eCommands.appendChild(element);
+        //if ( data['debugmasks'][obj].name.substr(0,9) == "RS Serial" ) {
+        //    _rssd_logmask = element_id;
+        if(data['debugmasks'][obj].id == RSSD_MASK_ID) {
+          _rssd_logmask = element_id;
+          element = document.createElement('div');
+          element.style.marginTop = '1px';
+          element.style.marginBottom = '2px'; // = 'style="margin-left: 5px';
+          element.innerHTML = '<input id="rssd_filter" type="text" value="" size="10" maxlength="19">&nbsp;RS Serial Filter <font size="-2">(Eg 0x10 0x0a)</font></input>';
+          eCommands.appendChild(element);
+          var filterentry = document.getElementById("rssd_filter");
+          filterentry.value = "";
+          for(var id in data['debugmasks'][obj].filters) {
+            //console.log("Filter "+data['debugmasks'][obj].filters[id]);
+            if(data['debugmasks'][obj].filters[id] != "0x00") {
+              if(filterentry.value.length == 0) {
+                filterentry.value = data['debugmasks'][obj].filters[id];
+              } else {
+                filterentry.value = filterentry.value + " " + data['debugmasks'][obj].filters[id];
+              }
             }
           }
         }
+      }
+      settoggle(element_id, data['debugmasks'][obj].set);
+    }
+  }
 
-        function setAqManagerOptions(data) {
-            /*
-              read deamonized logging2file logfilename debugmasks[] loglevels[]
-              if logfilename=NULL we can turn on/off logging to file.
-              logging2file will tell us if it's currently on or off
-            */
-            try{
-              document.getElementById("aqualinkdversion").innerHTML = data['aqualinkd_version'];
-            } catch (e){}
-           
-            if (data['deamonized'] == 'off') {
-                //console.log("deamonized=" + data['deamonized'] + " Need to rename Restart to Reload");
-                disablebutton("restart");
-                disablebutton("upgrade");
-            } else {
-              enablebutton("restart");
-             
-              if (data['aqualinkd_version']) {
-                _currentVersion = data['aqualinkd_version'];
-                //document.getElementById("aqualinkdversion").innerHTML = data['aqualinkd_version'];
-                if (data['aqualinkd_version'] == _latestVersionAvailable ) {
-                    document.getElementById("latesversionavailable").classList.add("hidden");
-                } else {
-                    document.getElementById("latesversionavailable").classList.add("newversion");
-                }
+  function get_appropriate_ws_url() {
+    var pcol;
+    var u = document.URL;
+    /*
+     * We open the websocket encrypted if this page came on an
+     * https:// url itself, otherwise unencrypted
+     */
+    if(u.substring(0, 5) == "https") {
+      pcol = "wss://";
+      u = u.substr(8);
+    } else {
+      pcol = "ws://";
+      if(u.substring(0, 4) == "http") u = u.substr(7);
+    }
+    u = u.split('/');
+    //alert (pcol + u[0] + ":6500");
+    return pcol + u[0];
+  }
+  /* dumb increment protocol */
+  var socket_di;
 
-                delayedVersionCheck(data['aqualinkd_version']);
-                
-                if (_urlParams.get('upgrade') != null) {
-                   enablebutton("upgrade");
-                }
-                
-              }
-            }
-
-
-            if (data['config_editor'] == 'yes') {
-                enablebutton("editconfig");
-            } else {
-                disablebutton("editconfig");
-                // This is disabled during startup, so get again if disabled
-                setTimeout(function () {
-                  start_manager();
-                }, 10000);
-            }
-
-            
-
-            /*
-                        if (data['logfilename'] == "(null)")
-                            enabletoggle("logfile");
-                        else
-                            disabletoggle("logfile");
-            */
-            /*
-                        if (data['logfileready'] == "on") {
-                            enablebutton("downloadlog");
-                            enablebutton("cleanlog");
-                        } else {
-                            disablebutton("downloadlog");
-                            disablebutton("cleanlog");
-                        }
-            */
-            var eCommands = document.getElementById("loglevels");
-            for (var obj in data['loglevels']) {
-                //console.log(data['loglevels'][obj].name);
-                var element_id = "loglevel_" + data['loglevels'][obj].id;
-                var element = document.getElementById(element_id);
-                if (!element) {
-                    element = document.createElement('label');
-                    element.classList.add('toggle');
-                    element.classList.add('logtoggle');
-                    element.innerHTML = '<input class="toggle-checkbox" type="checkbox" id="' + element_id + '" onclick="setloglevel(this);">' +
-                        '<div class="toggle-switch"></div>' +
-                        '<span class="toggle-label">' + data['loglevels'][obj].name + '</span>';
-                    eCommands.appendChild(element);
-                }
-                settoggle(element_id, data['loglevels'][obj].set);
-            }
-
-            var eCommands = document.getElementById("debugmasks");
-            for (var obj in data['debugmasks']) {
-                var element_id = "debugmask_" + data['debugmasks'][obj].id;
-                var element = document.getElementById(element_id);
-                if (!element) {
-                    element = document.createElement('label');
-                    element.classList.add('toggle');
-                    element.classList.add('logtoggle');
-                    element.innerHTML = '<input class="toggle-checkbox" type="checkbox" id="' + element_id + '" onclick="setlogmask(this);">' +
-                        '<div class="toggle-switch"></div>' +
-                        '<span class="toggle-label">' + data['debugmasks'][obj].name + '</span>';
-                    eCommands.appendChild(element);
-
-                    //if ( data['debugmasks'][obj].name.substr(0,9) == "RS Serial" ) {
-                    //    _rssd_logmask = element_id;
-                    if ( data['debugmasks'][obj].id == RSSD_MASK_ID) {
-                        _rssd_logmask = element_id;
-                        element = document.createElement('div');
-                        element.style.marginTop = '1px';
-                        element.style.marginBottom = '2px'; // = 'style="margin-left: 5px';
-                        element.innerHTML =  '<input id="rssd_filter" type="text" value="" size="10" maxlength="19">&nbsp;RS Serial Filter <font size="-2">(Eg 0x10 0x0a)</font></input>';
-                        eCommands.appendChild(element);
-                        var filterentry = document.getElementById("rssd_filter");
-                        filterentry.value = "";
-                        for (var id in data['debugmasks'][obj].filters) {
-                          //console.log("Filter "+data['debugmasks'][obj].filters[id]);
-                          if (data['debugmasks'][obj].filters[id] != "0x00") {
-                            if (filterentry.value.length == 0) {
-                              filterentry.value = data['debugmasks'][obj].filters[id];
-                            } else {
-                              filterentry.value = filterentry.value+" "+data['debugmasks'][obj].filters[id];
-                            }
-                          }
-                        }
-                    } 
-                }
-                settoggle(element_id, data['debugmasks'][obj].set);
-            }
-
+  function startWebsockets() {
+    socket_di = new WebSocket(get_appropriate_ws_url());
+    try {
+      socket_di.onopen = function() {
+        // success!
+        start_manager();
+        //get_devices();
+      }
+      socket_di.onmessage = function got_packet(msg) {
+        //document.getElementById("status").classList.remove("error");
+        //console.log(msg.data);
+        var data
+        try {
+          data = JSON.parse(msg.data);
+        } catch (error) {
+          console.error(error);
+          console.log(msg.data);
         }
-
-        function get_appropriate_ws_url() {
-            var pcol;
-            var u = document.URL;
-            /*
-             * We open the websocket encrypted if this page came on an
-             * https:// url itself, otherwise unencrypted
-             */
-            if (u.substring(0, 5) == "https") {
-                pcol = "wss://";
-                u = u.substr(8);
-            } else {
-                pcol = "ws://";
-                if (u.substring(0, 4) == "http")
-                    u = u.substr(7);
-            }
-            u = u.split('/');
-            //alert (pcol + u[0] + ":6500");
-            return pcol + u[0];
+        if(data.logmsg) {
+          update_log_message(data.logmsg);
+        } else if(data.na_message) {
+          set_unavailable(data.na_message);
+        } else if(data.message) {
+          update_status_message(data.message);
+        } else if(data.type == 'aqmanager') {
+          setAqManagerOptions(data);
+          update_status(data);
+        } else if(data.type == 'devices') {
+          //update_device(data);
+        } else if(data.type == 'status') {
+          update_status(data);
+        } else if(data.type == 'aux_labels') {
+          //set_labels(data);
+        } else if(data.type == 'config') {
+          showConfig(data);
         }
-        /* dumb increment protocol */
-        var socket_di;
+      }
+      socket_di.onclose = function() {
+        // something went wrong
+        //document.getElementById("status").innerHTML = '  !!! Connection error !!!  '
+        //document.getElementById("status").classList.add("error");
+        // Try to reconnect every 5 seconds.
+        update_status_message('  !!! Connection error !!!  ', true);
+        setTimeout(function() {
+          startWebsockets();
+        }, 5000);
+      }
+    } catch (exception) {
+      //alert('<p>Error' + exception);
+    }
+  }
 
-        function startWebsockets() {
-            socket_di = new WebSocket(get_appropriate_ws_url());
-            try {
-                socket_di.onopen = function () {
-                    // success!
-                    start_manager();
-                    //get_devices();
-                }
-                socket_di.onmessage = function got_packet(msg) {
-                    //document.getElementById("status").classList.remove("error");
-                    //console.log(msg.data);
-                    var data
-                    try {
-                        data = JSON.parse(msg.data);
+  function send_command(cmd) {
+    //console.log("Send " + JSON.stringify(cmd));
+    socket_di.send(JSON.stringify(cmd));
+  }
 
-                    }
-                    catch (error) {
-                        console.error(error);
-                        console.log(msg.data);
-                    }
+  function start_manager() {
+    var msg = {
+      //command: "simulator"
+      uri: "aqmanager"
+    };
+    socket_di.send(JSON.stringify(msg));
+  }
 
-                    if (data.logmsg) {
-                        update_log_message(data.logmsg);
-                    } else if (data.na_message) {
-                        set_unavailable(data.na_message);
-                    } else if (data.message) {
-                        update_status_message(data.message);
-                    } else if (data.type == 'aqmanager') {
-                        setAqManagerOptions(data);
-                        update_status(data);
-                    } else if (data.type == 'devices') {
-                        //update_device(data);
-                    } else if (data.type == 'status') {
-                        update_status(data);
-                    } else if (data.type == 'aux_labels') {
-                        //set_labels(data);
-                    } else if (data.type == 'config') {
-                        showConfig(data);
-                    }
-                }
-                socket_di.onclose = function () {
-                    // something went wrong
-                    //document.getElementById("status").innerHTML = '  !!! Connection error !!!  '
-                    //document.getElementById("status").classList.add("error");
-                    // Try to reconnect every 5 seconds.
-                    update_status_message('  !!! Connection error !!!  ', true);
-                    setTimeout(function () {
-                        startWebsockets();
-                    }, 5000);
-                }
-            } catch (exception) {
-                //alert('<p>Error' + exception);
-            }
+  function get_devices() {
+    var msg = {
+      uri: "devices"
+    };
+    socket_di.send(JSON.stringify(msg));
+  }
+
+  function isNewerVersion(version1, version2) {
+    try {
+      let [major1, minor1, patch1] = version1.split('.').map(Number => parseInt(Number, 10));
+      let [major2, minor2, patch2] = version2.split('.').map(Number => parseInt(Number, 10));
+      if(patch1 === undefined) {
+        patch1 = 0;
+      }
+      if(patch2 === undefined) {
+        patch2 = 0;
+      }
+      //console.log(version1+" major="+major1+", "+version2+" major="+major2);
+      if(major1 > major2) return true;
+      if(major1 < major2) return false;
+      //console.log(version1+" minor="+minor1+", "+version2+" minor="+minor2);
+      if(minor1 > minor2) return true;
+      if(minor1 < minor2) return false;
+      //Look for any strings that might be a pre-release
+      if(version2.toLowerCase().includes("dev") || version2.toLowerCase().includes("dev") || version2.toLowerCase().includes("beta")) {
+        patch2--;
+      }
+      //console.log(version1+" patch="+patch1+", "+version2+" patch="+patch2);
+      return patch1 > patch2;
+    } catch (e) {
+      return false;
+    }
+  }
+  /*
+          function reset() {
+              socket_di.send("reset\n");
+          }
+  */
+  function init() {
+    // Resize log container
+    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    if(h > 0) {
+      try {
+        document.documentElement.style.setProperty('--logcontainer-height', (h - 290) + 'px');
+      } catch (e) {}
+    } else {
+      console.log("ERROR can't get browser width");
+    }
+    if(w > 0) {
+      try {
+        var computedStyles = getComputedStyle(document.documentElement);
+        var gw = parseInt(computedStyles.getPropertyValue('--grid-width'));
+        document.documentElement.style.setProperty('--logcontainer-width', (w - gw - 20) + 'px');
+      } catch (e) {}
+      //console.log("grid width = " + gw );
+      //console.log("Setting logcontainer width to "+(w-gw) );
+    } else {
+      console.log("ERROR can't get browser height");
+    }
+    //computedStyles.getPropertyValue
+    //var element = document.documentElement; // For a variable defined on :root
+    //var computedStyles = getComputedStyle(document.documentElement);
+    //console.log("grid width = " + computedStyles.getPropertyValue('--grid-width') );
+    //console.log("grid width complete= " + computedStyles.getPropertyValue('--grid-width-complete') );
+    disablebutton("restart");
+    disablebutton("upgrade");
+    checkboxClick(document.getElementById("slog_debug"));
+    checkboxClick(document.getElementById("slog_poll_cycle"));
+    startWebsockets();
+    getLatestVersion();
+    //getLatestDevVersion();
+  }
+
+  function set_unavailable(message) {
+    console.log("!!! NOT Available !!!");
+    update_log_message("!!! AqualinkD Manager " + message + " !!!");
+    const demoClasses = document.querySelectorAll('.inner');
+    demoClasses.forEach(element => {
+      element.style.opacity = 0.2;
+      console.log('Element ' + element);
+    });
+    disablebutton("restart");
+    disablebutton("seriallog");
+    disablebutton("downloadlog");
+    //disabletoggle("logfile");
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+    for(i = 0; i < coll.length; i++) {
+      // Remove event listeners from Element by cloning it.
+      coll[i].replaceWith(coll[i].cloneNode(true));
+    }
+    //disabletoggle("seriallog");
+  }
+
+  function send(source) {
+    //console.log("from" + source.id);
+    var cmd = {};
+    //cmd.uri = "rawcommand"
+    switch (source.id) {
+      case "upgrade":
+        getVersions();
+        aqdAlert("Searching release versions");
+        //let dlg = document.getElementById("alertDialogHeader");
+        //dlg.innerHTML='<input type="list"
+        return;
+        break;
+      case "installVersion":
+        let version = document.getElementById("selectedrelease").value;
+        cmd.uri = "installrelease/" + version
+        cmd.text_value = version;
+        update_log_message("***** AqualinkD upgrade in progress *****");
+        break;
+      case "restart":
+        cmd.uri = "restart"
+        // NEED TO REGET aqmanager after restart.
+        break;
+      case "debugstart":
+        cmd.uri = "debug/start"
+        break;
+      case "debugstop":
+        cmd.uri = "debug/stop"
+        break;
+      case "seriallog":
+        cmd.uri = "seriallogger"
+        break;
+      case "seriallogWoptions":
+        var ids = document.getElementById("slog_ids").value;
+        if(ids.length == 0) ids = '--';
+        cmd.uri = "seriallogger/" + ids + "/" + document.getElementById("slog_debug").checked;
+        if(document.getElementById("slog_poll_cycle").checked) {
+          cmd.value = -1;
+        } else {
+          cmd.value = document.getElementById("slog_packets").value;
         }
-
-        function send_command(cmd) {
-            //console.log("Send " + JSON.stringify(cmd));
-            socket_di.send(JSON.stringify(cmd));
-
-        }
-
-        function start_manager() {
-            var msg = {
-                //command: "simulator"
-                uri: "aqmanager"
-            };
-            socket_di.send(JSON.stringify(msg));
-        }
-
-        function get_devices() {
-            var msg = {
-                uri: "devices"
-            };
-            socket_di.send(JSON.stringify(msg));
-        }
-
-        function isNewerVersion(version1, version2) {
-            try{
-              let [major1, minor1, patch1] = version1.split('.').map(Number => parseInt(Number, 10));
-              let [major2, minor2, patch2] = version2.split('.').map(Number => parseInt(Number, 10));
-            
-              if (patch1 === undefined) { patch1 = 0; }
-              if (patch2 === undefined) { patch2 = 0; }
-            //console.log(version1+" major="+major1+", "+version2+" major="+major2);
-              if (major1 > major2) return true;
-              if (major1 < major2) return false;
-            //console.log(version1+" minor="+minor1+", "+version2+" minor="+minor2);
-              if (minor1 > minor2) return true;
-              if (minor1 < minor2) return false;
-
-              //Look for any strings that might be a pre-release
-              if ( version2.toLowerCase().includes("dev") ||
-                   version2.toLowerCase().includes("dev") ||
-                   version2.toLowerCase().includes("beta") ) {
-                patch2--;
-              }
-            //console.log(version1+" patch="+patch1+", "+version2+" patch="+patch2);
-              return patch1 > patch2;
-            } catch (e) {
-              return false;
-            }
-        }
-        /*
-                function reset() {
-                    socket_di.send("reset\n");
-                }
-        */
-        function init() {
-            // Resize log container
-            var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-            var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-
-            if (h > 0) {
-              try {
-                document.documentElement.style.setProperty('--logcontainer-height', (h-290)+'px');
-              } catch (e) {}
-            } else {
-              console.log("ERROR can't get browser width");
-            }
-
-
-            if (w > 0) {
-              try {
-                var computedStyles = getComputedStyle(document.documentElement);
-                var gw = parseInt(computedStyles.getPropertyValue('--grid-width'));
-                document.documentElement.style.setProperty('--logcontainer-width', (w - gw - 20)+'px');
-              } catch (e) {}
-              //console.log("grid width = " + gw );
-              //console.log("Setting logcontainer width to "+(w-gw) );
-            } else {
-              console.log("ERROR can't get browser height");
-            }
-
-            //computedStyles.getPropertyValue
-            //var element = document.documentElement; // For a variable defined on :root
-            //var computedStyles = getComputedStyle(document.documentElement);
-            //console.log("grid width = " + computedStyles.getPropertyValue('--grid-width') );
-            //console.log("grid width complete= " + computedStyles.getPropertyValue('--grid-width-complete') );
-
-            disablebutton("restart");
-            disablebutton("upgrade");
-
-            checkboxClick(document.getElementById("slog_debug"));
-            checkboxClick(document.getElementById("slog_poll_cycle"));
-
-            startWebsockets();
-            getLatestVersion();
-            //getLatestDevVersion();
-        }
-
-        function set_unavailable(message) {
-
-            console.log("!!! NOT Available !!!");
-
-            update_log_message("!!! AqualinkD Manager " + message + " !!!");
-
-            const demoClasses = document.querySelectorAll('.inner');
-            demoClasses.forEach(element => {
-                element.style.opacity = 0.2;
-                console.log('Element ' + element);
-            });
-
-            disablebutton("restart");
-            disablebutton("seriallog");
-            disablebutton("downloadlog");
-            //disabletoggle("logfile");
-
-            var coll = document.getElementsByClassName("collapsible");
-            var i;
-            for (i = 0; i < coll.length; i++) {
-                // Remove event listeners from Element by cloning it.
-                coll[i].replaceWith(coll[i].cloneNode(true));
-            }
-            //disabletoggle("seriallog");
-        }
-
-
-        function send(source) {
-            //console.log("from" + source.id);
-
-            var cmd = {};
-            //cmd.uri = "rawcommand"
-            switch (source.id) {
-                case "upgrade":
-                   getVersions();
-                   aqdAlert("Searching release versions");
-                   //let dlg = document.getElementById("alertDialogHeader");
-                   //dlg.innerHTML='<input type="list"
-                   return;
-                    break;
-                case "installVersion":
-                    let version = document.getElementById("selectedrelease").value;
-                    cmd.uri = "installrelease/"+version
-                    cmd.text_value = version;
-                    update_log_message("***** AqualinkD upgrade in progress *****");
-                    break;
-                case "restart":
-                    cmd.uri = "restart"
-                    // NEED TO REGET aqmanager after restart.
-                    break;
-                case "debugstart":
-                    cmd.uri = "debug/start"
-                    break;
-                case "debugstop":
-                    cmd.uri = "debug/stop"
-                    break;
-                case "seriallog":
-                    cmd.uri = "seriallogger"
-                    break;
-                case "seriallogWoptions":
-                    var ids = document.getElementById("slog_ids").value;
-                    if ( ids.length == 0 )
-                      ids='--';
-
-                    cmd.uri = "seriallogger/"+ids+"/"+document.getElementById("slog_debug").checked;
-
-                    if ( document.getElementById("slog_poll_cycle").checked ) {
-                      cmd.value = -1;
-                    } else {
-                      cmd.value = document.getElementById("slog_packets").value;
-                    }
-                    //console.log("Command = "+cmd);
-                    //console.log("Packets=" + document.getElementById("slog_packets").value );
-                    //console.log("IDs=" + document.getElementById("slog_ids").value );
-                    //console.log("ListQueriedID=" + document.getElementById("slog_ids_queried").checked );
-                    //console.log("debug=" + document.getElementById("slog_debug").checked );
-                    //return; // REMOVE
-                    break;
-                default:
-                    alert("Unknown button");
-                    return;
-                    break;
-            }
-
-            send_command(cmd);
-        }
-
-
+        //console.log("Command = "+cmd);
+        //console.log("Packets=" + document.getElementById("slog_packets").value );
+        //console.log("IDs=" + document.getElementById("slog_ids").value );
+        //console.log("ListQueriedID=" + document.getElementById("slog_ids_queried").checked );
+        //console.log("debug=" + document.getElementById("slog_debug").checked );
+        //return; // REMOVE
+        break;
+      default:
+        alert("Unknown button");
+        return;
+        break;
+    }
+    send_command(cmd);
+  }
 
   function populateVersionSelection(caller = null) {
     let prerelease = false;
-    let showversionwarning=false
-
-    if (caller && caller.id == "useprerelease" && caller.checked){
+    let showversionwarning = false
+    if(caller && caller.id == "useprerelease" && caller.checked) {
       prerelease = true;
-    } else if (caller && caller.id == "selectedrelease" && caller.value) {
-      if (isNewerVersion(_currentVersion, caller.value.replace(/[^\d.-]/g, '')))
-        showversionwarning=true;
-
+    } else if(caller && caller.id == "selectedrelease" && caller.value) {
+      if(isNewerVersion(_currentVersion, caller.value.replace(/[^\d.-]/g, ''))) {
+        showversionwarning = true;
+      }
       prerelease = document.getElementById("useprerelease")?.checked?true:false;
     }
-      
     try {
       let dlg_head = document.getElementById("alertDialogHeader");
       let dlg_msg = document.getElementById("alertDialogMessage");
-
       let dropdown = '<select id="selectedrelease" name="version selection" onchange="populateVersionSelection(this)">';
       //for (const versionNumber of _aqualinkVersions) {
-      for (const [versionNumber, details] of Object.entries(_aqualinkVersions)) {
+      for(const [versionNumber, details] of Object.entries(_aqualinkVersions)) {
         //alert(versionNumber);
-        if (prerelease || _aqualinkVersions[versionNumber].prerelease === false) {
-          let exttext='';
-          let selected='';
-
-          if (versionNumber.replace(/[^\d.-]/g, '') == _latestVersionAvailable) {
+        if(prerelease || _aqualinkVersions[versionNumber].prerelease === false) {
+          let exttext = '';
+          let selected = '';
+          if(versionNumber.replace(/[^\d.-]/g, '') == _latestVersionAvailable) {
             exttext = ' (latest)';
           }
-          if (versionNumber === caller?.value) {
+          if(versionNumber === caller?.value) {
             selected = 'selected';
           }
-
-          dropdown += '<option value="' + versionNumber + '"'+selected+'>' + versionNumber + exttext +'</option>';
+          dropdown += '<option value="' + versionNumber + '"' + selected + '>' + versionNumber + exttext + '</option>';
         }
       }
       dropdown += '</select>';
       dropdown += '&nbsp;&nbsp;&nbsp;Include Dev Releases<input id="useprerelease" type="checkbox" onchange="populateVersionSelection(this)" name="prerelease" value="PreRelease" ' + (prerelease == true ? "checked" : "") + '/>';
       dropdown += '<br>'
-      if (_latestVersionAvailable == _currentVersion) {
+      if(_latestVersionAvailable == _currentVersion) {
         dropdown += '<br>latest Release version already installed';
       }
       dropdown += '<br><input type="button" id="installVersion" onclick="send(this);aqdAlertClose();" value="Install"/>';
       dlg_head.innerHTML = dropdown;
-
-      if (showversionwarning) {
-        dlg_msg.innerHTML = 'Warning:<p style="font-size: small;">Config files are not always backward compatible when downgrading.<br>'+
-                            'You may need to manually update <b>aqualinkd.conf & config.json</b>.</p>';
+      if(showversionwarning) {
+        dlg_msg.innerHTML = 'Warning:<p style="font-size: small;">Config files are not always backward compatible when downgrading.<br>' + 'You may need to manually update <b>aqualinkd.conf & config.json</b>.</p>';
       } else {
         dlg_msg.innerText = "";
       }
     } catch (e) {
       alert("load error " + e);
     }
-
     //alert("loaded");
   }
-
   async function getVersions() {
-
     try {
       // Fetch the file from the specified path (make sure config.json exists)
-      const response = await fetch(VERSION_URL, { cache: 'no-store' });
-
-      if (!response.ok) {
+      const response = await fetch(VERSION_URL, {
+        cache: 'no-store'
+      });
+      if(!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       // Get the response as plain text
       const versions = await response.text();
       const versionObject = JSON.parse(versions);
-
-      for (const release of versionObject) {
-        if (!release.assets || release.prerelease == "true" || release.assets.length === 0) {
+      for(const release of versionObject) {
+        if(!release.assets || release.prerelease == "true" || release.assets.length === 0) {
           continue;
         }
         const downloadUrl = release.assets[0].browser_download_url;
-        if (downloadUrl) {
+        if(downloadUrl) {
           _aqualinkVersions[release.tag_name] = {};
           _aqualinkVersions[release.tag_name].url = downloadUrl;
           _aqualinkVersions[release.tag_name].prerelease = release.prerelease;
         }
       }
-
       populateVersionSelection();
-
     } catch (error) {
       console.error('There was a problem fetching the config file:', error);
       let dlg_msg = document.getElementById("alertDialogMessage");
       //dlg_msg.innerText = "Error connecting to github, please check connection!\n\n"+VERSION_URL;
-      dlg_msg.innerHTML = '<p>Error connecting to github, please check connection</p<<hr><p style="font-size: small;">'+VERSION_URL+'</p>';
+      dlg_msg.innerHTML = '<p>Error connecting to github, please check connection</p<<hr><p style="font-size: small;">' + VERSION_URL + '</p>';
     }
   }
 
-        function getLatestVersion(url="https://api.github.com/repos/AqualinkD/AqualinkD/releases/latest", tryagain=true) {
-            var xmlhttp = new XMLHttpRequest();
-            xmlhttp.onreadystatechange = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    var JS = JSON.parse(this.responseText);
-                    _latestVersionAvailable = JS.tag_name.replace(/[^\d.-]/g, '');
-                    document.getElementById("latestaqualinkdversion").innerHTML = _latestVersionAvailable;   
-                } else if (this.readyState == 4 && this.status == 404) {
-                    //console.log("URL ERROR "+this.readyState+" "+this.status);
-                    if (tryagain) {
-                        // Try sfeakes repo
-                      getLatestVersion("https://api.github.com/repos/sfeakes/AqualinkD/releases/latest", false);
-                    }
-                }
-            };
-            xmlhttp.open("GET", url);
-            xmlhttp.send();
+  function getLatestVersion(url = "https://api.github.com/repos/AqualinkD/AqualinkD/releases/latest", tryagain = true) {
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+      if(this.readyState == 4 && this.status == 200) {
+        var JS = JSON.parse(this.responseText);
+        _latestVersionAvailable = JS.tag_name.replace(/[^\d.-]/g, '');
+        document.getElementById("latestaqualinkdversion").innerHTML = _latestVersionAvailable;
+      } else if(this.readyState == 4 && this.status == 404) {
+        //console.log("URL ERROR "+this.readyState+" "+this.status);
+        if(tryagain) {
+          // Try sfeakes repo
+          getLatestVersion("https://api.github.com/repos/sfeakes/AqualinkD/releases/latest", false);
         }
-/*
-        function getLatestDevVersion(url="https://api.github.com/repos/AqualinkD/AqualinkD/contents/source/version.h", tryagain=true) {
-            var xmlhttp = new XMLHttpRequest();
-            xmlhttp.onreadystatechange = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                  //console.log(this.responseText);
-                  _latestDevVersionAvailable = this.responseText.match(/AQUALINKD_VERSION "(.*)"/i)[1];
-                } else if (this.readyState == 4 && this.status == 404) {
-                    if (tryagain) {
-                        // Try sfeakes repo
-                      getLatestDevVersion("https://api.github.com/repos/AqualinkD/AqualinkD/contents/source/version.h", false);
-                    }
-                }
-            };
-            xmlhttp.open("GET", url);
-            xmlhttp.setRequestHeader("Accept","application/vnd.github.raw");
-            xmlhttp.send();
-        }
-*/
-        function aqdAlert(message) {
-          document.getElementById("alertDialogHeader").innerText = '';
-          document.getElementById('alertDialogMessage').innerText = message;
-          document.getElementById('alertOverlay').style.display = 'block';
-          document.getElementById('alertCustomDialog').style.display = 'block';
-        }
+      }
+    };
+    xmlhttp.open("GET", url);
+    xmlhttp.send();
+  }
+  /*
+          function getLatestDevVersion(url="https://api.github.com/repos/AqualinkD/AqualinkD/contents/source/version.h", tryagain=true) {
+              var xmlhttp = new XMLHttpRequest();
+              xmlhttp.onreadystatechange = function () {
+                  if (this.readyState == 4 && this.status == 200) {
+                    //console.log(this.responseText);
+                    _latestDevVersionAvailable = this.responseText.match(/AQUALINKD_VERSION "(.*)"/i)[1];
+                  } else if (this.readyState == 4 && this.status == 404) {
+                      if (tryagain) {
+                          // Try sfeakes repo
+                        getLatestDevVersion("https://api.github.com/repos/AqualinkD/AqualinkD/contents/source/version.h", false);
+                      }
+                  }
+              };
+              xmlhttp.open("GET", url);
+              xmlhttp.setRequestHeader("Accept","application/vnd.github.raw");
+              xmlhttp.send();
+          }
+  */
+  function aqdAlert(message) {
+    document.getElementById("alertDialogHeader").innerText = '';
+    document.getElementById('alertDialogMessage').innerText = message;
+    document.getElementById('alertOverlay').style.display = 'block';
+    document.getElementById('alertCustomDialog').style.display = 'block';
+  }
 
-        function aqdAlertClose() {
-          document.getElementById("alertDialogHeader").innerText = '';
-          document.getElementById('alertOverlay').style.display = 'none';
-          document.getElementById('alertCustomDialog').style.display = 'none';
-        }
+  function aqdAlertClose() {
+    document.getElementById("alertDialogHeader").innerText = '';
+    document.getElementById('alertOverlay').style.display = 'none';
+    document.getElementById('alertCustomDialog').style.display = 'none';
+  }
 
-        function timedAlert(message, timeout) {
-          aqdAlert(message);
-          // Set a timeout to automatically close the dialog
-          if (timeout > 0)
-            setTimeout(aqdAlertClose, timeout * 1000);
-        }
-
-    </script>
+  function timedAlert(message, timeout) {
+    aqdAlert(message);
+    // Set a timeout to automatically close the dialog
+    if(timeout > 0) setTimeout(aqdAlertClose, timeout * 1000);
+  }
+  </script>
 
 <body onload="init();init_collapsible();">
-    <div class="wrapper">
-        
-        <div class="aqualinkd">
-            <!--<iframe id="aqd" class="aqd_iframe" src="/" width="100%" height="350px"></iframe>-->
-            <iframe id="aqd" class="aqualinkd_iframe" src="/"></iframe>
-        </div>
-        <div class="inner">
-            <div class="commands">
-              
-                <table border='0' id="deviceList" style="width: 100%;">
-                    <tr style="title">
-                        <td colspan="2" style="title" align="center"><label id="title">&nbsp;&nbsp;AqualinkD Managment
-                                Console&nbsp;&nbsp;</label></th>
-                    </tr>
-                    <tr>
-                        <td colspan="2" align="center"><label id="statusmsg" class="statusmsg">status</label></td>
-                    </tr>
-                    <tr>
-                        <td colspan="1" align="center"><input id="restart" type="button" onclick="send(this);" value="Restart AqualinkD"></td>
-                        <td colspan="1" align="center"><input id="upgrade" type="button" onclick="send(this);" value="Update AqualinkD"></td>
-                    </tr>
-                    <!--
+  <div class="wrapper">
+    <div class="aqualinkd">
+      <!--<iframe id="aqd" class="aqd_iframe" src="/" width="100%" height="350px"></iframe>-->
+      <iframe id="aqd" class="aqualinkd_iframe" src="/"></iframe>
+    </div>
+    <div class="inner">
+      <div class="commands">
+        <table border='0' id="deviceList" style="width: 100%;">
+          <tr style="title">
+            <td colspan="2" style="title" align="center"><label id="title">&nbsp;&nbsp;AqualinkD Managment Console&nbsp;&nbsp;</label></th>
+          </tr>
+          <tr>
+            <td colspan="2" align="center"><label id="statusmsg" class="statusmsg">status</label></td>
+          </tr>
+          <tr>
+            <td colspan="1" align="center"><input id="restart" type="button" onclick="send(this);" value="Restart AqualinkD"></td>
+            <td colspan="1" align="center"><input id="upgrade" type="button" onclick="send(this);" value="Update AqualinkD"></td>
+          </tr>
+          <!--
                     <tr>
                         <td align="center">
                             <input id="restart" type="button" onclick="send(this);" value="Restart AqualinkD">
@@ -2536,219 +2309,209 @@
                         </td>
                     </tr>
                     -->
-                </table>
-             
-                <button class="collapsible" id="systembutton">System Information</button>
-                <div class="content" id="system">
-                    <table border='0'>
-                        <tr>
-                            <td>AqualinkD version:</td>
-                            <td id="aqualinkdversion"></td>
-                        </tr>
-                        <tr id="latesversionavailable">
-                            <td>Latest version:</td>
-                            <td id="latestaqualinkdversion"></td>
-                        </tr>
-                        <tr>
-                            <td>Panel version:</td>
-                            <td id="panelversion"></td>
-                        </tr>
-                        <tr>
-                            <td>Panel type:</td>
-                            <td id="paneltype"></td>
-                        </tr>
-                    </table>
-                </div>
-                <!--&nbsp;-->
-                <button class="collapsible">Log Levels</button>
-                <div class="content" id="loglevels">
-                    <!-- Will be populated on load -->
-                </div>
-                <button class="collapsible">Log File</button>
-                <div class="content" id="logfile">
-                    <!--
+        </table>
+        <button class="collapsible" id="systembutton">System Information</button>
+        <div class="content" id="system">
+          <table border='0'>
+            <tr>
+              <td>AqualinkD version:</td>
+              <td id="aqualinkdversion"></td>
+            </tr>
+            <tr id="latesversionavailable">
+              <td>Latest version:</td>
+              <td id="latestaqualinkdversion"></td>
+            </tr>
+            <tr>
+              <td>Panel version:</td>
+              <td id="panelversion"></td>
+            </tr>
+            <tr>
+              <td>Panel type:</td>
+              <td id="paneltype"></td>
+            </tr>
+          </table>
+        </div>
+        <!--&nbsp;-->
+        <button class="collapsible">Log Levels</button>
+        <div class="content" id="loglevels">
+          <!-- Will be populated on load -->
+        </div>
+        <button class="collapsible">Log File</button>
+        <div class="content" id="logfile">
+          <!--
                     <label class="toggle logtoggle"><input class="toggle-checkbox" type="checkbox" id="logfile"
                             onclick="requestFileDownload(this);">
                         <div class="toggle-switch"></div><span class="toggle-label">Log to file</span>
                     </label>
                 -->
-                    <table border='0'>
-                        <tr>
-                            <td>
-                                <input id="downloadlog" type="button" onclick="requestFileDownload(this);"
-                                    value="Download logfile"></input>
-                            </td>
-                            <td>
-                                <input id="logsize" type="text" value="1000" size="5">#lines</input>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <!--&nbsp;-->
-                <button class="collapsible">Debug Masks</button>
-                <div class="debugmasks content" id="debugmasks">
-                    <!-- Will be populated on load -->
-                </div>
-                <button class="collapsible">Serial Logger</button>
-                <div class="content" id="seriallogger">
-                    <table border='0'>
-                        <tr>
-                          <td colspan="2" align="center"><input id="seriallogWoptions" type="button" onclick="send(this);" value="Run Serial Logger"></td>
-                        </tr>
-                        <tr>
-                          <td>#Packets</td>
-                          <td><input id="slog_packets" type="text" value="800" size="5"></input></td>
-                        </tr>
-                        <tr>
-                          <td>Poll cycle</td>
-                          <td><input id="slog_poll_cycle" type="checkbox" checked onload="checkboxClick(this)" onclick="checkboxClick(this)"></input></td>
-                        </tr>
-                        <tr>
-                          <td>ID's <font size="-2">(Eg 0x08 0x10)</font></td>
-                          <td><input id="slog_ids" type="text" value="" size="15"></input></td>
-                        </tr>
-                        <tr>
-                          <td>Debug</td>
-                          <td><input id="slog_debug" type="checkbox" onclick="checkboxClick(this)"></input></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" align="center">AqualinkD will be disabled while running</td>
-                        </tr>
-                    </table>
-                </div>
-                <button class="collapsible">Config</button>
-                <div class="content" id="config">
-                    <table border='0'>
-                        <tr>
-                            <td align="center">
-                                <input id="editconfig" type="button" onclick="editconfig(this);"
-                                    value="edit config"></input>
-                            </td>
-                            <td align="center">
-                                <input id="webconfig" type="button" onclick="showWebConfig(this);"
-                                    value="web config"></input>
-                            </td>
-                            <td align="center">
-                                <input id="downloadconfig" type="button" onclick="requestFileDownload(this);""
-                                    value="download config"></input>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="inner">
-            <div class="logcontainer" id="logs">
-                <!--<div class="inner">END</div>-->
-            </div>
-        </div>
-        <!-- <div id="config_options" class="config_options hide" style="display: flex;" onclick="closeconfig();"> -->
-        <div id="config_options" class="config_options hide" style="display: flex;">
-          <!--<div id="xx" class="config_options_pane" >-->
-            <div id="config_options_pane" class="config_options_pane hide">
-              <div class="config_pane_close_button_contaner">
-                  <input class="config_pane_close_button" type="button" onclick="closeconfig();" value="x"></input>
-                </div>
-              <table id="config_table_outer" border="0" cellpadding="1px" width="100%" class="configTable">
-                <tbody><tr class="options_title">
-                  <th colspan="3"><span>AqualinkD Configuration</span></th>
-                  <!--<td><input class="config_option_deletebutton" type="button" onclick="closeconfig(this);" value="x"></input></td>-->
-                </tr>
-                <tr>
-                  <td align="center" colspan="3">    
-                    <label>
-                        <input class="toggle-checkbox" type="checkbox" id="show_advanced" onclick="resetConfig(this);">
-                        <div class="toggle-switch"></div>
-                        <span class="toggle-label">Show&nbsp;Advanced&nbsp;Options</span>
-                    </label>
-                  </td> 
-               
-                </tr>
-                
-                <tr colspan="3">
-                  <td style="padding-left: 10px; padding-right: 10px">
-                    <div class="config_pane_scrollable">
-                    <table style="border-left: 1px solid black; border-right: 1px solid black;" id="config_table" border="0" cellpadding="1px" width="100%" class="configTable">
-                    </table>
-                    </div>
-                  </td>
-                </tr>
-              <tr colspan="3"><td>
-                
-              <table border="0" cellpadding="0px" width="100%">
-                <tr>
-                <td align="right" style="width:50%;padding-right: 10px;">
-                  <input id="saveconfig" type="button" onclick="saveconfig(this);" value="Save"></input>
-                </td>
-                <td align="left" style="width:50%;padding-left: 10px;">
-                  <input id="saveconfig" type="button" onclick="closeconfig(this);" value="Discard"></input> 
-                </td>
-                </tr>
-              </table>
-              </td></tr>
-              </tbody>
-              </table>
-            </div>
-          <!--</div>-->
-         </div>
-
-         <div id="web_config_options" class="web_config_options hide" style="display: flex;">
-            <div id="web_config_options_pane" class="config_options_pane hide">
-                
-                <div class="config_pane_close_button_contaner">
-                  <input class="config_pane_close_button" type="button" onclick="closeWebConfig();" value="x"></input>
-                </div>
-              
-                <!--<table id="config_table" border="0" cellpadding="1px" width="100%" style="border-collapse: collapse;">-->
-                <table id="config_table" border="0" cellpadding="1px" width="100%" class="configTable">
-                <tbody><tr class="options_title">
-                  <th colspan="3" style="padding: 10px;"><span>AqualinkD Web Configuration</span></th>
-                </tr>
-                <tr>
-                  <td align="center" colspan="3"> 
-                    <div class="textarea-container">
-                      <textarea class="web_config_numbers" id="web_config_numbers" readonly></textarea>
-                      <textarea class="web_config_textarea" id="webconfig-json-input" placeholder="Loading configuration..."></textarea>
-                      
-                    </div>
-                  </td>
-                  </tr>
-                  <tr>
-                    <td align="right" style="width:33%;padding-right: 10px;">
-                      <input type="button" onclick="webconfig_validateAndDisplay()" value="Validate"></input>
-                    </td>
-                    <td <td align="center" style="width:33%;">
-                      <input type="button" onclick="saveWebConfig()" value="Save"></input>
-                    </td>
-                    <td align="left" style="width:33%;padding-left: 10px;">
-                      <input type="button" onclick="closeWebConfig()" value="Discard"></input>
-                      <!-- For the future, to reset config to github contents, or to add new keys to json config pulling from github-->
-                      <!-- <input type="button" onclick="updateWebConfigFromMaster()" value="get new"></input> -->
-                    </td>
-                  </tr>
-              <tr>
-                <td colspan="3">
-              <div id="validation-result" style="padding-left: 10px;padding-right: 10px;"></div>
+          <table border='0'>
+            <tr>
+              <td>
+                <input id="downloadlog" type="button" onclick="requestFileDownload(this);" value="Download logfile"></input>
               </td>
-              </tr>
-                </tbody>
-              </table>
-            </div>
-         </div>
-        <!--<iframe src='about:blank' id="logdownload"></iframe>-->
+              <td>
+                <input id="logsize" type="text" value="1000" size="5">#lines</input>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <!--&nbsp;-->
+        <button class="collapsible">Debug Masks</button>
+        <div class="debugmasks content" id="debugmasks">
+          <!-- Will be populated on load -->
+        </div>
+        <button class="collapsible">RS485 Monitor</button>
+        <div class="content" id="seriallogger">
+          <table border='0'>
+            <tr>
+              <td colspan="2" align="center"><input id="seriallogWoptions" type="button" onclick="send(this);" value="Run rs485mon"></td>
+            </tr>
+            <tr>
+              <td>#Packets</td>
+              <td><input id="slog_packets" type="text" value="800" size="5"></input></td>
+            </tr>
+            <tr>
+              <td>Poll cycle</td>
+              <td><input id="slog_poll_cycle" type="checkbox" checked onload="checkboxClick(this)" onclick="checkboxClick(this)"></input></td>
+            </tr>
+            <tr>
+              <td>ID's <font size="-2">(Eg 0x08 0x10)</font>
+              </td>
+              <td><input id="slog_ids" type="text" value="" size="15"></input></td>
+            </tr>
+            <tr>
+              <td>Debug</td>
+              <td><input id="slog_debug" type="checkbox" onclick="checkboxClick(this)"></input></td>
+            </tr>
+            <tr>
+              <td colspan="2" align="center">AqualinkD will be disabled while running</td>
+            </tr>
+          </table>
+        </div>
+        <button class="collapsible">Config</button>
+        <div class="content" id="config">
+          <table border='0'>
+            <tr>
+              <td align="center">
+                <input id="editconfig" type="button" onclick="editconfig(this);" value="edit config"></input>
+              </td>
+              <td align="center">
+                <input id="webconfig" type="button" onclick="showWebConfig(this);" value="web config"></input>
+              </td>
+              <td align="center">
+                <input id="downloadconfig" type="button" onclick="requestFileDownload(this);" value="download config"></input>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
     </div>
-
-    <div id="alertOverlay" style="display: none;"></div>
-    <div id="alertCustomDialog" style="display: none;">
-      <div style="text-align: left; font-size: small; color:#8e8e8e;">AqualinkD</div>
-      <div id="alertDialogHeader"></div>
-      <p id="alertDialogMessage"></p>
-      <hr>
-      <!--<button onclick="aqdAlertClose()">Close</button>-->
-      <input type="button" onclick="aqdAlertClose()" value="Close"/>
+    <div class="inner">
+      <div class="logcontainer" id="logs">
+        <!--<div class="inner">END</div>-->
+      </div>
     </div>
-
+    <!-- <div id="config_options" class="config_options hide" style="display: flex;" onclick="closeconfig();"> -->
+    <div id="config_options" class="config_options hide" style="display: flex;">
+      <!--<div id="xx" class="config_options_pane" >-->
+      <div id="config_options_pane" class="config_options_pane hide">
+        <div class="config_pane_close_button_contaner">
+          <input class="config_pane_close_button" type="button" onclick="closeconfig();" value="x"></input>
+        </div>
+        <table id="config_table_outer" border="0" cellpadding="1px" width="100%" class="configTable">
+          <tbody>
+            <tr class="options_title">
+              <th colspan="3"><span>AqualinkD Configuration</span></th>
+              <!--<td><input class="config_option_deletebutton" type="button" onclick="closeconfig(this);" value="x"></input></td>-->
+            </tr>
+            <tr>
+              <td align="center" colspan="3">
+                <label>
+                  <input class="toggle-checkbox" type="checkbox" id="show_advanced" onclick="resetConfig(this);">
+                  <div class="toggle-switch"></div>
+                  <span class="toggle-label">Show&nbsp;Advanced&nbsp;Options</span>
+                </label>
+              </td>
+            </tr>
+            <tr colspan="3">
+              <td style="padding-left: 10px; padding-right: 10px">
+                <div class="config_pane_scrollable">
+                  <table style="border-left: 1px solid black; border-right: 1px solid black;" id="config_table" border="0" cellpadding="1px" width="100%" class="configTable">
+                  </table>
+                </div>
+              </td>
+            </tr>
+            <tr colspan="3">
+              <td>
+                <table border="0" cellpadding="0px" width="100%">
+                  <tr>
+                    <td align="right" style="width:50%;padding-right: 10px;">
+                      <input id="saveconfig" type="button" onclick="saveconfig(this);" value="Save"></input>
+                    </td>
+                    <td align="left" style="width:50%;padding-left: 10px;">
+                      <input id="saveconfig" type="button" onclick="closeconfig(this);" value="Discard"></input>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!--</div>-->
+    </div>
+    <div id="web_config_options" class="web_config_options hide" style="display: flex;">
+      <div id="web_config_options_pane" class="config_options_pane hide">
+        <div class="config_pane_close_button_contaner">
+          <input class="config_pane_close_button" type="button" onclick="closeWebConfig();" value="x"></input>
+        </div>
+        <!--<table id="config_table" border="0" cellpadding="1px" width="100%" style="border-collapse: collapse;">-->
+        <table id="config_table" border="0" cellpadding="1px" width="100%" class="configTable">
+          <tbody>
+            <tr class="options_title">
+              <th colspan="3" style="padding: 10px;"><span>AqualinkD Web Configuration</span></th>
+            </tr>
+            <tr>
+              <td align="center" colspan="3">
+                <div class="textarea-container">
+                  <textarea class="web_config_numbers" id="web_config_numbers" readonly></textarea>
+                  <textarea class="web_config_textarea" id="webconfig-json-input" placeholder="Loading configuration..."></textarea>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td align="right" style="width:33%;padding-right: 10px;">
+                <input type="button" onclick="webconfig_validateAndDisplay()" value="Validate"></input>
+              </td>
+              <td <td align="center" style="width:33%;">
+                <input type="button" onclick="saveWebConfig()" value="Save"></input>
+              </td>
+              <td align="left" style="width:33%;padding-left: 10px;">
+                <input type="button" onclick="closeWebConfig()" value="Discard"></input>
+                <!-- For the future, to reset config to github contents, or to add new keys to json config pulling from github-->
+                <!-- <input type="button" onclick="updateWebConfigFromMaster()" value="get new"></input> -->
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3">
+                <div id="validation-result" style="padding-left: 10px;padding-right: 10px;"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!--<iframe src='about:blank' id="logdownload"></iframe>-->
+  </div>
+  <div id="alertOverlay" style="display: none;"></div>
+  <div id="alertCustomDialog" style="display: none;">
+    <div style="text-align: left; font-size: small; color:#8e8e8e;">AqualinkD</div>
+    <div id="alertDialogHeader"></div>
+    <p id="alertDialogMessage"></p>
+    <hr>
+    <!--<button onclick="aqdAlertClose()">Close</button>-->
+    <input type="button" onclick="aqdAlertClose()" value="Close" />
+  </div>
 </body>
 
 </html>

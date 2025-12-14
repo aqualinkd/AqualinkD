@@ -162,8 +162,8 @@ int save_schedules_js(const char* inBuf, int inSize, char* outBuf, int outSize)
         LOG(SCHD_LOG,LOG_DEBUG, "Write to cron Min:%s Hour:%s DayM:%s Month:%s DayW:%s URL:%s Value:%s\n",cline.minute,cline.hour,cline.daym,cline.month,cline.dayw,cline.url,cline.value);
         //LOG(SCHD_LOG,LOG_INFO, "%s%s %s %s %s %s curl -s -S --show-error -o /dev/null localhost:%s%s -d value=%s -X PUT\n",(cline.enabled?"":"#"),cline.minute, cline.hour, cline.daym, cline.month, cline.dayw, _aqconfig_.socket_port, cline.url, cline.value);
         //fprintf(fp, "%s%s %s %s %s %s root curl -s -S --show-error -o /dev/null localhost:%s%s -d value=%s -X PUT\n",(cline.enabled?"":"#"),cline.minute, cline.hour, cline.daym, cline.month, cline.dayw, _aqconfig_.socket_port, cline.url, cline.value);
-        LOG(SCHD_LOG,LOG_INFO, "%s%s %s %s %s %s curl -s -S --show-error %s -o /dev/null %s%s -d value=%s -X PUT\n",(cline.enabled?"":"#"),cline.minute, cline.hour, cline.daym, cline.month, cline.dayw, (iface->isLocalurlTLS?"--insecure":""),(iface->localurl==NULL?_aqconfig_.listen_address:iface->localurl), cline.url, cline.value);
-        fprintf(fp, "%s%s %s %s %s %s root curl -s -S --show-error %s -o /dev/null %s%s -d value=%s -X PUT\n",(cline.enabled?"":"#"),cline.minute, cline.hour, cline.daym, cline.month, cline.dayw, (iface->isLocalurlTLS?"--insecure":""),(iface->localurl==NULL?_aqconfig_.listen_address:iface->localurl), cline.url, cline.value);      
+        LOG(SCHD_LOG,LOG_INFO, "%s%s %s %s %s %s curl -s -S --show-error %s -o /dev/null %s%s -d value=%s -X PUT\n",(cline.enabled?"":"#"),cline.minute, cline.hour, cline.daym, cline.month, cline.dayw, (iface->isLocalurlTLS?"--insecure":""),(iface->localurl[0]=='\0'?_aqconfig_.listen_address:iface->localurl), cline.url, cline.value);
+        fprintf(fp, "%s%s %s %s %s %s root curl -s -S --show-error %s -o /dev/null %s%s -d value=%s -X PUT\n",(cline.enabled?"":"#"),cline.minute, cline.hour, cline.daym, cline.month, cline.dayw, (iface->isLocalurlTLS?"--insecure":""),(iface->localurl[0]=='\0'?_aqconfig_.listen_address:iface->localurl), cline.url, cline.value);      
       }
   }
     

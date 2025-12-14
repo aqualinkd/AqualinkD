@@ -1,7 +1,7 @@
 #
 # Options
 #
-# make          // standard build aqualinkd and serial_logger
+# make          // standard build aqualinkd and rs485mon
 # make debug    // Compule standard aqualinkd binary just with debugging
 # make aqdebug  // Compile with extra aqualink debug information like timings
 # make slog     // Serial logger
@@ -71,7 +71,7 @@ endif
 SRCS = aqualinkd.c utils.c config.c aq_serial.c aq_panel.c aq_programmer.c allbutton.c allbutton_aq_programmer.c net_services.c net_interface.c json_messages.c rs_msg_utils.c\
        onetouch.c onetouch_aq_programmer.c iaqtouch.c iaqtouch_aq_programmer.c iaqualink.c\
        devices_jandy.c packetLogger.c devices_pentair.c color_lights.c serialadapter.c aq_timer.c aq_scheduler.c web_config.c\
-       serial_logger.c mongoose.c mqtt_discovery.c simulator.c sensors.c aq_systemutils.c timespec_subtract.c auto_configure.c
+       rs485mon.c mongoose.c mqtt_discovery.c simulator.c sensors.c aq_systemutils.c timespec_subtract.c auto_configure.c
 
 
 AQ_FLAGS =
@@ -90,8 +90,8 @@ ifeq ($(AQ_MANAGER), true)
     $(warning AQ_MANAGER requires threads, ignoring AQ_NO_THREAD_NETSERVICE)
   endif
 else
-  # No need for serial_logger without aq_manager
-  SRCS := $(filter-out serial_logger.c, $(SRCS))
+  # No need for rs485mon without aq_manager
+  SRCS := $(filter-out rs485mon.c, $(SRCS))
   # no threadded net service only valid without aq manager.
   ifeq ($(AQ_NO_THREAD_NETSERVICE), true)
     AQ_FLAGS := $(AQ_FLAGS) -D AQ_NO_THREAD_NETSERVICE
@@ -106,7 +106,7 @@ DBG_CFLAGS = $(DBGFLAGS) $(AQ_FLAGS) $(MGFLAGS)
 
 # Other sources.
 DBG_SRC = $(SRCS) debug_timer.c
-SL_SRC = serial_logger.c aq_serial.c utils.c packetLogger.c rs_msg_utils.c timespec_subtract.c
+SL_SRC = rs485mon.c aq_serial.c utils.c packetLogger.c rs_msg_utils.c timespec_subtract.c
 
 DD_SRC = dummy_device.c aq_serial.c utils.c packetLogger.c rs_msg_utils.c timespec_subtract.c
 DR_SRC = dummy_reader.c aq_serial.c utils.c packetLogger.c rs_msg_utils.c timespec_subtract.c
@@ -168,7 +168,7 @@ SL_OBJ_FILES_AMD64 := $(patsubst $(SRC_DIR)/%.c,$(SL_OBJ_DIR_AMD64)/%.o,$(SL_SRC
 
 # define the executable file
 MAIN = ./release/aqualinkd
-SLOG = ./release/serial_logger
+RSMON = ./release/rs485mon
 DEBG = ./release/aqualinkd-debug
 DDEVICE = ./release/dummydevice
 DREADER = ./release/dummyreader
@@ -177,9 +177,9 @@ MAIN_ARM64 = ./release/aqualinkd-arm64
 MAIN_ARMHF = ./release/aqualinkd-armhf
 MAIN_AMD64 = ./release/aqualinkd-amd64
 
-SLOG_ARM64 = ./release/serial_logger-arm64
-SLOG_ARMHF = ./release/serial_logger-armhf
-SLOG_AMD64 = ./release/serial_logger-amd64
+RSMON_ARM64 = ./release/rs485mon-arm64
+RSMON_ARMHF = ./release/rs485mon-armhf
+RSMON_AMD64 = ./release/rs485mon-amd64
 
 #LOGR = ./release/log_reader
 #PLAY = ./release/aqualinkd-player
@@ -216,11 +216,11 @@ runindocker:
 
 # This is run inside container Dockerfile.releaseBinariies (aqualinkd-releasebin)
 buildrelease: clean armhf arm64 
-	$(shell cd release && ln -s ./aqualinkd-armhf ./aqualinkd && ln -s ./serial_logger-armhf ./serial_logger)
+	$(shell cd release && ln -s ./aqualinkd-armhf ./aqualinkd && ln -s ./rs485mon-armhf ./rs485mon)
 
 # This is run inside container Dockerfile.releaseBinariies (aqualinkd-releasebin)
 quickbuild: armhf arm64 
-	$(shell cd release && [ ! -f "./aqualinkd-armhf" ] && ln -s ./aqualinkd-armhf ./aqualinkd && ln -s ./serial_logger-armhf ./serial_logger)
+	$(shell cd release && [ ! -f "./aqualinkd-armhf" ] && ln -s ./aqualinkd-armhf ./aqualinkd && ln -s ./rs485mon-armhf ./rs485mon)
 
 # This is run inside container Dockerfile.releaseBinariies (aqualinkd-releasebin)
 dockerbuildnrun: ./release/aqualinkd
@@ -229,16 +229,16 @@ dockerbuildnrun: ./release/aqualinkd
 
 debugbuild: CFLAGS = $(DFLAGS)
 debugbuild: armhf arm64 
-	$(shell cd release && [ ! -f "./aqualinkd-armhf" ] && ln -s ./aqualinkd-armhf ./aqualinkd && ln -s ./serial_logger-armhf ./serial_logger)
+	$(shell cd release && [ ! -f "./aqualinkd-armhf" ] && ln -s ./aqualinkd-armhf ./aqualinkd && ln -s ./rs485mon-armhf ./rs485mon)
 
 
 # Rules to pass to make.
-all:    $(MAIN) $(SLOG)
+all:    $(MAIN) $(RSMON)
 	$(info $(MAIN) has been compiled)
-	$(info $(SLOG) has been compiled)
+	$(info $(RSMON) has been compiled)
 
-slog:	$(SLOG)
-	$(info $(SLOG) has been compiled)
+slog:	$(RSMON)
+	$(info $(RSMON) has been compiled)
 
 aqdebug: $(DEBG)
 	$(info $(DEBG) has been compiled)
@@ -251,9 +251,9 @@ dummyreader:	$(DREADER)
 
 # Container, add container flag and compile
 container: CFLAGS := $(CFLAGS) -D AQ_CONTAINER
-container: $(MAIN) $(SLOG)
+container: $(MAIN) $(RSMON)
 	$(info $(MAIN) has been compiled (** For Container use **))
-	$(info $(SLOG) has been compiled (** For Container use **))
+	$(info $(RSMON) has been compiled (** For Container use **))
 
 container-arm64: CC := $(CC_ARM64)
 container-arm64: container
@@ -263,27 +263,27 @@ container-amd64: container
 
 # armhf
 armhf: CC := $(CC_ARMHF)
-armhf: $(MAIN_ARMHF) $(SLOG_ARMHF)
+armhf: $(MAIN_ARMHF) $(RSMON_ARMHF)
 	$(info $(MAIN_ARMHF) has been compiled)
-	$(info $(SLOG_ARMHF) has been compiled)
+	$(info $(RSMON_ARMHF) has been compiled)
 
 # arm64
 arm64: CC := $(CC_ARM64)
-arm64: $(MAIN_ARM64) $(SLOG_ARM64)
+arm64: $(MAIN_ARM64) $(RSMON_ARM64)
 	$(info $(MAIN_ARM64) has been compiled)
-	$(info $(SLOG_ARM64) has been compiled)
+	$(info $(RSMON_ARM64) has been compiled)
 
 # amd64
 amd64: CC := $(CC_AMD64)
-amd64: $(MAIN_AMD64) $(SLOG_AMD64)
+amd64: $(MAIN_AMD64) $(RSMON_AMD64)
 	$(info $(MAIN_AMD64) has been compiled)
-	$(info $(SLOG_AMD64) has been compiled)
+	$(info $(RSMON_AMD64) has been compiled)
 
 #debug, Just change compile flags and call MAIN
 debug: CFLAGS = $(DFLAGS)
-debug: $(MAIN) $(SLOG)
+debug: $(MAIN) $(RSMON)
 	$(info $(MAIN) has been compiled (** DEBUG **))
-	$(info $(SLOG) has been compiled (** DEBUG **))
+	$(info $(RSMON) has been compiled (** DEBUG **))
 
 #install: $(MAIN)
 install:
@@ -340,27 +340,27 @@ $(MAIN_AMD64): $(OBJ_FILES_AMD64)
 $(DEBG): $(DBG_OBJ_FILES)
 	$(CC) $(DBG_CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
-$(SLOG): CFLAGS := $(CFLAGS) -D SERIAL_LOGGER
-$(SLOG): $(SL_OBJ_FILES)
+$(RSMON): CFLAGS := $(CFLAGS) -D RS485MON
+$(RSMON): $(SL_OBJ_FILES)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
-$(SLOG_ARMHF): CFLAGS := $(CFLAGS) -D SERIAL_LOGGER
-$(SLOG_ARMHF): $(SL_OBJ_FILES_ARMHF)
+$(RSMON_ARMHF): CFLAGS := $(CFLAGS) -D RS485MON
+$(RSMON_ARMHF): $(SL_OBJ_FILES_ARMHF)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
-$(SLOG_ARM64): CFLAGS := $(CFLAGS) -D SERIAL_LOGGER
-$(SLOG_ARM64): $(SL_OBJ_FILES_ARM64)
+$(RSMON_ARM64): CFLAGS := $(CFLAGS) -D RS485MON
+$(RSMON_ARM64): $(SL_OBJ_FILES_ARM64)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
-$(SLOG_AMD64): CFLAGS := $(CFLAGS) -D SERIAL_LOGGER
-$(SLOG_AMD64): $(SL_OBJ_FILES_AMD64)
+$(RSMON_AMD64): CFLAGS := $(CFLAGS) -D RS485MON
+$(RSMON_AMD64): $(SL_OBJ_FILES_AMD64)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
-$(DDEVICE): CFLAGS := $(CFLAGS) -D SERIAL_LOGGER -D DUMMY_DEVICE
+$(DDEVICE): CFLAGS := $(CFLAGS) -D RS485MON -D DUMMY_DEVICE
 $(DDEVICE): $(DD_OBJ_FILES)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
-$(DREADER): CFLAGS := $(CFLAGS) -D SERIAL_LOGGER -D DUMMY_DEVICE -D DUMMY_READER
+$(DREADER): CFLAGS := $(CFLAGS) -D RS485MON -D DUMMY_DEVICE -D DUMMY_READER
 $(DREADER): $(DR_OBJ_FILES)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
@@ -402,7 +402,7 @@ $(SL_OBJ_DIR_AMD64):
 
 clean: clean-buildfiles
 	$(RM) *.o *~ $(MAIN) $(MAIN_U) $(PLAY) $(PL_EXOBJ) $(DEBG) $(DDEVICE) $(DREADER)
-	$(RM) $(wildcard *.o) $(wildcard *~) $(MAIN) $(MAIN_ARM64) $(MAIN_ARMHF) $(MAIN_AMD64) $(SLOG) $(DDEVICE) $(SLOG_ARM64) $(SLOG_ARMHF) $(SLOG_AMD64) $(MAIN_U) $(PLAY) $(PL_EXOBJ) $(LOGR) $(PLAY) $(DEBG)
+	$(RM) $(wildcard *.o) $(wildcard *~) $(MAIN) $(MAIN_ARM64) $(MAIN_ARMHF) $(MAIN_AMD64) $(RSMON) $(DDEVICE) $(RSMON_ARM64) $(RSMON_ARMHF) $(RSMON_AMD64) $(MAIN_U) $(PLAY) $(PL_EXOBJ) $(LOGR) $(PLAY) $(DEBG)
 
 clean-buildfiles:
 	$(RM) $(wildcard *.o) $(wildcard *~) $(OBJ_FILES) $(DBG_OBJ_FILES) $(SL_OBJ_FILES) $(DD_OBJ_FILES) $(DR_OBJ_FILES) $(OBJ_FILES_ARMHF) $(OBJ_FILES_ARM64) $(OBJ_FILES_AMD64) $(SL_OBJ_FILES_ARMHF) $(SL_OBJ_FILES_ARM64) $(SL_OBJ_FILES_AMD64)

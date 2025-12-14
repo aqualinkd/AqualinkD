@@ -62,7 +62,7 @@
 #include "auto_configure.h"
 
 #ifdef AQ_MANAGER
-#include "serial_logger.h"
+#include "rs485mon.h"
 #endif
 
 /*
@@ -1211,13 +1211,13 @@ void main_loop()
 
 #ifdef AQ_MANAGER
     if (_aqualink_data.run_slogger) {
-       LOG(AQUA_LOG,LOG_WARNING, "Starting serial_logger, this will take some time!\n");
+       LOG(AQUA_LOG,LOG_WARNING, "Starting rs485mon, this will take some time!\n");
        broadcast_aqualinkstate_error(CONNECTION_RUNNING_SLOG);
 
        if (_aqualink_data.slogger_debug)
          addDebugLogMask(SLOG_LOG);
 
-       serial_logger(rs_fd, _aqconfig_.serial_port, _aqualink_data.slogger_debug?LOG_DEBUG:getSystemLogLevel(), _aqualink_data.slogger_packets, _aqualink_data.slogger_ids);
+       rs485mon(rs_fd, _aqconfig_.serial_port, _aqualink_data.slogger_debug?LOG_DEBUG:getSystemLogLevel(), _aqualink_data.slogger_packets, _aqualink_data.slogger_ids);
        _aqualink_data.run_slogger = false;
 
        if (_aqualink_data.slogger_debug)

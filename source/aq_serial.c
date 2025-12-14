@@ -873,7 +873,7 @@ void send_packet(int fd, unsigned char *packet, int length)
 
   tcdrain(fd); // Make sure buffer has been sent.
   //if (_aqconfig_.frame_delay > 0) {
-#ifndef SERIAL_LOGGER
+#ifndef RS485MON
   if (_aqconfig_.frame_delay > 0) {
     timespec_subtract(&elapsed_time, &now, &_last_serial_read_time);
     LOG(RSTM_LOG, LOG_DEBUG, "Time from recv to send is %.3f sec\n",
