@@ -156,8 +156,9 @@ AqualinkD will be moving over to github hosted runners for compiling, currently 
 # Updates in 3.0.0 (dev)
 * Serial optimization for AqualinkD HAT.
 * Can now edit webconfig in aqmanager, added many UI customization options.
+  * [Click for details](https://github.com/aqualinkd/AqualinkD/wiki#Web-Config)
   * web/config.js is now web/config.json any custom settings will need to be migrated.
-  * Added example plugin of how to get HomeAssistant devices to show up in AqualinkD UI.
+  * Added example plugin of how to get HomeAssistant devices to show up in AqualinkD UI. [Click for details](https://github.com/aqualinkd/AqualinkD/wiki#WebUIplugin)
 * upgraded network library ( HTTP(S), MQTT(S), WS ) 
 * Added support for HTTPS and MQTTS. 
   * HTTPS is for two way auth only, ie You create your own cert and load on both AqualinkD server and all client devices.
