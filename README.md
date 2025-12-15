@@ -153,7 +153,7 @@ AqualinkD will be moving over to github hosted runners for compiling, currently 
 <br>
 <br>
 
-# Updates in 3.0.0 (dev)
+# Updates in 3.0.0
 * Serial optimization for AqualinkD HAT.
 * Can now edit webconfig in aqmanager, added many UI customization options.
   * [Click for details](https://github.com/aqualinkd/AqualinkD/wiki#Web-Config)
