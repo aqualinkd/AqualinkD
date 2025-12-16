@@ -311,7 +311,7 @@ function run_install_script {
 }
 
 function remove_install {
-  curl -fsSL -H "Accept: application/vnd.github.raw+json" "$REPO/contents/install/install.sh" | sudo bash clean
+  curl -fsSL -H "Accept: application/vnd.github.raw" "$REPO/contents/release/install.sh" | sudo bash -s -- clean
 }
 
 function cleanup {

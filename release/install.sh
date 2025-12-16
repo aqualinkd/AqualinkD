@@ -67,6 +67,35 @@ printHelp()
   echo "--logfile <filename>  (log to file)"
 }
 
+clean()
+{
+  log "Deleting install"
+  systemctl disable $SERVICE > /dev/null 2>&1
+  if [ -f $BINLocation/$BIN ]; then
+    rm -f $BINLocation/$BIN
+  fi
+  if [ -f $BINLocation/$RS485BIN ]; then
+    rm -f $BINLocation/$RS485BIN
+  fi
+  if [ -f $SRVLocation/$SRV ]; then
+    rm -f $SRVLocation/$SRV
+  fi
+  if [ -f $CFGLocation/$CFG ]; then
+    rm -f $CFGLocation/$CFG
+  fi
+  if [ -f $DEFLocation/$DEF ]; then
+    rm -f $DEFLocation/$DEF
+  fi
+  if [ -f /etc/cron.d/aqualinkd ]; then
+    rm -f /etc/cron.d/aqualinkd
+  fi
+  if [ -d $WEBLocation ]; then
+    rm -rf $WEBLocation
+  fi
+  systemctl daemon-reload
+  exit
+}
+
 
 #log "Called $0 with $*"
 
@@ -98,6 +127,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     help | -help | --help | -h)
       printHelp
+      exit $TRUE;
+      ;;
+    clean | delete)
+      clean
       exit $TRUE;
       ;;
     *)
@@ -221,36 +254,6 @@ if [ "$_nosystemd" -eq $FALSE ]; then
   systemctl stop $SERVICE > /dev/null 2>&1
   SERVICE_EXISTS=$(echo $?)
 fi
-
-# Clean everything if requested.
-if [ "$1" == "clean" ]; then
-  log "Deleting install"
-  systemctl disable $SERVICE > /dev/null 2>&1
-  if [ -f $BINLocation/$BIN ]; then
-    rm -f $BINLocation/$BIN
-  fi
-  if [ -f $BINLocation/$RS485BIN ]; then
-    rm -f $BINLocation/$RS485BIN
-  fi
-  if [ -f $SRVLocation/$SRV ]; then
-    rm -f $SRVLocation/$SRV
-  fi
-  if [ -f $CFGLocation/$CFG ]; then
-    rm -f $CFGLocation/$CFG
-  fi
-  if [ -f $DEFLocation/$DEF ]; then
-    rm -f $DEFLocation/$DEF
-  fi
-  if [ -f /etc/cron.d/aqualinkd ]; then
-    rm -f /etc/cron.d/aqualinkd
-  fi
-  if [ -d $WEBLocation ]; then
-    rm -rf $WEBLocation
-  fi
-  systemctl daemon-reload
-  exit
-fi
-
 
 # Check cron.d options
 if systemctl is-active --quiet cron.service; then
