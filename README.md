@@ -154,6 +154,7 @@ AqualinkD will be moving over to github hosted runners for compiling, currently 
 <br>
 
 # Updates in 3.0.0
+* <B>NOTE:- When upgradeing to v3.0.0</b> if you see bank AqualinkD screen (ie no buttons), please clear browser cache. This also goes for the mobile/webapp (you may need to delete and re-add to mobile home screen)
 * Serial optimization for AqualinkD HAT.
 * Can now edit webconfig in aqmanager, added many UI customization options.
   * [Click for details](https://github.com/aqualinkd/AqualinkD/wiki#Web-Config)
