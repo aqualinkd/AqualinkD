@@ -244,6 +244,15 @@ void init_parameters (struct aqconfig * parms)
   _cfgParams[_numCfgParams].default_value = NULL;
 
   _numCfgParams++;
+  _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.web_config;
+  _cfgParams[_numCfgParams].value_type = CFG_STRING;
+  _cfgParams[_numCfgParams].name = CFG_N_web_cfg_file;
+  //_cfgParams[_numCfgParams].advanced = true;
+  _cfgParams[_numCfgParams].config_mask |= CFG_GRP_ADVANCED;
+  _cfgParams[_numCfgParams].config_mask |= CFG_READONLY;
+  _cfgParams[_numCfgParams].default_value = NULL;
+
+  _numCfgParams++;
   _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.paneltype_mask;
   _cfgParams[_numCfgParams].value_type = CFG_SPECIAL;
   _cfgParams[_numCfgParams].name = CFG_N_panel_type;
@@ -1628,17 +1637,21 @@ void check_print_config (struct aqualinkdata *aqdata)
   }
 
   // Make sure all sensors are fully populated
+  int sec = 0; // sensor error count
   for (i=0; i < aqdata->num_sensors; i++ ) {
     //if (aqdata->sensors[i].uom == NULL) {
     //  aqdata->sensors[i].uom = cleanalloc("°C");
     //}
     if ( aqdata->sensors[i].label == NULL ||  aqdata->sensors[i].path == NULL ) {
-      LOG(AQUA_LOG,LOG_ERR, "Invalid sensor %d, removing!\n",i+1);
+      LOG(AQUA_LOG,LOG_ERR, "Invalid sensor %d, removing!\n",i+1+sec);
+      sec++;
       setMASK(errors, ERR_INVALID_SENSORS);
       if (i == (aqdata->num_sensors-1) ) { // last sensor
         // don't need to do anything, just reduce total number sensors
-      } else if (aqdata->num_sensors > 1) { // there are more sensors adter this bad one
+        //printf("Remove last sensor\n");
+      } else if (aqdata->num_sensors > 1) { // there are more sensors after this bad one
         for (int j=i; j < aqdata->num_sensors; j++) {
+          //printf("Moved sensor %d to %d\n",(j+1),j);
           aqdata->sensors[j].label = aqdata->sensors[j+1].label;
           aqdata->sensors[j].path = aqdata->sensors[j+1].path;
           aqdata->sensors[j].factor = aqdata->sensors[j+1].factor;
@@ -1648,6 +1661,7 @@ void check_print_config (struct aqualinkdata *aqdata)
           sprintf(aqdata->sensors[j].ID, "Aux_S%d", j+1);
           //printf("Sensor %d = %s, %s\n",j,aqdata->sensors[j].ID,aqdata->sensors[j].label);
         }
+        i--; // Need re-test i incase we have multiple blank sensors
       }
       if (aqdata->num_sensors > 1) {
         aqdata->num_sensors --;

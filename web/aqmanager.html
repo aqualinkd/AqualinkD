@@ -450,6 +450,7 @@
 
   .invalid_json {
     background-color: rgb(255, 100, 0);
+    border-radius: 9px !important;
   }
 
   .textarea-container {
@@ -1585,7 +1586,7 @@
     var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
     //console.log("Height="+h);
     document.documentElement.style.setProperty('--max-config-height', (h - 50) + 'px');
-    document.documentElement.style.setProperty('--web-config-textarea-height', (h - 180) + 'px');
+    document.documentElement.style.setProperty('--web-config-textarea-height', (h - 190) + 'px');
     document.getElementById("web_config_options").classList.remove("hide");
     document.getElementById("web_config_options_pane").classList.remove("hide");
     // Link the scroll for the two text areas.
@@ -2490,6 +2491,11 @@
                 <input type="button" onclick="closeWebConfig()" value="Discard"></input>
                 <!-- For the future, to reset config to github contents, or to add new keys to json config pulling from github-->
                 <!-- <input type="button" onclick="updateWebConfigFromMaster()" value="get new"></input> -->
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3" align="right" style="width:100%;padding:0px;">
+                <input type="button" onclick="updateWebConfigFromMaster()" value="Get latest config from Github" style="scale:0.75;"></input>
               </td>
             </tr>
             <tr>

@@ -153,6 +153,13 @@ AqualinkD will be moving over to github hosted runners for compiling, currently 
 <br>
 <br>
 
+# Updates in 3.0.1
+* UI Update for web config.
+* UI Now support for themes. (auto, dark, light -or- custom)
+* Fixed UI not updating for sensors.
+* Updates to UOM's for HA.   gal/min, W, rpm
+* Fix issue with multiple bad sensors in config.
+  
 # Updates in 3.0.0
 * <B>NOTE:- When upgradeing to v3.0.0</b> if you see bank AqualinkD screen (ie no buttons), please clear browser cache. This also goes for the mobile/webapp (you may need to delete and re-add to mobile home screen)
 * Serial optimization for AqualinkD HAT.

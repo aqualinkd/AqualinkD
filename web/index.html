@@ -9,6 +9,7 @@
   <meta name='mobile-web-app-capable' content='yes'>
   <meta name='apple-mobile-web-app-capable' content='yes'>
   <meta name='apple-mobile-web-app-status-bar-style' content='black'>
+  <meta name="apple-mobile-web-app-title" content="AqualinkD">
   
 
   <link href='aqualinkd.png' rel='apple-touch-icon'>
@@ -71,6 +72,8 @@
       --tile_icon_background_color_cool: rgb(4, 159, 248);
       --tile_icon_background_color_enabled: rgb(78, 196, 0);
       --tile_icon_background_color_disabled: rgb(110, 110, 110);
+
+      --tile_off_opacity: 0.95;
     }
 
     div {
@@ -256,8 +259,8 @@
       padding: 5px;
       height: var(--tile-width);
       width: var(--tile-width);
-      filter: opacity(95%);
-      opacity: 0.95;
+      /*filter: opacity(90%);*/
+      opacity: var(--tile_off_opacity);
     }
 
     .on {
@@ -763,6 +766,7 @@
     var _tile_line_char_limit = 0;
     var _devices = [];
     var _enable_schedules = false;
+    var _theme = "";
 
     var _switchOnUri;
     var _switchOffUri;
@@ -770,8 +774,8 @@
 
     var _DisableOffIconCircle = true;
 
-    //_switchOnUri = createSwitchIcon("rgb(255, 255, 255)", false);
-    //_switchOffUri = createSwitchIcon(_DisableOffIconCircle?"rgb(110, 110, 110)":"rgb(220, 220, 220)", _DisableOffIconCircle);
+    const _isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    //console.log(_isDarkMode ? "Dark mode is on" : "Light mode is on");
 
     async function loadConfig() {
       try {
@@ -790,6 +794,31 @@
         //_targetClearErrorMsg = new Date(Date.now() + 5000);  // Set 5 sec from now.
       }
 
+      // Set current theme
+      if ( _config?.theme === "auto" ) {
+        _theme = window.matchMedia("(prefers-color-scheme: dark)").matches?"-dark":"-light";
+      } else if ( _config?.theme ) {
+        _theme = "-"+_config?.theme;
+      } else {
+        _theme = "";
+      }
+
+      // Check we have correct objects for theme.
+      if (_config?.background_image?.["url"+_theme]) {
+       // console.log("Found background image - "+_config?.background_image?.["url"+_theme]);
+      } else {
+        console.log("ERROR: No image background found for theme, json path \"background_image\": {\"url"+_theme+"\":.....}`");
+      }
+
+      if (_config?.["colors"+_theme]) {
+        //console.log("Found colors - colors"+_theme+"{..}");
+      } else {
+        if ( _theme !== "" ) {
+          // Don't error on blank theme, as we use default colors.
+          console.log("ERROR: No colors found for theme '"+_theme+"', json path \"colors"+_theme+"\":{...}`");
+        }
+      }
+
       // Set defaults.
    
       if (typeof _config.background_image?.url === 'undefined') {
@@ -798,8 +827,9 @@
         _config.background_image.url_reload = 0;
       }
 
-      if (_config?.colors?.tile_on_background) {
-         _switchOnUri = createSwitchIcon(_config.colors.tile_on_background, false);
+      //if (_config?.colors?.tile_on_background) {
+      if (_config?.["colors"+_theme]?.tile_on_background) {
+         _switchOnUri = createSwitchIcon(_config["colors"+_theme].tile_on_background, false);
       } else {
         _switchOnUri = createSwitchIcon("rgb(255, 255, 255)", false);
       }
@@ -811,14 +841,16 @@
       }
 
       if (_DisableOffIconCircle) {
-        if (_config?.colors?.tile_icon_background_color_disabled) {
-          _switchOffUri = createSwitchIcon(_config.colors.tile_icon_background_color_disabled, _DisableOffIconCircle);
+        //if (_config?.colors?.tile_icon_background_color_disabled) {
+        if (_config?.["colors"+_theme]?.tile_icon_background_color_disabled) {
+          _switchOffUri = createSwitchIcon(_config["colors"+_theme].tile_icon_background_color_disabled, _DisableOffIconCircle);
         } else {
           _switchOffUri = createSwitchIcon("rgb(110, 110, 110)", _DisableOffIconCircle);
         }
       } else {
-        if (_config?.colors?.tile_background) {
-          _switchOffUri = createSwitchIcon(_config.colors.tile_background, _DisableOffIconCircle);
+        //if (_config?.colors?.tile_background) {
+        if (_config?.["colors"+_theme]?.tile_background) {
+          _switchOffUri = createSwitchIcon(_config["colors"+_theme].tile_background, _DisableOffIconCircle);
         } else {
           _switchOffUri = createSwitchIcon("rgb(220, 220, 220)", _DisableOffIconCircle);
         }
@@ -1103,13 +1135,13 @@
 
     // Simply loop over each key/value in color jason array and set that property adding -- to the beginning of key
     function setColors() {
-      if ( _config?.colors ) {
+      if ( _config?.["colors"+_theme] ) {
         const rootElement = document.documentElement;
 
-        Object.entries(_config.colors).forEach(([key, value]) => {
+        Object.entries(_config["colors"+_theme]).forEach(([key, value]) => {
           //console.log(`Key (Color Variable): ${key}, Value (Color Code): ${value}`);
           //console.log(key+ " " +document.documentElement.style.getPropertyValue('--' + key)+" | "+window.getComputedStyle(document.documentElement).getPropertyValue('--' + key));
-          if (window.getComputedStyle(rootElement).getPropertyValue('--'+key) && _config?.colors[key]) {
+          if (window.getComputedStyle(rootElement).getPropertyValue('--'+key) && _config?.["colors"+_theme][key]) {
             document.documentElement.style.setProperty('--'+key, value);
           } else {
             console.log(`Invalid config (Color Variable): ${key}, Value : ${value}`);
@@ -1215,9 +1247,9 @@
     }
 
     function load_background() {
-      // check for undevined AND defined but empty
+      // check for undefined AND defined but empty
       //if (typeof background_url === 'undefined' || background_url === undefined)
-      if (!_config.background_image?.url) {
+      if (!_config.background_image?.["url"+_theme]) {
         return;
       }
       //alert("load");
@@ -1233,13 +1265,13 @@
       //if (typeof background_reload !== 'undefined' && background_reload > 0) {
       if ( _config.background_image?.url_reload > 0) {
         if (_config.background_image.url.indexOf('?') > 0 )
-          image.src = _config.background_image.url + '&aqrnd=' + new Date().getTime();
+          image.src = _config.background_image["url"+_theme] + '&aqrnd=' + new Date().getTime();
         else
-          image.src = _config.background_image.url + '?' + new Date().getTime();
+          image.src = _config.background_image["url"+_theme] + '?' + new Date().getTime();
 
         setTimeout(load_background, (_config.background_image.url_reload * 1000));
       } else {
-        image.src = _config.background_image.url;
+        image.src = _config.background_image["url"+_theme];
       }
     }
     // If the grid continer is larger than the page container, increase page so background looks nice
@@ -1566,7 +1598,7 @@
         }
       } catch (e) {
           // Devices that are hidden are not found
-          //console.log('ERROR id=' + id + ' Line '+new Error().lineNumber+' | element = '+document.getElementById(id)+"\n"+e);
+          console.log('ERROR id=' + id + ' Line '+new Error().lineNumber+' | element = '+document.getElementById(id)+"\n"+e);
       }
       //document.getElementById(id + '_tile_icon_value').textContent = value;
       var tile;
@@ -3154,8 +3186,8 @@
 
       for (var obj in data.sensors) {
         //console.log("Set Value `Sensor/"+obj.toString()+"' to "+data.sensors[obj]);
-        //setTileValue("Sensor/"+obj.toString(), data.sensors[obj]);
-        setTileValue(obj.toString(), data.sensors[obj]);
+        setTileValue("Sensor/"+obj.toString(), data.sensors[obj]);
+        //setTileValue(obj.toString(), data.sensors[obj]);
       }
 
       for (var obj in data.alternate_modes) {

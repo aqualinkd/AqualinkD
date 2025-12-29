@@ -123,7 +123,7 @@ char *_color_light_options[NUMBER_LIGHT_COLOR_TYPES][LIGHT_COLOR_OPTIONS] =
         "Mardi Gras",      // 0x50 (home panel) // 0x4b (simulator)
         "Cool Cabaret"     // 0x51 (home panel) // 0x4c
   },
-  {// 7 = Jandy Infinate Water Colors (RS485)
+  {// 7 = Jandy Infinite Water Colors (RS485)
         "Off",
         "Alpine White",
         "Sky Blue",

@@ -1,9 +1,12 @@
 {
+  "theme": "",
   "background_image": {
     "url": "hk/background.jpg",
+    "url-light": "hk/background-light.jpg",
+    "url-dark": "hk/background-dark.jpg",
     "url_reload": 0
   },
-  "colors": {
+  "colors-light": {
     "body_background": "#EBEBEB",
     "body_text": "#000000",
     "options_pane_background": "#F5F5F5",
@@ -26,7 +29,34 @@
     "tile_icon_background_color_heat": "rgb(255, 123, 0)",
     "tile_icon_background_color_cool": "rgb(4, 159, 248)",
     "tile_icon_background_color_enabled": "rgb(78, 196, 0)",
-    "tile_icon_background_color_disabled": "rgb(110, 110, 110)"
+    "tile_icon_background_color_disabled": "rgb(110, 110, 110)",
+    "tile_off_opacity": "0.90"
+  },
+  "colors-dark": {
+    "body_background": "#121212",
+    "body_text": "#FFFFFF",
+    "options_pane_background": "#1E1E1E",
+    "options_pane_bordercolor": "#555555",
+    "options_slider_highlight": "#64B5F6",
+    "options_slider_lowlight": "#555555",
+    "head_background": "#004d7a",
+    "head_text": "#FFFFFF",
+    "error_background": "#b00020",
+    "tile_background": "#333333",
+    "tile_text": "#AAAAAA",
+    "tile_on_background": "#BBBBBB",
+    "tile_on_text": "#000000",
+    "tile_status_text": "#7b7b7b",
+    "value_tile_normal_color": "#049FF8",
+    "value_tile_attention_color": "#b04300",
+    "value_tile_outofrange_color": "#b02300",
+    "options_radio_highlight": "#64B5F6",
+    "options_radio_lowlight": "#555555",
+    "tile_icon_background_color_heat": "rgb(255, 123, 0)",
+    "tile_icon_background_color_cool": "rgb(4, 159, 248)",
+    "tile_icon_background_color_enabled": "rgb(78, 196, 0)",
+    "tile_icon_background_color_disabled": "rgb(110, 110, 110)",
+    "tile_off_opacity": "0.90"
   },
   "devices": {
     "Filter_Pump": {
@@ -272,31 +302,5 @@
     "show_vsp_gpm": "true",
     "disable_off_icon_background": "true",
     "light_program_use_dropdown": "false"
-  },
-  "colors-dark-example": {
-    "body_background": "#121212",
-    "body_text": "#FFFFFF",
-    "options_pane_background": "#1E1E1E",
-    "options_pane_bordercolor": "#555555",
-    "options_slider_highlight": "#64B5F6",
-    "options_slider_lowlight": "#555555",
-    "head_background": "#004d7a",
-    "head_text": "#FFFFFF",
-    "error_background": "#b00020",
-    "tile_background": "#333333",
-    "tile_text": "#AAAAAA",
-    "tile_on_background": "#BBBBBB",
-    "tile_on_text": "#000000",
-    "tile_status_text": "#888888",
-    "value_tile_normal_color": "#049FF8",
-    "value_tile_normal_color_": "#69F0AE",
-    "value_tile_attention_color": "#FFB74D",
-    "value_tile_outofrange_color": "#FF8A65",
-    "options_radio_highlight": "#64B5F6",
-    "options_radio_lowlight": "#555555",
-    "tile_icon_background_color_heat": "rgb(255, 123, 0)",
-    "tile_icon_background_color_cool": "rgb(4, 159, 248)",
-    "tile_icon_background_color_enabled": "rgb(78, 196, 0)",
-    "tile_icon_background_color_disabled": "rgb(110, 110, 110)"
   }
 }

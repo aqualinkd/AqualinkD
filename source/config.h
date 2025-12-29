@@ -68,6 +68,7 @@ struct aqconfig
   unsigned int log_level;
   unsigned int mg_log_level;
   char *web_directory;
+  char *web_config;
   unsigned char device_id;
   unsigned char rssa_device_id;
   uint16_t paneltype_mask;
@@ -257,6 +258,7 @@ int _numCfgParams;
 #define CFG_N_cert_dir                          "https_cert_dir"
 
 #define CFG_N_web_directory                     "web_directory"
+#define CFG_N_web_cfg_file                      "web_config_json"
 #define CFG_N_device_id                         "device_id"
 
 #define CFG_V_device_id                         "[\"0x0a\", \"0x0b\", \"0x09\", \"0x08\", \"0x60\", \"0x33\", \"0xFF\"]"

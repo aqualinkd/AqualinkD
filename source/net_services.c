@@ -1588,12 +1588,40 @@ void log_http_request(int level, char *message, struct mg_http_message *http_msg
   strncpy(uri, http_msg->uri.buf, http_msg->uri.len + http_msg->query.len + 1);
   uri[http_msg->uri.len + http_msg->query.len + 1] = '\0';
 
-  LOG(NET_LOG,level, "%s: '%s'\n", message, uri);
+  LOG(NET_LOG,level, "%s: '%s', length %d\n", message, uri, http_msg->uri.len);
   
   free(uri);
 }
 
-void action_web_request(struct mg_connection *nc, struct mg_http_message *http_msg) {
+void serve_file(struct mg_connection *nc, struct mg_http_message *http_msg)
+{
+  // Anything with .json should not be cached.
+  if (FAST_SUFFIX_4_CI(http_msg->uri.buf, http_msg->uri.len, "json"))
+  {
+    if (_aqconfig_.web_config != NULL && strncmp(http_msg->uri.buf, "/config.json", 12) == 0)
+    {
+      mg_http_serve_file(nc, http_msg, _aqconfig_.web_config, &_http_server_opts_nocache);
+      LOG(NET_LOG, LOG_NOTICE, "Using %s for web config\n", _aqconfig_.web_config);
+    }
+    else
+    {
+      mg_http_serve_dir(nc, http_msg, &_http_server_opts_nocache);
+    }
+  }
+  else // can cache anything here.
+  {
+    if (http_msg->uri.len <= 12 && strncmp(http_msg->uri.buf, "/aqmanager", 10) == 0) {
+      char buf[256];
+      snprintf(buf, 256, "%s/aqmanager.html", _aqconfig_.web_directory);
+      mg_http_serve_file(nc, http_msg, buf, &_http_server_opts);
+    } else {
+      mg_http_serve_dir(nc, http_msg, &_http_server_opts);
+    }
+  }
+}
+
+void action_web_request(struct mg_connection *nc, struct mg_http_message *http_msg)
+{
   char *msg = NULL;
   // struct http_message *http_msg = (struct http_message *)ev_data;
 #ifdef AQ_TM_DEBUG
@@ -1601,165 +1629,168 @@ void action_web_request(struct mg_connection *nc, struct mg_http_message *http_m
   int tid2;
 #endif
 
-  //DEBUG_TIMER_START(&tid);
-  if (getLogLevel(NET_LOG) >= LOG_INFO) { // Simply for log message, check we are at
-                                          // this log level before running all this junk
-    /*
-    char *uri = (char *)malloc(http_msg->uri.len + http_msg->query_string.len + 2);
-    strncpy(uri, http_msg->uri.p, http_msg->uri.len + http_msg->query_string.len + 1);
-    uri[http_msg->uri.len + http_msg->query_string.len + 1] = '\0';
-    LOG(NET_LOG,LOG_INFO, "URI request: '%s'\n", uri);
-    free(uri);*/
-    log_http_request(LOG_INFO, "URI request: ", http_msg);
+  // DEBUG_TIMER_START(&tid);
+  if (getLogLevel(NET_LOG) >= LOG_INFO)
+  { // Simply for log message, check we are at
+    log_http_request(LOG_INFO, "URI request", http_msg);
   }
-  //DEBUG_TIMER_STOP(tid, NET_LOG, "action_web_request debug print crap took"); 
+  // DEBUG_TIMER_STOP(tid, NET_LOG, "action_web_request debug print crap took");
 
-  //LOG(NET_LOG,LOG_INFO, "Message request:\n'%.*s'\n", http_msg->message.len, http_msg->message.p);
+  // LOG(NET_LOG,LOG_INFO, "Message request:\n'%.*s'\n", http_msg->message.len, http_msg->message.p);
 
-  // If we have a get request, pass it
-  if (strncmp(http_msg->uri.buf, "/api", 4 ) != 0) {
-      DEBUG_TIMER_START(&tid);
-      //if ( FAST_SUFFIX_3_CI(http_msg->uri.buf, http_msg->uri.len, ".js") ) {
-      if ( FAST_SUFFIX_4_CI(http_msg->uri.buf, http_msg->uri.len, "json") ) {
-        mg_http_serve_dir(nc, http_msg, &_http_server_opts_nocache);
-      } else {
-        mg_http_serve_dir(nc, http_msg, &_http_server_opts);
-      }
-      DEBUG_TIMER_STOP(tid, NET_LOG, "action_web_request() serve file took");
-  } else {
-    char buf[JSON_BUFFER_SIZE];
-    float value = 0;
+  // If we have a get request (ie file), pass it
+  if (strncmp(http_msg->uri.buf, "/api", 4) != 0)
+  {
     DEBUG_TIMER_START(&tid);
-
-    // If query string.
-    if (http_msg->query.len > 1) {
-      //mg_get_http_var(&http_msg->query, "value", buf, sizeof(buf)); // Old mosquitto
-      mg_http_get_var(&http_msg->query, "value", buf, sizeof(buf));
-      value = atof(buf);
-    } else if (http_msg->body.len > 1) {
-      value = pass_mg_body(&http_msg->body);
-    }
-    
-    int len = mg_url_decode(http_msg->uri.buf, http_msg->uri.len, buf, 50, 0);
-    
-    if (strncmp(http_msg->uri.buf, "/api/",4) == 0) {
-      switch (action_URI(NET_API, &buf[5], len-5, value, false, &msg)) {
-        case uActioned:
-          mg_http_reply(nc, 200, CONTENT_TEXT, GET_RTN_OK);
-        break;
-        case uDevices:
-        {
-          char message[JSON_BUFFER_SIZE];
-          DEBUG_TIMER_START(&tid2);
-          build_device_JSON(_aqualink_data, message, JSON_BUFFER_SIZE, false);
-          DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_device_JSON took");
-          mg_http_reply(nc, 200, CONTENT_JSON, message);
-        }
-        break;
-        case uHomebridge:
-        {
-          char message[JSON_BUFFER_SIZE];
-          build_device_JSON(_aqualink_data, message, JSON_BUFFER_SIZE, true);
-          mg_http_reply(nc, 200, CONTENT_JSON, message);
-        }
-        break;
-        case uStatus:
-        {
-          char message[JSON_BUFFER_SIZE];
-          DEBUG_TIMER_START(&tid2);
-          build_aqualink_status_JSON(_aqualink_data, message, JSON_BUFFER_SIZE);
-          DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_aqualink_status_JSON took");
-          mg_http_reply(nc, 200, CONTENT_JSON, message);
-        }
-        break;
-        case uDynamicconf:
-        {
-          char message[JSON_BUFFER_SIZE];
-          DEBUG_TIMER_START(&tid2);
-          /*
-          build_dynamic_webconfig_js(_aqualink_data, message, JSON_BUFFER_SIZE);
-          DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_webconfig_js took");
-          mg_http_reply(nc, 200, CONTENT_JS, message);
-          */
-          build_dynamic_webconfig_json(_aqualink_data, message, JSON_BUFFER_SIZE);
-          DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_webconfig_json took");
-          mg_http_reply(nc, 200, CONTENT_JSON, message);
-        }
-        break;
-        case uSchedules:
-        {
-          char message[JSON_BUFFER_SIZE];
-          DEBUG_TIMER_START(&tid2);
-          build_schedules_js(message, JSON_BUFFER_SIZE);
-          DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_schedules_js took");
-          mg_http_reply(nc, 200, CONTENT_JSON, message);
-        }
-        break;
-        case uSetSchedules:
-        {
-          char message[JSON_BUFFER_SIZE];
-          DEBUG_TIMER_START(&tid2);
-          save_schedules_js(http_msg->body.buf, http_msg->body.len, message, JSON_BUFFER_SIZE);
-          DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() save_schedules_js took");
-          mg_http_reply(nc, 200, CONTENT_JSON, message);
-        }
-        break;
-        case uConfig:
-        {
-          char message[JSON_BUFFER_SIZE];
-          DEBUG_TIMER_START(&tid2);
-          build_aqualink_config_JSON(message, JSON_BUFFER_SIZE, _aqualink_data);
-          DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_aqualink_config_JSON took");
-          mg_http_reply(nc, 200, CONTENT_JSON, message);
-        }
-        break;
-#ifndef AQ_MANAGER
-        case uDebugStatus:
-        {
-          char message[JSON_BUFFER_SIZE];
-          snprintf(message,80,"{\"sLevel\":\"%s\", \"iLevel\":%d, \"logReady\":\"%s\"}\n",elevel2text(getLogLevel(NET_LOG)),getLogLevel(NET_LOG),islogFileReady()?"true":"false" );
-          mg_http_reply(nc, 200, CONTENT_JS, message);
-        }
-        break;
-#else
-        case uLogDownload:
-          //int lines = 1000;
-          #define DEFAULT_LOG_DOWNLOAD_LINES 100
-          // If lines was passed in post use it, if not see if it's next path in URI is a number
-          if (value == 0.0) {
-            // /api/<downloadmsg>/<lines>
-            char *pt = rsm_lastindexof(buf, "/", strlen(buf));
-            value = atoi(pt+1);
-          }
-          LOG(NET_LOG, LOG_DEBUG, "Downloading log of max %d lines\n",value>0?(int)value:DEFAULT_LOG_DOWNLOAD_LINES);
-          if (write_systemd_logmessages_2file("/dev/shm/aqualinkd.log", value>0?(int)value:DEFAULT_LOG_DOWNLOAD_LINES) ) {
-            mg_http_serve_file(nc, http_msg, "/dev/shm/aqualinkd.log", &_http_server_opts_nocache);
-            remove("/dev/shm/aqualinkd.log");
-          }
-        break;
-
-        case uConfigDownload:
-          LOG(NET_LOG, LOG_DEBUG, "Downloading config\n");
-          mg_http_serve_file(nc, http_msg, _aqconfig_.config_file, &_http_server_opts_nocache);
-        break;
-#endif
-        case uBad:
-        default:
-          if (msg == NULL) {
-            mg_http_reply(nc, 400, CONTENT_TEXT, GET_RTN_UNKNOWN);
-          } else {
-            mg_http_reply(nc, 400, CONTENT_TEXT, msg);
-          }
-        break;
-      }
-    } else {
-      mg_http_reply(nc, 400, CONTENT_TEXT, GET_RTN_UNKNOWN);
-    }
-
-    sprintf(buf, "action_web_request() request '%.*s' took",(int)http_msg->uri.len, http_msg->uri.buf);
-
-    DEBUG_TIMER_STOP(tid, NET_LOG, buf);
+    serve_file(nc, http_msg);
+    DEBUG_TIMER_STOP(tid, NET_LOG, "action_web_request() serve file took");
+    return;
   }
+
+  char buf[JSON_BUFFER_SIZE];
+  float value = 0;
+  DEBUG_TIMER_START(&tid);
+
+  // If query string.
+  if (http_msg->query.len > 1)
+  {
+    // mg_get_http_var(&http_msg->query, "value", buf, sizeof(buf)); // Old mosquitto
+    mg_http_get_var(&http_msg->query, "value", buf, sizeof(buf));
+    value = atof(buf);
+  }
+  else if (http_msg->body.len > 1)
+  {
+    value = pass_mg_body(&http_msg->body);
+  }
+
+  int len = mg_url_decode(http_msg->uri.buf, http_msg->uri.len, buf, 50, 0);
+
+  if (strncmp(http_msg->uri.buf, "/api/", 4) == 0)
+  {
+    switch (action_URI(NET_API, &buf[5], len - 5, value, false, &msg))
+    {
+    case uActioned:
+      mg_http_reply(nc, 200, CONTENT_TEXT, GET_RTN_OK);
+      break;
+    case uDevices:
+    {
+      char message[JSON_BUFFER_SIZE];
+      DEBUG_TIMER_START(&tid2);
+      build_device_JSON(_aqualink_data, message, JSON_BUFFER_SIZE, false);
+      DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_device_JSON took");
+      mg_http_reply(nc, 200, CONTENT_JSON, message);
+    }
+    break;
+    case uHomebridge:
+    {
+      char message[JSON_BUFFER_SIZE];
+      build_device_JSON(_aqualink_data, message, JSON_BUFFER_SIZE, true);
+      mg_http_reply(nc, 200, CONTENT_JSON, message);
+    }
+    break;
+    case uStatus:
+    {
+      char message[JSON_BUFFER_SIZE];
+      DEBUG_TIMER_START(&tid2);
+      build_aqualink_status_JSON(_aqualink_data, message, JSON_BUFFER_SIZE);
+      DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_aqualink_status_JSON took");
+      mg_http_reply(nc, 200, CONTENT_JSON, message);
+    }
+    break;
+    case uDynamicconf:
+    {
+      char message[JSON_BUFFER_SIZE];
+      DEBUG_TIMER_START(&tid2);
+      /*
+      build_dynamic_webconfig_js(_aqualink_data, message, JSON_BUFFER_SIZE);
+      DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_webconfig_js took");
+      mg_http_reply(nc, 200, CONTENT_JS, message);
+      */
+      build_dynamic_webconfig_json(_aqualink_data, message, JSON_BUFFER_SIZE);
+      DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_webconfig_json took");
+      mg_http_reply(nc, 200, CONTENT_JSON, message);
+    }
+    break;
+    case uSchedules:
+    {
+      char message[JSON_BUFFER_SIZE];
+      DEBUG_TIMER_START(&tid2);
+      build_schedules_js(message, JSON_BUFFER_SIZE);
+      DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_schedules_js took");
+      mg_http_reply(nc, 200, CONTENT_JSON, message);
+    }
+    break;
+    case uSetSchedules:
+    {
+      char message[JSON_BUFFER_SIZE];
+      DEBUG_TIMER_START(&tid2);
+      save_schedules_js(http_msg->body.buf, http_msg->body.len, message, JSON_BUFFER_SIZE);
+      DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() save_schedules_js took");
+      mg_http_reply(nc, 200, CONTENT_JSON, message);
+    }
+    break;
+    case uConfig:
+    {
+      char message[JSON_BUFFER_SIZE];
+      DEBUG_TIMER_START(&tid2);
+      build_aqualink_config_JSON(message, JSON_BUFFER_SIZE, _aqualink_data);
+      DEBUG_TIMER_STOP(tid2, NET_LOG, "action_web_request() build_aqualink_config_JSON took");
+      mg_http_reply(nc, 200, CONTENT_JSON, message);
+    }
+    break;
+#ifndef AQ_MANAGER
+    case uDebugStatus:
+    {
+      char message[JSON_BUFFER_SIZE];
+      snprintf(message, 80, "{\"sLevel\":\"%s\", \"iLevel\":%d, \"logReady\":\"%s\"}\n", elevel2text(getLogLevel(NET_LOG)), getLogLevel(NET_LOG), islogFileReady() ? "true" : "false");
+      mg_http_reply(nc, 200, CONTENT_JS, message);
+    }
+    break;
+#else
+    case uLogDownload:
+// int lines = 1000;
+#define DEFAULT_LOG_DOWNLOAD_LINES 100
+      // If lines was passed in post use it, if not see if it's next path in URI is a number
+      if (value == 0.0)
+      {
+        // /api/<downloadmsg>/<lines>
+        char *pt = rsm_lastindexof(buf, "/", strlen(buf));
+        value = atoi(pt + 1);
+      }
+      LOG(NET_LOG, LOG_DEBUG, "Downloading log of max %d lines\n", value > 0 ? (int)value : DEFAULT_LOG_DOWNLOAD_LINES);
+      if (write_systemd_logmessages_2file("/dev/shm/aqualinkd.log", value > 0 ? (int)value : DEFAULT_LOG_DOWNLOAD_LINES))
+      {
+        mg_http_serve_file(nc, http_msg, "/dev/shm/aqualinkd.log", &_http_server_opts_nocache);
+        remove("/dev/shm/aqualinkd.log");
+      }
+      break;
+
+    case uConfigDownload:
+      LOG(NET_LOG, LOG_DEBUG, "Downloading config\n");
+      mg_http_serve_file(nc, http_msg, _aqconfig_.config_file, &_http_server_opts_nocache);
+      break;
+#endif
+    case uBad:
+    default:
+      if (msg == NULL)
+      {
+        mg_http_reply(nc, 400, CONTENT_TEXT, GET_RTN_UNKNOWN);
+      }
+      else
+      {
+        mg_http_reply(nc, 400, CONTENT_TEXT, msg);
+      }
+      break;
+    }
+  }
+  else
+  {
+    mg_http_reply(nc, 400, CONTENT_TEXT, GET_RTN_UNKNOWN);
+  }
+
+  sprintf(buf, "action_web_request() request '%.*s' took", (int)http_msg->uri.len, http_msg->uri.buf);
+
+  DEBUG_TIMER_STOP(tid, NET_LOG, buf);
 }
 
 void action_websocket_request(struct mg_connection *nc, struct mg_ws_message *wm) {

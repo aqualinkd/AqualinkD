@@ -636,7 +636,7 @@ void publish_mqtt_discovery(struct aqualinkdata *aqdata, struct mg_connection *n
               "Pump",pn,"GPM",
               aqdata->pumps[i].button->label,(rsm_strncasestr(aqdata->pumps[i].button->label,"pump",strlen(aqdata->pumps[i].button->label))!=NULL)?"":"Pump","GPM",
               _aqconfig_.mqtt_aq_topic,aqdata->pumps[i].button->name ,PUMP_GPM_TOPIC,
-              "GPM");
+              "gal/min");
       sprintf(topic, "%s/sensor/aqualinkd/aqualinkd_%s%d_%s/config", _aqconfig_.mqtt_discovery_topic, "Pump",pn,"GPM");
       send_mqtt(nc, topic, msg);
 
@@ -688,7 +688,7 @@ void publish_mqtt_discovery(struct aqualinkdata *aqdata, struct mg_connection *n
               "Pump",pn,"RPM",
               aqdata->pumps[i].button->label,(rsm_strncasestr(aqdata->pumps[i].button->label,"pump",strlen(aqdata->pumps[i].button->label))!=NULL)?"":"Pump","RPM",
               _aqconfig_.mqtt_aq_topic,aqdata->pumps[i].button->name ,PUMP_RPM_TOPIC,
-              "RPM");
+              "rpm");
     sprintf(topic, "%s/sensor/aqualinkd/aqualinkd_%s%d_%s/config", _aqconfig_.mqtt_discovery_topic, "Pump",pn,"RPM");
     send_mqtt(nc, topic, msg);
 
@@ -698,7 +698,7 @@ void publish_mqtt_discovery(struct aqualinkdata *aqdata, struct mg_connection *n
               "Pump",pn,"Watts",
               aqdata->pumps[i].button->label,(rsm_strncasestr(aqdata->pumps[i].button->label,"pump",strlen(aqdata->pumps[i].button->label))!=NULL)?"":"Pump","Watts",
               _aqconfig_.mqtt_aq_topic,aqdata->pumps[i].button->name ,PUMP_WATTS_TOPIC,
-              "Watts");
+              "W");
     sprintf(topic, "%s/sensor/aqualinkd/aqualinkd_%s%d_%s/config", _aqconfig_.mqtt_discovery_topic, "Pump",pn,"Watts");
     send_mqtt(nc, topic, msg);
   }

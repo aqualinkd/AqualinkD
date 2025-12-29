@@ -145,7 +145,7 @@ bool read_sensor(external_sensor *sensor) {
     status = regcomp(&preg, sensor->regex, REG_EXTENDED);
     if (status != 0) {
       LOG(AQUA_LOG,LOG_ERR, "Compiling sensor regex %s\n",sensor->regex);
-      return 1;
+      return FALSE;
     }
 
     // Run regex

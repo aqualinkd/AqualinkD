@@ -84,8 +84,11 @@ int save_web_config_json(const char* inBuf, int inSize, char* outBuf, int outSiz
   bool created_file;
   char *contents;
 
-  snprintf(configfile, 256, "%s%s", _aqconfig_.web_directory,WEBCONFIGFILE);
-
+  if ( _aqconfig_.web_config !=NULL) {
+    snprintf(configfile, 256, "%s", _aqconfig_.web_config);
+  } else {
+    snprintf(configfile, 256, "%s%s", _aqconfig_.web_directory,WEBCONFIGFILE);
+  }
 
   fp = aq_open_file(configfile, &ro_root, &created_file);
 
