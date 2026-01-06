@@ -1055,13 +1055,25 @@ if (strlen(cleanwhitespace(value)) <= 0) {
     }
     char *name = cleanalloc(value);
     int len = strlen(name);
+    char *end = NULL;
     if (len > 0) {
+      //printf("%s\n",name);
+      if ((end = strstr(name, " - show")) != NULL) {
+        name[end-name] = '\0';
+        set_aqualinkd_light_mode_name(name,num,true);
+        //printf("Index Added SHOW '%s'\n",name);
+      } else {
+        set_aqualinkd_light_mode_name(name,num,false);
+        //printf("Added light '%s'\n",name);
+      }
+      /*
       if ( strncasecmp(name+len-7, " - show", 7) == 0 ) {
         name[len-7] = '\0';
         set_aqualinkd_light_mode_name(name,num,true);
       } else {
         set_aqualinkd_light_mode_name(name,num,false);
       }
+        */
       rtn=true;
     } else {
       LOG(AQUA_LOG,LOG_WARNING, "Config error, light_program_%d is blank\n",num);

@@ -152,9 +152,6 @@
     "CHEM/ORP": {
       "display": "true"
     },
-    "Solar_Heater": {
-      "display": "true"
-    },
     "Extra_Aux": {
       "display": "true"
     },

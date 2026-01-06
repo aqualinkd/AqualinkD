@@ -115,31 +115,6 @@ Designed to mimic AqualinkRS devices, used to fully configure the master control
 * The only Jandy devices I have not decoded yet are LX heater & Chemical Feeder. If you have either of these devices and are willing to post some logs, please let me know, or post in the [Discussions area](https://github.com/aqualinkd/AqualinkD/discussions)
 
 
-<!-- 
-NEED TO FIX FOR THIS RELEASE.
-* check panel version reported against config.
-* pickup speed faster on iaqualinktouch after change
-* with iaqualink2 no need to poll iaqtouch devices as frequently
-* update documentation on how vbutton / vpump / pump_max & min / enable_iauqalink2
-* check rs serial adapter is active if light color mode 11 is used.
-
-* Check SWG messages like "#1 TruClear", see log in this post https://github.com/aqualinkd/AqualinkD/discussions/388
-
-* Heat Pump / Chiller for OneTouch
-
-* Update Mongoose
-
-* PDA Crap.
-* pda_aq_programmer line 702/703 color light.
-* pda_aq_programmer line 782 back menu testing in pda_init
-
-* FIX Panel name in config to accept output from panel actual name
-
-* Move all programming threads over to using struct programmerArgs.
-* Use set_allbutton_light_dimmer for all lights (ie color lights)
-
--->
-
 <br>
 <br>
 <br>
@@ -152,6 +127,20 @@ AqualinkD will be moving over to github hosted runners for compiling, currently 
 <hr>
 <br>
 <br>
+
+
+<!-- 
+NEED TO FIX NEXT THIS RELEASE.
+
+DONE - web config using wrong ID for "extra_aux" "Solar_Heater". should probably delete solah_heater
+Fix space after " - show " needed in config for show to work.
+DONE.  -   SWG comes up enabled with there isn't one
+-->
+
+# Updates in 3.0.2
+* Fixed bug with SWG being enabled if one is not present.
+* Fixed bug with light_programs ending in 'show' aqualinkd.conf
+
 
 # Updates in 3.0.1
 * UI Update for web config.

@@ -259,12 +259,13 @@ void _processMessage(char *message, struct aqualinkdata *aqdata, bool reset)
     // Removed aqdata->swg_led_state check from below if, so SWG can be found if read_SWG_rs584 is off.
     // May want to add options like (isIAQT_ENABLED == false && isONET_ENABLED == false && READ_RSDEV_SWG == false )
     // Then remove the aqdata->swg_led_state check
-    if ( ((msg_loop & MSG_SWG_DEVICE) != MSG_SWG_DEVICE) /*&& aqdata->swg_led_state != LED_S_UNKNOWN*/) {
+    if ( ((msg_loop & MSG_SWG_DEVICE) != MSG_SWG_DEVICE) && aqdata->swg_led_state != LED_S_UNKNOWN) {
       // No Additional SWG devices messages like "no flow"
-      if ((msg_loop & MSG_SWG) != MSG_SWG && aqdata->aqbuttons[PUMP_INDEX].led->state == OFF )
+      if ((msg_loop & MSG_SWG) != MSG_SWG && aqdata->aqbuttons[PUMP_INDEX].led->state == OFF ) {
         setSWGdeviceStatus(aqdata, ALLBUTTON, SWG_STATUS_OFF);
-      else
+      } else {
         setSWGdeviceStatus(aqdata, ALLBUTTON, SWG_STATUS_ON);
+      }
     }
 
     // If no AQUAPURE message, either (no SWG, it's set 0, or it's off).
@@ -504,6 +505,11 @@ void _processMessage(char *message, struct aqualinkdata *aqdata, bool reset)
   }
   else if (strncasecmp(msg, MSG_SWG_PPM, MSG_SWG_PPM_LEN) == 0)
   {
+    // if we see PPM message, we must have a SWG, so set the status to on, if it's unknown.
+    // This will enable SWG without read_rs485_swg set
+    if (aqdata->swg_led_state == LED_S_UNKNOWN) {
+      setSWGdeviceStatus(aqdata, ALLBUTTON, SWG_STATUS_ON);
+    }
     SET_IF_CHANGED( aqdata->swg_ppm, atoi(msg + MSG_SWG_PPM_LEN), aqdata->is_dirty);
     msg_loop |= MSG_SWG;
   }

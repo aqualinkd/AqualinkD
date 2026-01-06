@@ -156,6 +156,10 @@ char *_color_light_options[NUMBER_LIGHT_COLOR_TYPES][LIGHT_COLOR_OPTIONS] =
 // DON'T FORGET TO CHANGE    #define DIMMER_LIGHT_INDEX 10   in color_lights.h
 
 
+int _custom_shows = 0;
+char *_color_light_custom_show_names[LIGHT_COLOR_OPTIONS];
+
+
 
 /*
 void deleteLightOption(int type, int index) 
@@ -210,6 +214,9 @@ void clear_aqualinkd_light_modes()
     //_color_light_options[0][i] = i;
     //_color_light_options[0][i] = _aqualinkd_custom_colors[i];
   }
+
+  // Reset the show list
+  _custom_shows = 0;
 }
 
 int get_num_light_modes(int index)
@@ -239,6 +246,15 @@ bool set_aqualinkd_light_mode_name(char *name, int index, bool isShow)
 
   // TODO NSF check isShow and add a custom one if needed
   _color_light_options[0][index] = name;
+
+  if (isShow) {
+    //printf ("ADDED Show %s and index %d\n",name,_custom_shows);
+    if (_custom_shows < LIGHT_COLOR_OPTIONS ) {
+      _color_light_custom_show_names[_custom_shows++] = name;
+    } else {
+      LOG(AQUA_LOG,LOG_WARNING, "Config error, max custom light mode shows is %d \n",LIGHT_COLOR_OPTIONS);
+    }
+  }
 
   return true;
 }
@@ -337,6 +353,15 @@ bool isShowMode(const char *mode)
   if (mode == NULL)
     return false;
     
+  for (int i=0; i < _custom_shows; i++) {
+    // We could probably simplify this by simply checking the pointers and not using strcmp
+    // if ( _color_light_custom_show_names[i] == mode )
+    if (_color_light_custom_show_names[i] != NULL && 
+        strcmp(mode, _color_light_custom_show_names[i]) == 0) {
+      return true;
+    }
+  }
+
   if (strcmp(mode, "Color Splash") == 0 ||
       strcmp(mode, "Slow Splash") == 0 ||
       strcmp(mode, "Fast Splash") == 0 ||
