@@ -132,10 +132,11 @@ AqualinkD will be moving over to github hosted runners for compiling, currently 
 <!-- 
 NEED TO FIX NEXT THIS RELEASE.
 
-DONE - web config using wrong ID for "extra_aux" "Solar_Heater". should probably delete solah_heater
-Fix space after " - show " needed in config for show to work.
-DONE.  -   SWG comes up enabled with there isn't one
+Panel = RS-2/6 Dual will not have spa on auto config. (fine after saving config and restart).
 -->
+
+# Update in 3.0.3 (dev)
+* Fixed setting SWG for PDA v1.2
 
 # Updates in 3.0.2
 * Fixed bug with SWG being enabled if one is not present.

@@ -1372,11 +1372,39 @@ void *set_PDA_aqualink_SWG_setpoint(void *ptr) {
   }
   // wait for menu to display to capture current value with process_pda_packet_msg_long_SWG
   waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS, 10);
+
+/*
+PDA Line 0 =   SET AquaPure
+PDA Line 1 =
+PDA Line 2 =
+PDA Line 3 =    SET TO 100%
+PDA Line 4 =
+PDA Line 5 =
+
+PDA Line 0 =   SET AquaPure
+PDA Line 1 =
+PDA Line 2 =
+PDA Line 3 = SET POOL TO: 45%
+PDA Line 4 =  SET SPA TO:  0%
+PDA Line 5 =
+*/
+ 
+//if (strncasecmp(pda_m_line(3), "SET TO", 6) == 0) {
+if (pda_find_m_index("SET TO") > 0) {
+  set_PDA_numeric_field_value(aqdata, val, -1, "SET TO", 5);
+} else if (aqdata->aqbuttons[SPA_INDEX].led->state != OFF) {
+  set_PDA_numeric_field_value(aqdata, val, -1, "SET SPA", 5);
+} else {
+  // Dual Setpoint Screen with SPA mode disabled
+  set_PDA_numeric_field_value(aqdata, val, -1, "SET POOL", 5);
+}
+    
+
 /*
   if (pda_find_m_index("SET POOL") < 0) {
     // Single Setpoint Screen
      set_PDA_numeric_field_value(aqdata, val, -1, NULL, 5);
-  } else*/ if (aqdata->aqbuttons[SPA_INDEX].led->state != OFF) {
+  } else*/ /*if (aqdata->aqbuttons[SPA_INDEX].led->state != OFF) {
     // Dual Setpoint Screen with SPA mode enabled
     // :TODO: aqdata should have 2 swg_precent values and GUI should be updated to
     //   display and modify both values.
@@ -1384,7 +1412,8 @@ void *set_PDA_aqualink_SWG_setpoint(void *ptr) {
   } else {
     // Dual Setpoint Screen with SPA mode disabled
      set_PDA_numeric_field_value(aqdata, val, -1, "SET POOL", 5);
-  }
+  }*/
+  // NSF Need to cater for "SET TO" message on some PDA versions
   
   waitfor_pda_queue2empty();
   goto_pda_menu(aqdata, PM_HOME);
