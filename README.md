@@ -135,8 +135,10 @@ NEED TO FIX NEXT THIS RELEASE.
 Panel = RS-2/6 Dual will not have spa on auto config. (fine after saving config and restart).
 -->
 
-# Update in 3.0.3 (dev)
+
+# Updates in 3.0.3 (dev)
 * Fixed setting SWG for PDA v1.2
+
 
 # Updates in 3.0.2
 * Fixed bug with SWG being enabled if one is not present.
