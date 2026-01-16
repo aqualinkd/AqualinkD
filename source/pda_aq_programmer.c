@@ -1390,7 +1390,7 @@ PDA Line 5 =
 */
  
 //if (strncasecmp(pda_m_line(3), "SET TO", 6) == 0) {
-if (pda_find_m_index("SET TO") > 0) {
+if (pda_find_m_index_loose("SET TO") > 0) {
   set_PDA_numeric_field_value(aqdata, val, -1, "SET TO", 5);
 } else if (aqdata->aqbuttons[SPA_INDEX].led->state != OFF) {
   set_PDA_numeric_field_value(aqdata, val, -1, "SET SPA", 5);
