@@ -133,6 +133,8 @@ AqualinkD will be moving over to github hosted runners for compiling, currently 
 NEED TO FIX NEXT THIS RELEASE.
 
 Panel = RS-2/6 Dual will not have spa on auto config. (fine after saving config and restart).
+Need to fix SWG when it's set to 0, thinks it's off and can't change, if it states 0 need to be enable, if blank turn off.
+Need to look at sub panel (combined panels) 
 -->
 
 

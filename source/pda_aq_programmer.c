@@ -1302,7 +1302,9 @@ bool set_PDA_numeric_field_value(struct aqualinkdata *aqdata, int val, int cur_v
 
   LOG(PDA_LOG,LOG_DEBUG, "set_PDA_numeric_field_value %s from %d to %d step %d\n", select_label, cur_val, val, step);
   if (select_label != NULL) {
-    if ( ! select_pda_menu_item(aqdata, select_label, false) ) {
+    //if ( ! select_pda_menu_item(aqdata, select_label, false) ) {
+    // Changed to loose for menu items that don't start at char position 1, like SWG message "   SET TO 100%".
+    if ( ! select_pda_menu_item_loose(aqdata, select_label, false) ) {
       return false;
     }
   }
