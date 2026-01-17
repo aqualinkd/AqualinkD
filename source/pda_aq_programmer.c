@@ -1431,11 +1431,17 @@ PDA Line 9 = item and press
 
   // At the menus above if we just get CMD_PDA_HIGHLIGHT then we need to press enter to set the %
   // if it's CMD_PDA_HIGHLIGHT then CMD_PDA_HIGHLIGHTCHARS, we can simply set the %
+
+  // At this point the Aquapure menu should be showing, if the last message was CMD_PDA_HIGHLIGHTCHARS then we
+  // only need to change value, so check and wait a few more messages so see it.  if not we assume we need to select
+  // a device to change ie Pool or Spa.
   bool selected=false;
-  waitForPDAMessageType(aqdata,CMD_PDA_HIGHLIGHT, 15);
-  if ( waitForPDAMessageType(aqdata,CMD_PDA_HIGHLIGHTCHARS, 2)) {
-    selected = true;
-  }
+  //waitForPDAMessageType(aqdata,CMD_PDA_HIGHLIGHT, 15);
+  //if (aqdata->last_packet_type != CMD_PDA_HIGHLIGHTCHARS) { // not needed, waitForPDAMessageType will return if last message was CMD_PDA_HIGHLIGHTCHARS
+    if ( waitForPDAMessageType(aqdata,CMD_PDA_HIGHLIGHTCHARS, 4)) {
+      selected = true;
+    }
+  //}
 
 if (selected) {
   LOG(PDA_LOG,LOG_DEBUG, "SWG %% already selected\n");

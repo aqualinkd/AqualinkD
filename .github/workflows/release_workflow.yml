@@ -44,7 +44,7 @@ jobs:
         
         # DYNAMIC LOGIC for 'name':
         # Same dynamic logic applied to the release name.
-        name: Update Release ${{ github.event_name == 'push' && github.ref_name || github.event.inputs.tag_name }}
+        name: Release ${{ github.event_name == 'push' && github.ref_name || github.event.inputs.tag_name }}
 
         # Set draft to false if the intention is to publish/update a final version.
         draft: false
