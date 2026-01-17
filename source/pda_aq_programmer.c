@@ -1297,6 +1297,7 @@ bool waitForPDAMessages(struct aqualinkdata *aqdata, int numberMessages)
   Use -1 for cur_val if you want this to find the current value and change it.
   Use number for cur_val to  increase / decrease from known start point
 */
+
 bool set_PDA_numeric_field_value(struct aqualinkdata *aqdata, int val, int cur_val, char *select_label, int step) {
   int i=0;
 
@@ -1372,16 +1373,49 @@ void *set_PDA_aqualink_SWG_setpoint(void *ptr) {
     cleanAndTerminateThread(threadCtrl);
     return ptr;
   }
+  /*
   // wait for menu to display to capture current value with process_pda_packet_msg_long_SWG
-  waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS, 10);
+  waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS, 15);
+  
+  // On an PDA-ONLY panel we get the above BEFORE the actual menu is displayed, so wait a bit more, 
+  waitForPDAMessages(aqdata, 2);
+  */
+
 
 /*
+Fucking PDA, can't be that same for all version.
 PDA Line 0 =   SET AquaPure
 PDA Line 1 =
 PDA Line 2 =
 PDA Line 3 =    SET TO 100%
 PDA Line 4 =
 PDA Line 5 =
+PDA Line 6 =
+PDA Line 7 = Use ARROW KEYS
+PDA Line 8 = to set value.
+PDA Line 9 = Then SELECT.
+
+PDA Line 0 =   SET AquaPure
+PDA Line 1 =
+PDA Line 2 =
+PDA Line 3 =    SET TO 100%
+PDA Line 4 =
+PDA Line 5 =
+PDA Line 6 = 
+PDA Line 7 = 
+PDA Line 8 = Use Arrow Keys
+PDA Line 9 = to set value.
+
+PDA Line 0 =   Set AQUAPURE  
+PDA Line 1 = 
+PDA Line 2 = 
+PDA Line 3 = Set Pool to: 35%
+PDA Line 4 =                 
+PDA Line 5 = 
+PDA Line 6 = 
+PDA Line 7 = 
+PDA Line 8 = Use Arrow Keys
+PDA Line 9 = to set value.
 
 PDA Line 0 =   SET AquaPure
 PDA Line 1 =
@@ -1389,16 +1423,33 @@ PDA Line 2 =
 PDA Line 3 = SET POOL TO: 45%
 PDA Line 4 =  SET SPA TO:  0%
 PDA Line 5 =
+PDA Line 6 = 
+PDA Line 7 = 
+PDA Line 8 = Highlight an
+PDA Line 9 = item and press
 */
- 
-//if (strncasecmp(pda_m_line(3), "SET TO", 6) == 0) {
-if (pda_find_m_index_loose("SET TO") > 0) {
-  set_PDA_numeric_field_value(aqdata, val, -1, "SET TO", 5);
-} else if (aqdata->aqbuttons[SPA_INDEX].led->state != OFF) {
-  set_PDA_numeric_field_value(aqdata, val, -1, "SET SPA", 5);
+
+  // At the menus above if we just get CMD_PDA_HIGHLIGHT then we need to press enter to set the %
+  // if it's CMD_PDA_HIGHLIGHT then CMD_PDA_HIGHLIGHTCHARS, we can simply set the %
+  bool selected=false;
+  waitForPDAMessageType(aqdata,CMD_PDA_HIGHLIGHT, 15);
+  if ( waitForPDAMessageType(aqdata,CMD_PDA_HIGHLIGHTCHARS, 2)) {
+    selected = true;
+  }
+
+if (selected) {
+  LOG(PDA_LOG,LOG_DEBUG, "SWG %% already selected\n");
+  set_PDA_numeric_field_value(aqdata, val, -1, NULL, 5); // Null = line already selected
 } else {
+  LOG(PDA_LOG,LOG_DEBUG, "Looking for SWG device (pool/spa) to set\n");
+ if (pda_find_m_index_loose("SET TO") > 0) {
+  set_PDA_numeric_field_value(aqdata, val, -1, "SET TO", 5);
+ } else if (aqdata->aqbuttons[SPA_INDEX].led->state != OFF) {
+  set_PDA_numeric_field_value(aqdata, val, -1, "SET SPA", 5);
+ } else {
   // Dual Setpoint Screen with SPA mode disabled
   set_PDA_numeric_field_value(aqdata, val, -1, "SET POOL", 5);
+ }
 }
     
 

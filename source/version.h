@@ -4,5 +4,5 @@
 #define AQUALINKD_SHORT_NAME "AqualinkD"
 
 // Use Magor . Minor . Patch
-#define AQUALINKD_VERSION "3.0.3 (dev.3)"
+#define AQUALINKD_VERSION "3.0.3 (dev.4)"
  

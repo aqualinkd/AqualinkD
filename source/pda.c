@@ -906,6 +906,10 @@ bool process_pda_packet(unsigned char *packet, int length)
   static bool read_equiptment_menu = false;
   static int time_msg_cnt = 0;
 
+  if (packet[PKT_CMD] != _aqualink_data->last_packet_type) {
+    LOG(PDA_LOG,LOG_DEBUG, "Received PDA packet type 0x%02hhx\n", packet[PKT_CMD]);
+  }
+
   _aqualink_data->last_packet_type = packet[PKT_CMD];
 
   process_pda_menu_packet(packet, length, in_programming_mode(_aqualink_data));
