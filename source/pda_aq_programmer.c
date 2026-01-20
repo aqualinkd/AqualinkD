@@ -300,6 +300,7 @@ bool find_pda_menu_item(struct aqualinkdata *aqdata, char *menuText, int charlim
         //delay(500);
         //wait_for_empty_cmd_buffer();
         //waitForPDAMessageType(aqdata,CMD_PDA_HIGHLIGHT,2);
+	waitForPDAMessages(aqdata, 1); // Wait for a new message
         waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_MSG_LONG,8);
         //waitForMessage(aqdata, NULL, 1);
         index = (charlimit == 0)?pda_find_m_index(menuText):pda_find_m_index_case(menuText, charlimit);
@@ -963,6 +964,7 @@ void *set_aqualink_PDA_light_mode( void *ptr )
       } else { // set mode.
         if (strncasecmp(pda_m_line(3),"Light will turn", 15) == 0) {
           // If light is currently on, we will get this message, and need to clear it.
+          waitForPDAMessages(aqdata, 5);  // PDA needs another 5 messages. Otherwise, sometime it does not observed PDA SELECT
           send_pda_cmd(KEY_PDA_SELECT);
           waitForPDAMessageTypes(aqdata,CMD_PDA_HIGHLIGHT,CMD_PDA_HIGHLIGHTCHARS,15);
         }
