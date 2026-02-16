@@ -224,7 +224,7 @@ quickbuild: armhf arm64
 
 # This is run inside container Dockerfile.releaseBinariies (aqualinkd-releasebin)
 dockerbuildnrun: ./release/aqualinkd
-	$(shell ./release/aqualinkd -d -c ./realease/aqualinkd.test.conf
+	$(shell ./release/aqualinkd -d -c ./release/aqualinkd.test.conf)
 
 
 debugbuild: CFLAGS = $(DFLAGS)
