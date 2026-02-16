@@ -34,7 +34,7 @@ ERROR_ON_GLIBC=$FALSE # $TRUE will error and not continue, $FALSE will give a wa
 REQUIRED_GLIBC_VERSION="2.31"
 
 
-FROM_CURL=$FASE
+FROM_CURL=$FALSE
 SYSTEMD_LOG=$FALSE
 
 USE_RELEASE_PKG=$TRUE
@@ -225,9 +225,9 @@ function check_can_upgrade {
     fi
   fi
 
-  if [[ "$output" == "" ]] && [[ "$REL_VERSION" != "" ]]; then 
+  if [[ "$output" == "" ]] && [[ "$REL_VERSION" != "" ]]; then
     return "$TRUE"
-  else [[ "$output" != "" ]]
+  elif [[ "$output" != "" ]]; then
     logerr "$output";
     return "$FALSE"
   fi
