@@ -599,11 +599,13 @@ int _init_serial_port(const char* tty, bool blocking, bool readahead)
 
   if (tcgetattr(fd, &newtio) != 0) {
     LOG(RSSD_LOG,LOG_ERR, "Unable to get port attributes: %s, error %d\n", tty,errno);
+    close(fd);
     return -1;
   }
 
   if ( lock_port(fd, tty) < 0) {
     //LOG(RSSD_LOG,LOG_ERR, "Unable to lock port: %s, error %d\n", tty, errno);
+    close(fd);
     return -1;
   }
 
@@ -656,6 +658,8 @@ int _init_serial_port(const char* tty, bool blocking, bool readahead)
   tcflush(fd, TCIFLUSH);
   if (tcsetattr(fd, TCSANOW, &newtio) != 0) {
     LOG(RSSD_LOG,LOG_ERR, "Unable to set port attributes: %s, error %d\n", tty,errno);
+    unlock_port(fd);
+    close(fd);
     return -1;
   }
 
@@ -755,14 +759,12 @@ void send_pentair_command(int fd, unsigned char *packet_buffer, int size)
     //packet[i] = packet_buffer[i-4];    
   }
 
-  packet[++i] = NUL;  // Checksum
-  packet[++i] = NUL;  // Checksum
-  generate_pentair_checksum(&packet[1], i);
-  //packet[++i] = NUL;
+  // Place checksum placeholders immediately after data (no gap byte)
+  packet[i] = NUL;    // Checksum high
+  packet[i+1] = NUL;  // Checksum low
+  generate_pentair_checksum(&packet[1], i+2);
 
-
-  //logPacket(packet, i);
-  send_packet(fd,packet,++i);
+  send_packet(fd, packet, i+2);
 }
 
 #ifndef SEND_CMD_WITH_TRAILING_NUL
@@ -1077,7 +1079,7 @@ int fix_packet(unsigned char *packet_buffer, int packet_length, bool getCached) 
   // Ignore the first two bytes, assuming they are 0x10, 0x02
   
 
-  for (int i=2; i <= packet_length; i++ ) {
+  for (int i=2; i < packet_length - 1; i++ ) {
     if (packet_buffer[i] == DLE && packet_buffer[i+1] == STX) {
       LOG(RSSD_LOG,LOG_DEBUG, "Packet Fix: found start in middle of frame\n");
       int p1_length = i;

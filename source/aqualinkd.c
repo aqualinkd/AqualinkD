@@ -72,6 +72,8 @@
 
 static volatile bool _keepRunning = true;
 static volatile bool _restart = false;
+static volatile sig_atomic_t _received_signal = 0;
+static volatile sig_atomic_t _upgrade_requested = 0;
 //char** _argv;
 //static struct aqconfig _aqconfig_;
 static struct aqualinkdata _aqualink_data;
@@ -103,49 +105,25 @@ bool isAqualinkDStopping() {
 
 void intHandler(int sig_num)
 {
-  if (sig_num == SIGRUPGRADE) {
-    if (! run_aqualinkd_upgrade(false)) {
-      LOG(AQUA_LOG,LOG_ERR, "AqualinkD upgrade failed!\n");
-    }
-    return; // Let the upgrade process terminate us.
-  }
+  // Only perform async-signal-safe operations here:
+  // set flags and let the main loop handle cleanup.
+  _received_signal = sig_num;
 
-  LOG(AQUA_LOG,LOG_WARNING, "Stopping!\n");
+  if (sig_num == SIGRUPGRADE) {
+    _upgrade_requested = 1;
+    return;
+  }
 
   _keepRunning = false;
 
   if (sig_num == SIGRESTART) {
-    LOG(AQUA_LOG,LOG_WARNING, "Restarting AqualinkD!\n");
-    // If we are deamonized, we need to use the system
-    if (_aqconfig_.deamonize) {
-      if(fork() == 0) {
-        sleep(2);
-        char *newargv[] = {"/bin/systemctl", "restart", "aqualinkd", NULL};
-        char *newenviron[] = { NULL };
-        execve(newargv[0], newargv, newenviron);
-        exit (EXIT_SUCCESS);
-      }
-    } else {
-      _restart = true;
-    }
+    _restart = true;
   }
-  //LOG(AQUA_LOG,LOG_NOTICE, "Stopping!\n");
-  //if (dummy){}// stop compile warnings
 
-  // In blocking mode, die as cleanly as possible.
-#ifdef AQ_NO_THREAD_NETSERVICE
-  if (_aqconfig_.rs_poll_speed < 0) {
-    stopPacketLogger();
-    // This should force port to close and do somewhat gracefull exit.
-    close_blocking_serial_port();
-    //exit(-1);
-  }
-#else
-  stopPacketLogger();
-  // This should force port to close and do somewhat gracefull exit.
+  // In blocking mode, force the serial port closed so the blocking
+  // read returns and the main loop can exit.  close() is async-signal-safe.
   if (serial_blockingmode())
     close_blocking_serial_port();
-#endif
 }
 
 bool isVirtualButtonEnabled() {
@@ -1531,6 +1509,32 @@ void main_loop()
     //delay(10);
   }
   
+  // Handle deferred signal actions (moved out of signal handler for async-signal-safety).
+  if (_received_signal != 0) {
+    LOG(AQUA_LOG,LOG_WARNING, "Received signal %d, stopping!\n", _received_signal);
+  }
+
+  if (_upgrade_requested) {
+    _upgrade_requested = 0;
+    if (! run_aqualinkd_upgrade(false)) {
+      LOG(AQUA_LOG,LOG_ERR, "AqualinkD upgrade failed!\n");
+    }
+    // Let the upgrade process terminate us.
+  }
+
+  if (_restart && _aqconfig_.deamonize) {
+    // When daemonized, fork a child to restart via systemctl
+    LOG(AQUA_LOG,LOG_WARNING, "Restarting AqualinkD (daemonized)!\n");
+    if(fork() == 0) {
+      sleep(2);
+      char *newargv[] = {"/bin/systemctl", "restart", "aqualinkd", NULL};
+      char *newenviron[] = { NULL };
+      execve(newargv[0], newargv, newenviron);
+      exit(EXIT_SUCCESS);
+    }
+    _restart = false; // Let the parent exit normally
+  }
+
   //if (_aqconfig_.debug_RSProtocol_packets) stopPacketLogger();
   stopPacketLogger();
 
