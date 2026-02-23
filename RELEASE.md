@@ -4,20 +4,20 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Release 3.0.3 (Development)
+## Release 3.0.3 (Development - January 2026)
 * Fixed setting SWG for PDA v1.2
 * Fixed bug with slider run times in web UI
 * Fixed bug with heater max min in web UI
 
 ---
 
-## Release 3.0.2
+## Release 3.0.2 (January 2026)
 * Fixed bug with SWG being enabled if one is not present.
 * Fixed bug with light_programs ending in 'show' aqualinkd.conf
 
 ---
 
-## Release 3.0.1
+## Release 3.0.1 (December 2025)
 * UI Update for web config.
 * UI Now support for themes. (auto, dark, light -or- custom)
 * Fixed UI not updating for sensors.
@@ -26,7 +26,7 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Release 3.0.0
+## Release 3.0.0 (December 2025)
 
 **⚠️ NOTE: When upgrading to v3.0.0** - if you see blank AqualinkD screen (ie no buttons), please clear browser cache. This also goes for the mobile/webapp (you may need to delete and re-add to mobile home screen).
 
@@ -297,13 +297,13 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Release 2.2.2
+## Release 2.2.2 (August 2020)
 * Fixed some Web UI bugs
 * Color lights now quicker when selecting existing color mode.
 
 ---
 
-## Release 2.2.1
+## Release 2.2.1 (August 2020)
 * Supports serial adapter protocol `rssa_device_id` (provides instant heater setpoint changes & setpoint increment)
 * Can use separate threads for network & RS485 interface. (optimization for busy RS485 bus implementations)
 * Display messages now posted to MQTT
@@ -318,7 +318,7 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Pre-Release 2.2.0c
+## Pre-Release 2.2.0c (August 2020)
 * Cleaned up Makefile (and adding debug timings).
 * Changed logging infrastructure.
 * Added experimental options for Pi4.
@@ -347,7 +347,7 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Release 2.1.0
+## Release 2.1.0 (June 2020)
 
 **Big update, lots of core changes.** Please read wiki section: https://github.com/aqualinkd/AqualinkD/wiki#Version_2
 
@@ -362,7 +362,7 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Release 1.3.9a
+## Release 1.3.9a (May 2020)
 * Improved Debugging for serial.
 * Added panel Timeout mode support to UI and MQTT
 * Fixed SWG bug while in Service & Timeout modes
@@ -371,16 +371,14 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Release 1.3.8
+## Release 1.3.8 (October 2019)
 * Fixed PDA mode from 1.3.7
 * Added SWG Boost to PDA
 * More updates to protocol code for Jandy and Pentair.
 
 ---
 
-## Release 1.3.7
-
-**⚠️ PDA SUPPORT IS BROKEN IN 1.3.7 - DO NOT UPGRADE IF YOU'RE USING PDA MODE**
+## Release 1.3.7 (Date unknown)
 
 **Note:** Due to changes to speed up programming the control panel, PDA mode does not function correctly. Will be fixed in a future release.
 
@@ -396,7 +394,7 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Release 1.3.6
+## Release 1.3.6 (August 2019)
 * Can now debug inline from a web ui. (`http://aqualinkd.ip.address/debug.html`)
 * Fix SWG in homekit sometimes displaying wrong value. 
   * **Note to Homekit users:** Upgrading to 1.3.5c (and above) will add an additional SWG PPM tile (look in default room). You'll need to update homebridge-aqualinkd to 0.0.8 (or later) to remove the old PPM tile (or delete your homebridge cache). This is due to a bug in homebridge-aqualinkd < 0.0.7 that didn't delete unused tiles.
@@ -411,13 +409,13 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Release 1.3.5
+## Release 1.3.5 (August 2019)
 * Fixed SWG bug showing off/0% every ~15 seconds (introduced in 1.3.3).
 * PDA updates for freeze protect/SWG and general speed increase.
 
 ---
 
-## Release 1.3.4 (a)
+## Release 1.3.4 (July 2019)
 * Logging changes.
 * Fix issues in programming mode.
 * Update to simulation mode.
@@ -507,7 +505,7 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Release 1.2.6
+## Release 1.2.6 (May 2019)
 * Fix for PDA with SPA messages. (Thanks to ballle98).
 * Added report 0 for pool temperature when not available. (Thanks to tcm0116).
 
@@ -518,7 +516,7 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Release 1.2.4
+## Release 1.2.4 (December 2018)
 * Small fix for Freeze Protect.
 
 ---
@@ -571,7 +569,7 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
-## Release 1.0b
+## Release 1.0b (December 30, 2017)
 
 **NEW WEB UI!!!** (in beta)
 
