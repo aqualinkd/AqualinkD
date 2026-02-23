@@ -607,7 +607,7 @@ See License.md for more details.
 
 
 # Legal and Safety Disclaimer
-[Please read](https://github.com/aqualinkd/Disclaimer.md)
+[Please read](https://github.com/aqualinkd/AqualinkD/blob/master/Disclaimer.md)
 
 # Donation
 If you still like this project, please consider buying me a cup of coffee :)
