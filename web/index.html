@@ -2338,8 +2338,10 @@
           if (_temperature_units != 'c') { // Change to DegF
             //slider.min = 36;
             //slider.max = 104;
-            slider.min = ((typeof heater_slider_min !== 'undefined')?heater_slider_min:36);
-            slider.max = ((typeof heater_slider_max !== 'undefined')?heater_slider_max:104);
+            //slider.min = ((typeof heater_slider_min !== 'undefined')?heater_slider_min:36);
+            //slider.max = ((typeof heater_slider_max !== 'undefined')?heater_slider_max:104);
+            slider.min = ((_config?.slider_range?.heater_slider_min)?_config.slider_range.heater_slider_min:0);
+            slider.max = ((_config?.slider_range?.heater_slider_max)?_config.slider_range.heater_slider_max:104);
             slider.step = 1;
           } else { // Change to DegF
             slider.min = 0;
@@ -2475,9 +2477,14 @@
         }
 
         if (typeof tm_slider !== 'undefined' && tm_slider != null) {
-          tm_slider.min = ((typeof timer_slider_min !== 'undefined')?timer_slider_min:0);
-          tm_slider.max = ((typeof timer_slider_max !== 'undefined')?timer_slider_max:360);
-          tm_slider.step = ((typeof timer_slider_step !== 'undefined')?timer_slider_step:10);
+          //tm_slider.min = ((typeof timer_slider_min !== 'undefined')?timer_slider_min:0);
+          //tm_slider.max = ((typeof timer_slider_max !== 'undefined')?timer_slider_max:120);
+          //tm_slider.step = ((typeof timer_slider_step !== 'undefined')?timer_slider_step:10);
+
+          tm_slider.min = ((_config?.slider_range?.timer_slider_min)?_config.slider_range.timer_slider_min:0);
+          tm_slider.max = ((_config?.slider_range?.timer_slider_max)?_config.slider_range.timer_slider_max:360);
+          tm_slider.step = ((_config?.slider_range?.timer_slider_step)?_config.slider_range.timer_slider_step:10);
+
           tm_ext = ' runtime (min)';
 
           tm_slider.value = tm_slider.min;

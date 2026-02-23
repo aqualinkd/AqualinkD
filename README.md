@@ -6,28 +6,35 @@ Binaries are supplied for Raspberry Pi both 32 & 64 bit OS, Has been, and can be
 
 ### It does not, and will never provide any layer of security. NEVER directly expose the device running this software to the outside world; only indirectly through the use of Home Automation hub's or other security measures. e.g. VPNs.
 
-
-## Donation
+---
+### Donation
 If you like this project, you can buy me a cup of coffee :)
 <br>
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=SEGN9UNS38TXJ)
-<hr>
+[![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=SEGN9UNS38TXJ)
 
 
 
-## AqualinkD new home
+---
+### AqualinkD new home
 AqualinkD has grown over the years and now has multiple repositories for software / hardware. We are brining them all together under one organization. [AqualinkD home page (under construction)](https://www.aqualinkd.com) -or- [AqualinkD organization](https://github.com/aqualinkd).<br>
 AqualinkD will always be open source and so will every associated repository. Nothing will change from that perspective. You will always be able to run this on cheap off the shelf hardware.
 
 
-## AqualinkD discussions
+---
+### Legal and Safety Disclaimer
+[Please read](https://github.com/aqualinkd/Disclaimer.md)
+
+
+---
+### AqualinkD discussions
 
 * Please use github Discussions for questions (Link at top of page).
 https://github.com/aqualinkd/AqualinkD/discussions
 * For Bugs, please use issues link on top of page. ( please add AqualinkD version to posts )
 https://github.com/aqualinkd/AqualinkD/issues
 
-## Please see Wiki for installation instructions
+---
+### Please see Wiki for installation instructions
 https://github.com/aqualinkd/AqualinkD/wiki
 
 <!--
@@ -38,8 +45,8 @@ https://github.com/aqualinkd/AqualinkD/wiki/Upgrading-Jandy-Aqualink-PDA-to-RS-p
 Here's where I started to document what I know about the Jandy RS485 protocol.<br>
 https://github.com/aqualinkd/AqualinkD/wiki/Jandy-Aqualink-RS485-protocol
 -->
-
-## AqualinkD built in WEB Interface(s).
+---
+### AqualinkD built in WEB Interface(s).
 
 <table width="100%" border="0" cellpadding="20px">
  <tr><th width="50%">Default web interface</th><th wifth="50%">Simple web interface</img></th><tr>
@@ -134,18 +141,19 @@ NEED TO FIX NEXT THIS RELEASE.
 
 Panel = RS-2/6 Dual will not have spa on auto config. (fine after saving config and restart).
 Need to fix SWG when it's set to 0, thinks it's off and can't change, if it states 0 need to be enable, if blank turn off.
-Need to look at sub panel (combined panels) 
+Need to look at sub panel (combined panels)
+when serial port is wrong, can't edit config.
 -->
 
 
 # Updates in 3.0.3 (dev)
 * Fixed setting SWG for PDA v1.2
-
+* Fixed bug with slider run times in web UI
+* Fixed bug with heater max min in web UI
 
 # Updates in 3.0.2
 * Fixed bug with SWG being enabled if one is not present.
 * Fixed bug with light_programs ending in 'show' aqualinkd.conf
-
 
 # Updates in 3.0.1
 * UI Update for web config.
@@ -598,10 +606,11 @@ All non commercial projects can be run using our open source code under GPLv2 li
 See License.md for more details.
 
 
-
+# Legal and Safety Disclaimer
+[Please read](https://github.com/aqualinkd/Disclaimer.md)
 
 # Donation
 If you still like this project, please consider buying me a cup of coffee :)
 <br>
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=SEGN9UNS38TXJ)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=SEGN9UNS38TXJ)
 

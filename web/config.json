@@ -238,7 +238,7 @@
     "heater_slider_min": 36,
     "heater_slider_max": 104,
     "timer_slider_min": 0,
-    "timer_slider_max": 120,
+    "timer_slider_max": 240,
     "timer_slider_step": 1
   },
   "tile_thresholds": {
