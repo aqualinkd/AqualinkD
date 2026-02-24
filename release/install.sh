@@ -53,7 +53,7 @@ log()
 
   if [[ $LOG_SYSTEMD -eq 0 ]]; then
     logger -p local0.notice -t aqualinkd.upgrade "Upgrade:   $*"
-    # Below is same as above but will only wotrk on journald (leaving it here if we use that rater then file)
+    # Below is same as above but will only work on journald (leaving it here if we use that rather than file)
     #echo $* | systemd-cat -t aqualinkd_upgrade -p info 
     #echo "$*" >> "$OUTPUT"
   fi
@@ -194,7 +194,7 @@ if [ "$PARENT_COMMAND" != "make" ] && [ "$_frommake" -eq $FALSE ] && [ "$_ignore
         log "Arch $ARCH is not officially supported, but we found a suitable binary"
         BINEXT="-$ARCH"
       else
-        log "Arch $ARCH is unknown, Default to using 32bit HF AqualinkD, you may need to manually try ./release/aqualnkd_arm64"
+        log "Arch $ARCH is unknown, Default to using 32bit HF AqualinkD, you may need to manually try ./release/aqualinkd-arm64"
         BINEXT=""
       fi
     ;;

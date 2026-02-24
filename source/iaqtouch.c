@@ -279,7 +279,7 @@ void processPageMessage(unsigned char *message, int length)
   
   if (_currentPageLoading == IAQ_PAGE_HOME || _currentPage == IAQ_PAGE_HOME) {
     rsm_strncpy(_homeStatus[(int)message[PKT_IAQT_MSGINDX]], &message[PKT_IAQT_MSGDATA], AQ_MSGLEN, length-PKT_IAQT_MSGDATA-3);
-  } else if (_currentPageLoading == IAQ_PAGE_STATUS || _currentPage == IAQ_PAGE_STATUS) { // 2nd page of device status doesn;t gine us new page message
+  } else if (_currentPageLoading == IAQ_PAGE_STATUS || _currentPage == IAQ_PAGE_STATUS) { // 2nd page of device status doesn't give us new page message
     //sprintf(_deviceStatus[(int)message[4]], message[5], AQ_MSGLEN);
     //strncpy(_deviceStatus[(int)message[PKT_IAQT_MSGINDX]], (char *)message + PKT_IAQT_MSGDATA, AQ_MSGLEN);
     rsm_strncpy(_deviceStatus[(int)message[PKT_IAQT_MSGINDX]], &message[PKT_IAQT_MSGDATA], AQ_MSGLEN, length-PKT_IAQT_MSGDATA-3);

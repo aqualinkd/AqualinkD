@@ -1345,7 +1345,7 @@ bool set_PDA_numeric_field_value(struct aqualinkdata *aqdata, int val, int cur_v
     char *hghlight_chars;
     int hlight_length=0;
     int i=0;
-    hghlight_chars = pda_m_hlightchars(&hlight_length); // NSF May need to take this out and there for the LOG entry after while
+    hghlight_chars = pda_m_hlightchars(&hlight_length); // NSF May need to take this out and therefore the LOG entry after while
     while (hlight_length >= 15 || hlight_length <= 0) {
       delay(500);
       waitForPDANextMessageType(aqdata,CMD_PDA_HIGHLIGHTCHARS,5);

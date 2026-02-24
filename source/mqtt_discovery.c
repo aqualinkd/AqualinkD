@@ -345,8 +345,8 @@ const char *HASSIO_PUMP_TEXT_SENSOR_DISCOVER = "{"
     "\"icon\": \"mdi:pump\""
 "}";
 /*
-Below doesn;t work (int and string values).  Maybe try text sensor and add RPM/GPM to number
-Or add seperate text sensor. (this would be better options, that way you can see priming AND rpm)
+Below doesn't work (int and string values).  Maybe try text sensor and add RPM/GPM to number
+Or add separate text sensor. (this would be better options, that way you can see priming AND rpm)
 "value_template": "{% set values = { '-1':'priming', '-2':'offline', '-3':'error'} %}{{ values[value] if value in values.keys() else value }}",
 */
 const char *HASSIO_TEXT_SENSOR_DISCOVER = "{"

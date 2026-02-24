@@ -1,6 +1,6 @@
-#/bin/sh
+#!/bin/sh
 #
-# Geneate self-signed ECC certificates
+# Generate self-signed ECC certificates
 
 #cd `dirname $0`
 

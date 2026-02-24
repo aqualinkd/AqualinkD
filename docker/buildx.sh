@@ -2,8 +2,8 @@
 #
 # Script to build arm64 & amd64 containers that are published to docker.io
 # 
-# This should never be used, unless you want to deploy AqualinkD docker containers to docer.io
-# It's here incase someone taked over this repo because I'm no longer around
+# This should never be used, unless you want to deploy AqualinkD docker containers to docker.io
+# It's here in case someone takes over this repo because I'm no longer around
 #
 
 IMAGE=aqualinkd
