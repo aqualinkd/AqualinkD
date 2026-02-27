@@ -57,7 +57,7 @@ else
     #  $(info OS: $(PI_OS_VERSION) )
     #  GLIBC_VERSION = $(shell ldd --version | grep ldd)
     #  $(info GLIBC build with: $(GLIBC_VERSION) )
-    #  $(info GLIBC Prefered  : 2.24-11+deb9u1 2.24 )
+    #  $(info GLIBC Preferred  : 2.24-11+deb9u1 2.24 )
    endif
    # OSX
    ifeq ($(UNAME_S),Darwin)
@@ -111,7 +111,7 @@ SL_SRC = rs485mon.c aq_serial.c utils.c packetLogger.c rs_msg_utils.c timespec_s
 DD_SRC = dummy_device.c aq_serial.c utils.c packetLogger.c rs_msg_utils.c timespec_subtract.c
 DR_SRC = dummy_reader.c aq_serial.c utils.c packetLogger.c rs_msg_utils.c timespec_subtract.c
 
-# Build durectories
+# Build directories
 SRC_DIR := ./source
 OBJ_DIR := ./build
 DBG_OBJ_DIR := $(OBJ_DIR)/debug
@@ -214,15 +214,15 @@ runindocker:
 	sudo docker run -it --mount type=bind,source=./,target=/build aqualinkd-releasebin make dockerbuildnrun 
 	$(info Binaries for release have been built)
 
-# This is run inside container Dockerfile.releaseBinariies (aqualinkd-releasebin)
+# This is run inside container Dockerfile.releaseBinaries (aqualinkd-releasebin)
 buildrelease: clean armhf arm64 
 	$(shell cd release && ln -s ./aqualinkd-armhf ./aqualinkd && ln -s ./rs485mon-armhf ./rs485mon)
 
-# This is run inside container Dockerfile.releaseBinariies (aqualinkd-releasebin)
+# This is run inside container Dockerfile.releaseBinaries (aqualinkd-releasebin)
 quickbuild: armhf arm64 
 	$(shell cd release && [ ! -f "./aqualinkd-armhf" ] && ln -s ./aqualinkd-armhf ./aqualinkd && ln -s ./rs485mon-armhf ./rs485mon)
 
-# This is run inside container Dockerfile.releaseBinariies (aqualinkd-releasebin)
+# This is run inside container Dockerfile.releaseBinaries (aqualinkd-releasebin)
 dockerbuildnrun: ./release/aqualinkd
 	$(shell ./release/aqualinkd -d -c ./release/aqualinkd.test.conf)
 

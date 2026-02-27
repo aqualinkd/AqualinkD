@@ -388,7 +388,7 @@ void *set_allbutton_SWG( void *ptr )
   }
 
   // Let everyone know we set SWG, if it failed we will update on next message, unless it's 0.
-  setSWGpercent(aqdata, val); // Don't use chageSWGpercent as we are in programming mode.
+  setSWGpercent(aqdata, val); // Don't use changeSWGpercent as we are in programming mode.
 
 /*
   if (select_sub_menu_item(aqdata, "SET POOL SP") != true) {

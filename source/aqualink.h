@@ -8,7 +8,7 @@
 #include "aq_serial.h"
 #include "aq_programmer.h"
 #include "sensors.h"
-//#include "aq_panel.h"  // Moved to later in file to overcome circular dependancy. (crappy I know)
+//#include "aq_panel.h"  // Moved to later in file to overcome circular dependency. (crappy I know)
 
 #define DPRINTF(format, ...) printf("%s:%d: " format, __FILE__, __LINE__, ##__VA_ARGS__)
 //#define DPRINTF(format, ...)
@@ -188,7 +188,7 @@ struct action {
   //char value[10];
 };
 
-// Moved to aq_programmer to stop circular dependancy
+// Moved to aq_programmer to stop circular dependency
 /*
 typedef enum pump_type {
   PT_UNKNOWN = -1,
@@ -223,11 +223,11 @@ typedef enum SP_TYPE{
 #define PUMP_OFF_WAT PUMP_OFF_RPM
 
 
-// FUTURE VSP STATUS, keep panel status and RS485 status seperate
+// FUTURE VSP STATUS, keep panel status and RS485 status separate
 
 typedef enum panel_vsp_status
 {
-  PS_OK = 0,  // Start at 0 to match actual status from RS, but go down from their.
+  PS_OK = 0,  // Start at 0 to match actual status from RS, but go down from there.
   PS_OFF = -1,
   PS_PRIMING = -2,
   PS_OFFLINE = -3,

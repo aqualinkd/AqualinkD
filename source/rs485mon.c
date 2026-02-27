@@ -411,9 +411,9 @@ char* canUseExtended(unsigned char ID) {
   }
   for (i = 0; i < 4; i++) {
     if (ID == _goodIAQTID[i] && _panelPDA == false)
-      return " <-- can use for Aqualinkd (Prefered Extended Device ID)";
+      return " <-- can use for Aqualinkd (Preferred Extended Device ID)";
     else if (ID == _goodIAQTID[i] && _panelPDA == true)
-      return " <-- can use for Aqualinkd (PDA mode Expermental only)";
+      return " <-- can use for Aqualinkd (PDA mode Experimental only)";
   }
   for (i = 0; i < 2; i++) {
     if (ID == _goodRSSAID[i] && _panelPDA == false)
