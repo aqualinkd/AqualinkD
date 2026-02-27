@@ -14,7 +14,7 @@ FROM debian:bookworm AS aqualinkd-build
 RUN apt-get update && \
     apt-get -y install curl make gcc libsystemd-dev
 
-# Seup working dir
+# Setup working dir
 RUN mkdir /home/AqualinkD
 WORKDIR /home/AqualinkD
 
@@ -39,7 +39,8 @@ ARG AQUALINKD_VERSION
 
 RUN apt-get update && \
     apt-get install -y cron curl socat && \
-    apt-get clean
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set cron to read local.d
 RUN sed -i '/EXTRA_OPTS=.-l./s/^#//g' /etc/default/cron

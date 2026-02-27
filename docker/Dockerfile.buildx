@@ -34,7 +34,7 @@ ARG TARGETARCH
 
 # Print all buildx variables 
 RUN echo "Build Arch $BUILDARCH" && \
-    echo "Tagert OS $TARGETOS"
+    echo "Target OS $TARGETOS"
 
 # Setup build env, using toolchain for all builds, even native, since make this Dockerfile cleaner
 # and no need to use bash if statments.
@@ -78,7 +78,9 @@ RUN make clean && \
 FROM debian:bookworm-slim AS aqualinkd
 
 RUN apt-get update \
-  && apt-get install -y cron curl socat
+  && apt-get install -y cron curl socat \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
  
 # Set cron to read local.d
 RUN sed -i '/EXTRA_OPTS=.-l./s/^#//g' /etc/default/cron
