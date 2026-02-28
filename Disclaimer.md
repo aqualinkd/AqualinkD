@@ -13,9 +13,18 @@ This document outlines the legal status and usage terms for the **AqualinkD** pr
 
 ## 2. Reverse Engineering & Interoperability
 AqualinkD has been developed for the sole purpose of achieving **hardware interoperability**.
+
+<!--
 * **Clean Room Implementation:** This project does not contain, use, or redistribute any proprietary source code or binary firmware belonging to Jandy or Pentair. 
 * **Protocol Implementation:** The communication methods used by this software (including modifications to the standard Modbus protocol over RS485) are a "method of operation" implemented through independent observation of unencrypted signal sequences. 
 * **Legal Precedent:** This work is protected under the principles of **Fair Use** for interoperability (consistent with legal standards established in *Sega v. Accolade* and *Google v. Oracle*). Under 17 U.S.C. § 102(b), copyright protection does not extend to the ideas, systems, or methods of operation defined by a communication protocol.
+-->
+
+* **hardware interoperability:** AqualinkD is developed through independent reverse engineering of unencrypted signals transmitted over the RS485 communication bus used by Jandy® Aqualink® pool controllers.
+* **Original Work:** All code and documentation in this project are original works created without access to proprietary source code, firmware, or confidential information from Jandy® or Pentair®.
+* **Clean Room Implementation:** This project does not contain, use, or redistribute any proprietary source code or binary firmware belonging to Jandy or Pentair.
+* **Protocol Implementation:** The communication methods used by this software (including modifications to the standard Modbus protocol over RS485) are a "method of operation" implemented through independent observation of unencrypted signal sequences.
+* **Legal Precedent:** This work is designed to comply with and may be protected under the principles of Fair Use for interoperability (consistent with legal standards established in Sega v. Accolade and Google v. Oracle). Under 17 U.S.C. § 102(b), copyright protection does not extend to the ideas, systems, or methods of operation defined by a communication protocol.
 
 ## 3. Trademarks
 All product names, logos, and brands mentioned (such as Jandy®, Aqualink®, Pentair®, IntelliTouch®, or EasyTouch®) are the property of their respective owners. Their use within this project is for **nominative purposes only**—specifically to identify the pool equipment with which this software is compatible. This usage does not imply any affiliation with or endorsement by the trademark holders.

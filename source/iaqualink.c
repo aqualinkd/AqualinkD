@@ -691,9 +691,12 @@ bool process_iaqualink_packet(unsigned char *packet, int length, struct aqualink
         push_iaqualink_cmd(_fullcmd, 19);
         _fullcmd[4] = 0x00;
 */
-        push_iaqualink_cmd(cmd_getMainstatus, 2);
-        push_iaqualink_cmd(cmd_getTouchstatus, 2);
-        push_iaqualink_cmd(cmd_getAuxstatus, 2);
+        // If poll counter is less than 0 we are waiting for something and don't want to overload the controller with requests
+        if (get_iaqTouchPollCounter() > 0) {
+          push_iaqualink_cmd(cmd_getMainstatus, 2);
+          push_iaqualink_cmd(cmd_getTouchstatus, 2);
+          push_iaqualink_cmd(cmd_getAuxstatus, 2);
+        }
 /*
         LOG(IAQL_LOG, LOG_INFO,"*****************************************\n");
         LOG(IAQL_LOG, LOG_INFO,"********** Send %d 0x%02hhx ************\n",ID,ID);

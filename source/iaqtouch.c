@@ -830,10 +830,20 @@ static int _pollCnt;
 
 // running through status while programming a lighgt seems to confuse the panel, so let
 // other people reset our poll count.
-void reset_iaqTouchPollCounter()
+#ifdef PLIGHT_IAQTOUCH_FIX
+void reset_iaqTouchPollCounter(int number)
 {
-  _pollCnt = 0;
+  _pollCnt = number;
 }
+void delay_iaqTouch4lightProgramming()
+{
+  reset_iaqTouchPollCounter(-100); // Total quess at the moment.
+}
+int get_iaqTouchPollCounter()
+{
+  return _pollCnt;
+}
+#endif
 
 bool process_iaqtouch_packet(unsigned char *packet, int length, struct aqualinkdata *aqdata)
 {
@@ -1107,7 +1117,7 @@ if not programming && poll packet {
 
         iaqt_queue_cmd(nextPageRequestKey);
       
-      } else if ( (_pollCnt % DEVICE_STATUS_POLL_COUNT == 0) && 
+      } else if ( (_pollCnt > 0) && (_pollCnt % DEVICE_STATUS_POLL_COUNT == 0) && 
                   (_currentPage == IAQ_PAGE_DEVICES || _currentPage == IAQ_PAGE_DEVICES_REV_Yg) ) {
         iaqt_queue_cmd(KEY_IAQTCH_STATUS); // This will force us to go to status, then it'll jump back to devices, then force status again
       }

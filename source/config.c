@@ -419,6 +419,13 @@ void init_parameters (struct aqconfig * parms)
   _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_false;
 
   _numCfgParams++;
+  _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.light_programming_iaqualink_delay;
+  _cfgParams[_numCfgParams].value_type = CFG_BOOL;
+  _cfgParams[_numCfgParams].name = CFG_N_light_programming_iaqualink_delay;
+  _cfgParams[_numCfgParams].config_mask |= CFG_GRP_ADVANCED;
+  _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_false;
+
+  _numCfgParams++;
   _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.read_RS485_devmask;
   _cfgParams[_numCfgParams].value_type = CFG_BITMASK;
   _cfgParams[_numCfgParams].name = CFG_N_read_RS485_swg;

@@ -586,6 +586,10 @@ All notable changes to AqualinkD are documented here. Releases are listed in rev
 
 ---
 
+
+## Opened source to github (December 27, 2017)
+## Project started (2016)
+
 ## Supported Panel Versions
 
 AqualinkD was designed for Jandy Aqualink RS and works with AqualinkRS and iAqualink Combo control panels. It will work with Aqualink PDA/AquaPalm; but with limitations.

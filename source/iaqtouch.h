@@ -38,6 +38,9 @@ const char *iaqt_page_name(const unsigned char page);
 int num2iaqtRSset (unsigned char* packetbuffer, int num, bool pad4unknownreason);
 int char2iaqtRSset (unsigned char* packetbuffer, char *msg, int msg_len);
 
+void delay_iaqTouch4lightProgramming();
+int get_iaqTouchPollCounter();
+
 void set_iaqtouch_lastmsg(unsigned char msgtype);
 
 // This should be moved to aq_serial once finished.

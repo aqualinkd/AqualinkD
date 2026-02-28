@@ -11,6 +11,25 @@
 #include "color_lights.h"
 #include "aq_scheduler.h"
 
+#include "iaqtouch.h"
+
+/* Handle programmable light turning ON from OFF state */
+void handle_programmable_light_on(struct aqualinkdata *aqdata, int led_index)
+{
+  //if (aqdata->aqualinkleds[led_index].state == OFF) {
+    // Find the button associated with this LED
+    for (int j = 0; j < aqdata->total_buttons; j++) {
+      if (aqdata->aqbuttons[j].led == &aqdata->aqualinkleds[led_index] && 
+          (aqdata->aqbuttons[j].special_mask & PROGRAM_LIGHT)) {
+        // LED transitioning from OFF to ON and button has PROGRAM_LIGHT flag
+        delay_iaqTouch4lightProgramming();
+        LOG(ALLB_LOG,LOG_DEBUG, "Resetting iaqTouch poll counter due to light programming");
+        break;
+      }
+    }
+  //}
+}
+
 /* Below can also be called from serialadapter.c */
 void processLEDstate(struct aqualinkdata *aqdata, unsigned char *packet, logmask_t from)
 {
@@ -42,6 +61,11 @@ void processLEDstate(struct aqualinkdata *aqdata, unsigned char *packet, logmask
         SET_IF_CHANGED(aqdata->aqualinkleds[i].state, FLASH, aqdata->is_dirty);
       } else if (((aqdata->raw_status[byte] >> bit) & 1) == 1){
         //aqdata->aqualinkleds[i].state = ON;
+#ifdef PLIGHT_IAQTOUCH_FIX
+        if (_aqconfig_.light_programming_iaqualink_delay && aqdata->aqualinkleds[i].state == OFF) {
+          handle_programmable_light_on(aqdata, i);
+        }
+#endif
         SET_IF_CHANGED(aqdata->aqualinkleds[i].state, ON, aqdata->is_dirty);
       }else{
         //aqdata->aqualinkleds[i].state = OFF;

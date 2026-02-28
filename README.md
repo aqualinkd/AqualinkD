@@ -145,6 +145,7 @@ when serial port is wrong, can't edit config.
 * Fixed setting SWG for PDA v1.2
 * Fixed bug with slider run times in web UI
 * Fixed bug with heater max min in web UI
+* Added light_programming_iaqualink_delay to delay aqualink protocol while light is being programmed, some users have encountered panel slowing down while light is being programmed.
 
 ## Updates in 3.0.2
 * Fixed bug with SWG being enabled if one is not present.

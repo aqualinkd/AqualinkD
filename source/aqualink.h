@@ -22,6 +22,8 @@
 
 #define CLIGHT_PANEL_FIX // Overcome bug in some jandy panels where color light status of on is not in LED status
 
+#define PLIGHT_IAQTOUCH_FIX // Overcome bug in some jandy panels where programming a light can cause other light status to be missed, by resetting poll counter on light programming.
+
 #define TIME_CHECK_INTERVAL  3600
 //#define TIME_CHECK_INTERVAL  100 // DEBUG ONLY
 #define ACCEPTABLE_TIME_DIFF 120
