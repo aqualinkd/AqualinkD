@@ -1029,7 +1029,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
   int index = 0;
   aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[7-1];
   aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-  aqdata->aqbuttons[index].label = rs?name2label(BTN_PUMP):cleanalloc(BTN_PDA_PUMP);
+  if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(BTN_PUMP):cleanalloc(BTN_PDA_PUMP);
   aqdata->aqbuttons[index].name = BTN_PUMP;
   aqdata->aqbuttons[index].code = KEY_PUMP;
   aqdata->aqbuttons[index].special_mask = 0;
@@ -1039,7 +1039,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
   if (combo) {
     aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[6-1];
     aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-    aqdata->aqbuttons[index].label = rs?name2label(BTN_SPA):cleanalloc(BTN_PDA_SPA);
+    if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(BTN_SPA):cleanalloc(BTN_PDA_SPA);
     aqdata->aqbuttons[index].name = BTN_SPA;
     aqdata->aqbuttons[index].code = KEY_SPA;
     aqdata->aqbuttons[index].special_mask = 0;
@@ -1049,7 +1049,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
   
   aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[5-1];
   aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-  aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX1):cleanalloc(BTN_PDA_AUX1);
+  if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX1):cleanalloc(BTN_PDA_AUX1);
   aqdata->aqbuttons[index].name = BTN_AUX1;
   aqdata->aqbuttons[index].code = KEY_AUX1;
   aqdata->aqbuttons[index].special_mask = 0;
@@ -1058,7 +1058,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
   
   aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[4-1];
   aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-  aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX2):cleanalloc(BTN_PDA_AUX2);
+  if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX2):cleanalloc(BTN_PDA_AUX2);
   aqdata->aqbuttons[index].name = BTN_AUX2;
   aqdata->aqbuttons[index].code = KEY_AUX2;
   aqdata->aqbuttons[index].special_mask = 0;
@@ -1067,7 +1067,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
   
   aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[3-1];
   aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-  aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX3):cleanalloc(BTN_PDA_AUX3);
+  if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX3):cleanalloc(BTN_PDA_AUX3);
   aqdata->aqbuttons[index].name = BTN_AUX3;
   aqdata->aqbuttons[index].code = KEY_AUX3;
   aqdata->aqbuttons[index].special_mask = 0;
@@ -1078,7 +1078,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
   if (size >= 6) {
     aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[9-1];
     aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-    aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX4):cleanalloc(BTN_PDA_AUX4);
+    if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX4):cleanalloc(BTN_PDA_AUX4);
     aqdata->aqbuttons[index].name = BTN_AUX4;
     aqdata->aqbuttons[index].code = KEY_AUX4;
     aqdata->aqbuttons[index].special_mask = 0;
@@ -1087,7 +1087,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
 
     aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[8-1];
     aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-    aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX5):cleanalloc(BTN_PDA_AUX5);
+    if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX5):cleanalloc(BTN_PDA_AUX5);
     aqdata->aqbuttons[index].name = BTN_AUX5;
     aqdata->aqbuttons[index].code = KEY_AUX5;
     aqdata->aqbuttons[index].special_mask = 0;
@@ -1098,7 +1098,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
   if (size >= 8) {
     aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[12-1];
     aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-    aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX6):cleanalloc(BTN_PDA_AUX6);
+    if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX6):cleanalloc(BTN_PDA_AUX6);
     aqdata->aqbuttons[index].name = BTN_AUX6;
     aqdata->aqbuttons[index].code = KEY_AUX6;
     aqdata->aqbuttons[index].special_mask = 0;
@@ -1107,7 +1107,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
 
     aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[1-1];
     aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-    aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX7):cleanalloc(BTN_PDA_AUX7);
+    if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(BTN_AUX7):cleanalloc(BTN_PDA_AUX7);
     aqdata->aqbuttons[index].name = BTN_AUX7;
     aqdata->aqbuttons[index].code = KEY_AUX7;
     aqdata->aqbuttons[index].special_mask = 0;
@@ -1166,7 +1166,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
   if (size >= 14) { // Actually RS 16 panel, but also 2/14 dual panel.
     aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[21-1];  // doesn't actually exist
     aqdata->aqbuttons[index].led->state = OFF;  // Since there is no LED in data, set to off and allow messages to turn it on
-    aqdata->aqbuttons[index].label = name2label(BTN_AUXB5);
+    if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = name2label(BTN_AUXB5);
     aqdata->aqbuttons[index].name = BTN_AUXB5;
     aqdata->aqbuttons[index].code = KEY_AUXB5;
     aqdata->aqbuttons[index].special_mask = 0;
@@ -1175,7 +1175,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
  
     aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[22-1];  // doesn't actually exist
     aqdata->aqbuttons[index].led->state = OFF; // Since there is no LED in data, set to off and allow messages to turn it on
-    aqdata->aqbuttons[index].label = name2label(BTN_AUXB6);
+    if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = name2label(BTN_AUXB6);
     aqdata->aqbuttons[index].name = BTN_AUXB6;
     aqdata->aqbuttons[index].code = KEY_AUXB6;
     aqdata->aqbuttons[index].special_mask = 0;
@@ -1184,7 +1184,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
   
     aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[23-1];  // doesn't actually exist
     aqdata->aqbuttons[index].led->state = OFF; // Since there is no LED in data, set to off and allow messages to turn it on
-    aqdata->aqbuttons[index].label = name2label(BTN_AUXB7);
+    if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = name2label(BTN_AUXB7);
     aqdata->aqbuttons[index].name = BTN_AUXB7;
     aqdata->aqbuttons[index].code = KEY_AUXB7;
     aqdata->aqbuttons[index].rssd_code = RS_SA_AUX14;
@@ -1192,7 +1192,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
 
     aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[24-1]; // doesn't actually exist
     aqdata->aqbuttons[index].led->state = OFF; // Since there is no LED in data, set to off and allow messages to turn it on
-    aqdata->aqbuttons[index].label = name2label(BTN_AUXB8);
+    if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = name2label(BTN_AUXB8);
     aqdata->aqbuttons[index].name = BTN_AUXB8;
     aqdata->aqbuttons[index].code = KEY_AUXB8;
     aqdata->aqbuttons[index].special_mask = 0;
@@ -1206,7 +1206,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
     if (size == 6) {
       aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[12-1];
       aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-      aqdata->aqbuttons[index].label = name2label(BTN_AUX6);
+      if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = name2label(BTN_AUX6);
       aqdata->aqbuttons[index].name = BTN_AUX6;
       aqdata->aqbuttons[index].code = KEY_AUX6;
       aqdata->aqbuttons[index].special_mask = 0;
@@ -1227,7 +1227,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
 
   aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[15-1];
   aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-  aqdata->aqbuttons[index].label = rs?name2label(combo?BTN_POOL_HTR:BTN_TEMP1_HTR):cleanalloc(BTN_PDA_POOL_HTR);
+  if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(combo?BTN_POOL_HTR:BTN_TEMP1_HTR):cleanalloc(BTN_PDA_POOL_HTR);
   aqdata->aqbuttons[index].name = BTN_POOL_HTR;
   aqdata->aqbuttons[index].code = KEY_POOL_HTR;
   aqdata->aqbuttons[index].special_mask = 0;
@@ -1236,7 +1236,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
   
   aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[17-1];
   aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-  aqdata->aqbuttons[index].label = rs?name2label(combo?BTN_SPA_HTR:BTN_TEMP2_HTR):cleanalloc(BTN_PDA_SPA_HTR);
+  if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(combo?BTN_SPA_HTR:BTN_TEMP2_HTR):cleanalloc(BTN_PDA_SPA_HTR);
   aqdata->aqbuttons[index].name = BTN_SPA_HTR;
   aqdata->aqbuttons[index].code = KEY_SPA_HTR;
   aqdata->aqbuttons[index].special_mask = 0;
@@ -1245,7 +1245,7 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
   
   aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[19-1];
   aqdata->aqbuttons[index].led->state = LED_S_UNKNOWN;
-  aqdata->aqbuttons[index].label = rs?name2label(BTN_EXT_AUX):cleanalloc(BTN_PDA_EXT_AUX);
+  if (NULL == aqdata->aqbuttons[index].label || 0 == aqdata->aqbuttons[index].label[0]) aqdata->aqbuttons[index].label = rs?name2label(BTN_EXT_AUX):cleanalloc(BTN_PDA_EXT_AUX);
   aqdata->aqbuttons[index].name = BTN_EXT_AUX;
   aqdata->aqbuttons[index].code = KEY_EXT_AUX;
   aqdata->aqbuttons[index].special_mask = 0;
