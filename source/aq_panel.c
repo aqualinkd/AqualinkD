@@ -1022,9 +1022,18 @@ int convertPumpPercentToSpeed(pump_detail *pump, int pValue) {
 // 4,6,8,10,12,14
 void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo, bool dual) {
 
-  // Since we are resetting all special buttons here (.special_mask), we need to clean out the lights and pumps.
-  aqdata->num_lights = 0;
-  aqdata->num_pumps = 0;
+  // Since we are resetting all special buttons here (.special_mask), we
+  // need to clean out the lights and pumps. But num_pumps/num_lights and
+  // the pumps[]/lights[] arrays themselves are populated once from config
+  // (button_XX_pumpID etc, via populatePumpData()/populateLightData()) and
+  // aren't rebuilt here - only each button's special_mask flag is affected
+  // by this reset. Re-apply those associations after rebuilding the
+  // buttons below instead of discarding them: previously this permanently
+  // broke config-associated VSPs/programmable lights the moment the bus
+  // auto-configure handshake ran (i.e. whenever device_id=0xFF), even
+  // though the underlying pump/light data kept updating from the bus.
+  int saved_num_pumps = aqdata->num_pumps;
+  int saved_num_lights = aqdata->num_lights;
 
   int index = 0;
   aqdata->aqbuttons[index].led = &aqdata->aqualinkleds[7-1];
@@ -1268,6 +1277,26 @@ void initPanelButtons(struct aqualinkdata *aqdata, bool rs, int size, bool combo
         aqdata->aqbuttons[i].led->state = OFF;
     }
   #endif
+
+  // Re-associate any pumps/lights that were already configured now that
+  // the button array has been rebuilt (the pumps[]/lights[] entries and
+  // their .button pointers are still valid, only special_mask was wiped
+  // above).
+  aqdata->num_pumps = saved_num_pumps;
+  for (int p = 0; p < saved_num_pumps; p++) {
+    if (aqdata->pumps[p].button != NULL) {
+      setButtonSpecialMask(aqdata->pumps[p].button, VS_PUMP);
+      aqdata->pumps[p].button->special_mask_ptr = (void *)&aqdata->pumps[p];
+    }
+  }
+
+  aqdata->num_lights = saved_num_lights;
+  for (int l = 0; l < saved_num_lights; l++) {
+    if (aqdata->lights[l].button != NULL) {
+      setButtonSpecialMask(aqdata->lights[l].button, PROGRAM_LIGHT);
+      aqdata->lights[l].button->special_mask_ptr = (void *)&aqdata->lights[l];
+    }
+  }
 }
 
 const char* getRequestName(request_source source)
