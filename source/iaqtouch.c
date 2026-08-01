@@ -522,7 +522,7 @@ pump_detail *matchPump(const logmask_t from, struct aqualinkdata *aqdata, char *
   pump_detail *pump = NULL;
   int pi = 0;
 
-  LOG(IAQT_LOG,LOG_DEBUG, "Finding pump for message '%s'\n",name);
+  LOG(IAQT_LOG, LOG_DEBUG, "Finding pump for message '%s'\n", name);
 
   if (rsm_strcmp(name, "Intelliflo VS") == 0 ||
       rsm_strcmp(name, "Intelliflo VF") == 0 ||
@@ -530,13 +530,24 @@ pump_detail *matchPump(const logmask_t from, struct aqualinkdata *aqdata, char *
       rsm_strcmp(name, "ePump AC") == 0)
   {
     pi = rsm_atoi(&name[14]);
+
     if (pi <= 0)
-      pi = rsm_atoi(&name[10]); // ePump AC seems to display index in different position
+      pi = rsm_atoi(&name[10]); // ePump AC may display index in a different position
   }
 
-  // Now loop over all the VSP pumps and check the name.
+  LOG(from, LOG_NOTICE,
+      "Pump match: name='%s' parsed_index=%d num_pumps=%d\n",
+      name, pi, aqdata->num_pumps);
+
   for (i = 0; i < aqdata->num_pumps; i++)
   {
+    LOG(from, LOG_NOTICE,
+        "Configured[%d]: index=%d id=0x%02x name='%s'\n",
+        i,
+        aqdata->pumps[i].pumpIndex,
+        aqdata->pumps[i].pumpID,
+        aqdata->pumps[i].pumpName);
+
     if ((pi > 0 && aqdata->pumps[i].pumpIndex == pi) ||
         (rsm_strcmp(name, aqdata->pumps[i].pumpName) == 0))
     {
@@ -550,7 +561,9 @@ pump_detail *matchPump(const logmask_t from, struct aqualinkdata *aqdata, char *
   {
     if (pump == NULL)
     {
-      LOG(from, LOG_INFO, "Got pump message '%s' but can't find pump # %d, please update aqualinkd.conf\n", name, pi);
+      LOG(from, LOG_INFO,
+          "Got pump message '%s' but can't find pump # %d, please update aqualinkd.conf\n",
+          name, pi);
     }
     else if (pump->pumpType == PT_UNKNOWN)
     {
@@ -565,9 +578,15 @@ pump_detail *matchPump(const logmask_t from, struct aqualinkdata *aqdata, char *
   }
 
   if (pump == NULL)
-    LOG(from, LOG_DEBUG, "Did not find pump config for '%s'\n", name);
+    LOG(from, LOG_DEBUG,
+        "Did not find pump config for '%s'\n",
+        name);
   else
-    LOG(from, LOG_DEBUG, "Found pump '%s', Name='%s', 'Index='%d'\n", name, pump->pumpName, pump->pumpIndex);
+    LOG(from, LOG_DEBUG,
+        "Found pump '%s', Name='%s', 'Index='%d'\n",
+        name,
+        pump->pumpName,
+        pump->pumpIndex);
 
   return pump;
 }
