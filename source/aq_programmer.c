@@ -88,6 +88,7 @@ const func_ptr _prog_functions[AQP_RSSADAPTER_MAX] = {
      [AQ_SET_ONETOUCH_FREEZEPROTECT]   = set_aqualink_onetouch_freezeprotect, 
      [AQ_SET_IAQTOUCH_PUMP_RPM]        = set_aqualink_iaqtouch_pump_rpm, 
      [AQ_GET_IAQTOUCH_VSP_ASSIGNMENT]  = set_aqualink_iaqtouch_vsp_assignments, 
+     [AQ_SET_IAQTOUCH_VSP_MINIMUM]   = set_aqualink_iaqtouch_vsp_minimum,
      [AQ_GET_IAQTOUCH_SETPOINTS]       = get_aqualink_iaqtouch_setpoints, 
      [AQ_GET_IAQTOUCH_FREEZEPROTECT]   = get_aqualink_iaqtouch_freezeprotect, 
      [AQ_GET_IAQTOUCH_AUX_LABELS]      = get_aqualink_iaqtouch_aux_labels, 
@@ -989,6 +990,9 @@ const char *ptypeName(program_type type)
     case AQ_GET_IAQTOUCH_VSP_ASSIGNMENT:
       return "Get AqualinkTouch Touch Pump Assignment";
     break;
+    case AQ_SET_IAQTOUCH_VSP_MINIMUM:
+      return "Set AqualinkTouch VSP Minimum";
+    break;
     case AQ_GET_IAQTOUCH_SETPOINTS:
       return "Get AqualinkTouch Touch Setpoints";
     break;
@@ -1163,6 +1167,9 @@ const char *programtypeDisplayName(program_type type)
     break;
     case AQ_GET_IAQTOUCH_VSP_ASSIGNMENT:
       return "Get Pump Assignment";
+    break;
+    case AQ_SET_IAQTOUCH_VSP_MINIMUM:
+      return "Programming: setting VSP minimum";
     break;
     case AQ_SET_IAQTOUCH_DEVICE_ON_OFF:
     case AQ_SET_IAQTOUCH_ONETOUCH_ON_OFF:
