@@ -1112,12 +1112,49 @@ void *set_aqualink_iaqtouch_vsp_assignments( void *ptr )
         field->name,
         field->keycode);
 
+    const int requestedMinimum = 2000;
+
     send_aqt_cmd(field->keycode);
     waitfor_iaqt_queue2empty();
 
     LOG(IAQT_LOG, LOG_NOTICE,
-        "VSP minimum inline navigation: Pump 1 field selected; "
-        "no value sent\n");
+        "VSP minimum write: Pump 1 field selected; sending %d RPM\n",
+        requestedMinimum);
+
+    queue_iaqt_control_command(icct_setrpm, requestedMinimum);
+    waitfor_iaqt_ctrl_queue2empty();
+
+    waitfor_iaqt_nextPage(aqdata);
+
+    if (goto_iaqt_page(IAQ_PAGE_VSP_SETUP, aqdata) == false) {
+      LOG(IAQT_LOG, LOG_ERR,
+          "VSP minimum verification could not reopen VSP Setup\n");
+    } else {
+      field = iaqtFindButtonByIndex(8);
+
+      if (field == NULL || field->name[0] == '\0') {
+        LOG(IAQT_LOG, LOG_ERR,
+            "VSP minimum verification could not read Pump 1 minimum\n");
+      } else {
+        int verifiedMinimum = rsm_atoi(field->name);
+
+        if (verifiedMinimum == requestedMinimum) {
+          LOG(IAQT_LOG, LOG_NOTICE,
+              "VSP minimum write PASS: Pump 1 requested=%d verified=%d "
+              "display='%s'\n",
+              requestedMinimum,
+              verifiedMinimum,
+              field->name);
+        } else {
+          LOG(IAQT_LOG, LOG_ERR,
+              "VSP minimum write FAIL: Pump 1 requested=%d verified=%d "
+              "display='%s'\n",
+              requestedMinimum,
+              verifiedMinimum,
+              field->name);
+        }
+      }
+    }
   }
 
   LOG(IAQT_LOG, LOG_NOTICE, "VSP Setup configuration snapshot end\n");
