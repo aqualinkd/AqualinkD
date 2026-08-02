@@ -1080,13 +1080,44 @@ void *set_aqualink_iaqtouch_vsp_assignments( void *ptr )
       field = iaqtFindButtonByIndex(field_indexes[item]);
 
       LOG(IAQT_LOG, LOG_NOTICE,
-          "  %-14s index=%02d value='%s'\n",
+          "  %-14s index=%02d value='%s' keycode=0x%02x\n",
           field_names[item],
           field_indexes[item],
           field != NULL && field->name[0] != '\0'
             ? field->name
-            : "<missing>");
+            : "<missing>",
+          field != NULL ? field->keycode : 0);
     }
+  }
+
+  /*
+   * Sprint 15.3A: select Pump 1 minimum while the VSP Setup
+   * page and its button table are still populated.
+   * No numeric value is transmitted.
+   */
+  field = iaqtFindButtonByIndex(8);
+
+  if (field == NULL ||
+      field->name[0] == '\0' ||
+      field->keycode == NUL) {
+    LOG(IAQT_LOG, LOG_ERR,
+        "VSP minimum inline navigation found invalid Pump 1 field "
+        "value='%s' keycode=0x%02x\n",
+        field != NULL ? field->name : "<missing>",
+        field != NULL ? field->keycode : 0);
+  } else {
+    LOG(IAQT_LOG, LOG_NOTICE,
+        "VSP minimum inline navigation: Pump 1 index=8 "
+        "value='%s' keycode=0x%02x\n",
+        field->name,
+        field->keycode);
+
+    send_aqt_cmd(field->keycode);
+    waitfor_iaqt_queue2empty();
+
+    LOG(IAQT_LOG, LOG_NOTICE,
+        "VSP minimum inline navigation: Pump 1 field selected; "
+        "no value sent\n");
   }
 
   LOG(IAQT_LOG, LOG_NOTICE, "VSP Setup configuration snapshot end\n");
