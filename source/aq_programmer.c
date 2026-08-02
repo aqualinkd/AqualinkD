@@ -270,6 +270,7 @@ void queueGetProgramData(emulation_type source_type, struct aqualinkdata *aqdata
     } else if (source_type == IAQTOUCH && isEXTP_ENABLED) {
       //_aq_programmer(AQ_GET_IAQTOUCH_FREEZEPROTECT, NULL, aqdata, false); // Add back and remove below once tested and working
       //_aq_programmer(AQ_GET_IAQTOUCH_SETPOINTS, NULL, aqdata, false); // This get's freeze & heaters, we should just get freeze if isRSSA_ENABLED
+      _aq_programmer(AQ_GET_IAQTOUCH_VSP_ASSIGNMENT, NULL, aqdata, false);
       if (ENABLE_CHILLER) {
         // Need to get setpoints for chiller.
         _aq_programmer(AQ_GET_IAQTOUCH_SETPOINTS, NULL, aqdata, false);
@@ -303,6 +304,7 @@ void queueGetProgramData(emulation_type source_type, struct aqualinkdata *aqdata
     // IAQ touch extended and no serial adapter
     if (source_type == IAQTOUCH) {
       _aq_programmer(AQ_GET_IAQTOUCH_SETPOINTS, NULL, aqdata, false);
+      _aq_programmer(AQ_GET_IAQTOUCH_VSP_ASSIGNMENT, NULL, aqdata, false);
     } else if (source_type == ALLBUTTON) {
       if (_aqconfig_.use_panel_aux_labels) {
         _aq_programmer(AQ_GET_AUX_LABELS, NULL, aqdata, false);

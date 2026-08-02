@@ -1015,6 +1015,7 @@ void *set_aqualink_iaqtouch_vsp_assignments( void *ptr )
   struct programmingThreadCtrl *threadCtrl;
   threadCtrl = (struct programmingThreadCtrl *) ptr;
   struct aqualinkdata *aqdata = threadCtrl->aqdata;
+  struct iaqt_page_button *field;
   waitForSingleThreadOrTerminate(threadCtrl, AQ_GET_IAQTOUCH_VSP_ASSIGNMENT);
 
   if ( goto_iaqt_page(IAQ_PAGE_VSP_SETUP, aqdata) == false )
@@ -1051,6 +1052,45 @@ void *set_aqualink_iaqtouch_vsp_assignments( void *ptr )
    * Info:   Button 23|           :03   | type=0xff | state=0x00 | unknown=0xff 
    *  
 */
+
+  LOG(IAQT_LOG, LOG_NOTICE, "VSP Setup configuration snapshot begin\n");
+
+  for (int pump = 0; pump < 4; pump++) {
+    const int pump_number = pump + 1;
+    const int field_indexes[] = {
+      pump,
+      4 + pump,
+      8 + pump,
+      12 + pump,
+      16 + pump,
+      20 + pump
+    };
+    const char *field_names[] = {
+      "model",
+      "application",
+      "minimum",
+      "maximum",
+      "prime_speed",
+      "prime_duration"
+    };
+
+    LOG(IAQT_LOG, LOG_NOTICE, "VSP Setup Pump %d:\n", pump_number);
+
+    for (int item = 0; item < 6; item++) {
+      field = iaqtFindButtonByIndex(field_indexes[item]);
+
+      LOG(IAQT_LOG, LOG_NOTICE,
+          "  %-14s index=%02d value='%s'\n",
+          field_names[item],
+          field_indexes[item],
+          field != NULL && field->name[0] != '\0'
+            ? field->name
+            : "<missing>");
+    }
+  }
+
+  LOG(IAQT_LOG, LOG_NOTICE, "VSP Setup configuration snapshot end\n");
+
   f_end:
   goto_iaqt_page(IAQ_PAGE_HOME, aqdata);
   cleanAndTerminateThread(threadCtrl);
