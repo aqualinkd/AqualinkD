@@ -271,7 +271,17 @@ void queueGetProgramData(emulation_type source_type, struct aqualinkdata *aqdata
     } else if (source_type == IAQTOUCH && isEXTP_ENABLED) {
       //_aq_programmer(AQ_GET_IAQTOUCH_FREEZEPROTECT, NULL, aqdata, false); // Add back and remove below once tested and working
       //_aq_programmer(AQ_GET_IAQTOUCH_SETPOINTS, NULL, aqdata, false); // This get's freeze & heaters, we should just get freeze if isRSSA_ENABLED
-      _aq_programmer(AQ_GET_IAQTOUCH_VSP_ASSIGNMENT, NULL, aqdata, false);
+      //_aq_programmer(AQ_GET_IAQTOUCH_VSP_ASSIGNMENT, NULL, aqdata, false);
+      /*
+       * Sprint 15.4B temporary validation.
+       * Exercise the reusable VSP minimum programmer once at startup.
+       */
+      aq_programmer(
+          AQ_SET_IAQTOUCH_VSP_MINIMUM,
+          NULL,
+          2000,
+          1,
+          aqdata);
       if (ENABLE_CHILLER) {
         // Need to get setpoints for chiller.
         _aq_programmer(AQ_GET_IAQTOUCH_SETPOINTS, NULL, aqdata, false);
