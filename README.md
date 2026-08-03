@@ -268,3 +268,12 @@ If you still like this project, please consider buying me a cup of coffee :)
 <br>
 [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=SEGN9UNS38TXJ)
 
+
+## IAQ Touch VSP minimum-speed programming
+
+AquaLinkD supports verified minimum-RPM programming for IAQ Touch
+variable-speed pumps.
+
+- [`docs/http-api.md`](docs/http-api.md) — endpoint usage and examples
+- [`docs/iaqtouch-vsp-programming.md`](docs/iaqtouch-vsp-programming.md) —
+  controller behavior and implementation design

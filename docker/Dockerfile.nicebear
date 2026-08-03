@@ -1,0 +1,78 @@
+#####################################
+# NiceBear AquaLinkD development image
+#
+# Builds the current local source tree
+# using Debian Bookworm for compatibility
+# with the production runtime image.
+#####################################
+
+FROM debian:bookworm AS aqualinkd-build
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      make \
+      gcc \
+      libsystemd-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /home/AqualinkD
+
+COPY . .
+
+RUN make clean && \
+    mkdir -p build release && \
+    make container
+
+
+#####################################
+# Runtime image
+#####################################
+
+FROM debian:bookworm-slim AS aqualinkd
+
+ARG AQUALINKD_VERSION=nicebear-sprint-15-2
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      cron \
+      curl \
+      socat && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN sed -i '/EXTRA_OPTS=.-l./s/^#//g' /etc/default/cron
+
+LABEL org.opencontainers.image.title="NiceBear AquaLinkD"
+LABEL org.opencontainers.image.source="https://github.com/aqualinkd/AqualinkD"
+LABEL org.opencontainers.image.version="${AQUALINKD_VERSION}"
+LABEL com.nicebear.environment="development"
+LABEL com.nicebear.sprint="15.2"
+
+COPY --from=aqualinkd-build \
+  /home/AqualinkD/release/aqualinkd \
+  /usr/local/bin/aqualinkd
+
+COPY --from=aqualinkd-build \
+  /home/AqualinkD/release/rs485mon \
+  /usr/local/bin/rs485mon
+
+COPY --from=aqualinkd-build \
+  /home/AqualinkD/web/ \
+  /var/www/aqualinkd/
+
+COPY --from=aqualinkd-build \
+  /home/AqualinkD/release/aqualinkd.conf \
+  /etc/aqualinkd.conf
+
+COPY --from=aqualinkd-build \
+  /home/AqualinkD/docker/aqualinkd-docker.cmd \
+  /usr/local/bin/aqualinkd-docker
+
+RUN chmod 755 \
+  /usr/local/bin/aqualinkd \
+  /usr/local/bin/rs485mon \
+  /usr/local/bin/aqualinkd-docker
+
+EXPOSE 80/tcp
+
+CMD ["sh", "-c", "/usr/local/bin/aqualinkd-docker"]

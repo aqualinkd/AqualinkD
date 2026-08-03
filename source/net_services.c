@@ -1314,6 +1314,59 @@ uriAtype action_URI(request_source from, const char *URI, int uri_length, float 
     } else {
       rtn = uActioned;
     }
+  // Set the configured IAQ Touch VSP minimum RPM.
+  } else if (
+      ri2 != NULL &&
+      ri3 != NULL &&
+      strncasecmp(ri1, "Pump_", 5) == 0 &&
+      strncasecmp(ri2, "VSPMinimum", 10) == 0 &&
+      strncasecmp(ri3, "set", 3) == 0) {
+
+    int pumpNumber = atoi(ri1 + 5);
+    int requestedMinimum = round(value);
+
+    if (!isIAQT_ENABLED || !isEXTP_ENABLED) {
+      LOG(NET_LOG, LOG_WARNING,
+          "%s: VSP minimum programming requires IAQ Touch extended protocol\n",
+          actionName[from]);
+      *rtnmsg = "VSP minimum programming is not available";
+      return uBad;
+    }
+
+    if (pumpNumber < 1 || pumpNumber > 4) {
+      LOG(NET_LOG, LOG_WARNING,
+          "%s: invalid VSP minimum pump number %d\n",
+          actionName[from],
+          pumpNumber);
+      *rtnmsg = "Pump number must be between 1 and 4";
+      return uBad;
+    }
+
+    if (requestedMinimum < 600 || requestedMinimum > 3450) {
+      LOG(NET_LOG, LOG_WARNING,
+          "%s: invalid Pump %d VSP minimum %d RPM\n",
+          actionName[from],
+          pumpNumber,
+          requestedMinimum);
+      *rtnmsg = "VSP minimum must be between 600 and 3450 RPM";
+      return uBad;
+    }
+
+    LOG(NET_LOG, LOG_NOTICE,
+        "%s: request to set Pump %d VSP minimum to %d RPM\n",
+        actionName[from],
+        pumpNumber,
+        requestedMinimum);
+
+    aq_programmer(
+        AQ_SET_IAQTOUCH_VSP_MINIMUM,
+        NULL,
+        requestedMinimum,
+        pumpNumber,
+        _aqualink_data);
+
+    return uActioned;
+
   // Action a pump RPM/GPM message
   } else if ((ri3 != NULL && ((strncasecmp(ri2, "RPM", 3) == 0) || (strncasecmp(ri2, "GPM", 3) == 0) || (strncasecmp(ri2, "Speed", 5) == 0) || (strncasecmp(ri2, "VSP", 3) == 0)) && (strncasecmp(ri3, "set", 3) == 0))) {
     found = false;

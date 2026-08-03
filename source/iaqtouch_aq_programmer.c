@@ -399,7 +399,10 @@ bool goto_iaqt_page(const unsigned char pageID, struct aqualinkdata *aqdata) {
              pageID == IAQ_PAGE_VSP_SETUP) {
     // All other pages require us to go to Menu page
     send_aqt_cmd(KEY_IAQTCH_MENU);
-    if (waitfor_iaqt_nextPage(aqdata) != IAQ_PAGE_MENU) {
+
+    unsigned char menuPage = waitfor_iaqt_nextPage(aqdata);
+
+    if (menuPage != IAQ_PAGE_MENU) {
       LOG(IAQT_LOG, LOG_ERR, "IAQ Touch did not find Menu page\n");
       return false;
     } else
@@ -439,7 +442,10 @@ bool goto_iaqt_page(const unsigned char pageID, struct aqualinkdata *aqdata) {
 
     // All pages now require us to goto System Setup
     send_aqt_cmd(KEY_IAQTCH_SYSTEM_SETUP);
-    if (waitfor_iaqt_nextPage(aqdata) != IAQ_PAGE_SYSTEM_SETUP) {
+
+    unsigned char setupPage = waitfor_iaqt_nextPage(aqdata);
+
+    if (setupPage != IAQ_PAGE_SYSTEM_SETUP) {
       LOG(IAQT_LOG, LOG_ERR, "IAQ Touch did not find System Setup page\n");
       return false;
     }
@@ -466,6 +472,7 @@ bool goto_iaqt_page(const unsigned char pageID, struct aqualinkdata *aqdata) {
     }
 
     button = iaqtFindButtonByLabel(menuText);
+
     if (button == NULL) {
       //send_aqt_cmd(KEY_IAQTCH_NEXT_PAGE);
       // Try Next Page
@@ -478,7 +485,10 @@ bool goto_iaqt_page(const unsigned char pageID, struct aqualinkdata *aqdata) {
     }
     // send_aqt_cmd(KEY_IAQTCH_KEY01);
     send_aqt_cmd(button->keycode);
-    if (waitfor_iaqt_nextPage(aqdata) != pageID) {
+
+    unsigned char targetPage = waitfor_iaqt_nextPage(aqdata);
+
+    if (targetPage != pageID) {
       LOG(IAQT_LOG, LOG_ERR, "IAQ Touch did not find %s page\n", menuText);
       return false;
     } else
@@ -1010,14 +1020,119 @@ void *set_aqualink_iaqtouch_pump_rpm( void *ptr )
   return ptr;
 }
 
+/*
+ * IAQ Touch VSP Setup can return a complete button table only on
+ * the first detailed visit in a controller session. Preserve the
+ * minimum-field keycodes discovered during startup so later writers
+ * do not depend on the transient _pageButtons table.
+ */
+#define IAQT_VSP_PUMP_COUNT 4
+
+static unsigned char _iaqt_vsp_minimum_keycodes[IAQT_VSP_PUMP_COUNT] = {
+  NUL, NUL, NUL, NUL
+};
+
+static void iaqt_cache_vsp_minimum_keycode(
+    int pumpIndex,
+    unsigned char keycode)
+{
+  if (pumpIndex < 1 ||
+      pumpIndex > IAQT_VSP_PUMP_COUNT ||
+      keycode == NUL) {
+    return;
+  }
+
+  _iaqt_vsp_minimum_keycodes[pumpIndex - 1] = keycode;
+
+  LOG(IAQT_LOG, LOG_NOTICE,
+      "VSP minimum keycode cached: Pump %d keycode=0x%02x\n",
+      pumpIndex,
+      keycode);
+}
+
+static unsigned char iaqt_get_cached_vsp_minimum_keycode(
+    int pumpIndex)
+{
+  if (pumpIndex < 1 || pumpIndex > IAQT_VSP_PUMP_COUNT) {
+    return NUL;
+  }
+
+  return _iaqt_vsp_minimum_keycodes[pumpIndex - 1];
+}
+
+/*
+ * Open the IAQ Touch VSP Setup page and confirm that its
+ * minimum-speed fields have been populated.
+ *
+ * This helper centralizes VSP page acquisition for readers
+ * and writers. Callers remain responsible for returning Home.
+ */
+static bool iaqt_open_vsp_setup(struct aqualinkdata *aqdata)
+{
+  struct iaqt_page_button *field;
+
+  /*
+   * Some later visits to VSP Setup return PAGE_START/PAGE_END
+   * without sending any PAGE_BUTTON packets. Retry one complete
+   * Home -> VSP Setup transition before treating the page as
+   * unavailable.
+   */
+  for (int attempt = 1; attempt <= 2; attempt++) {
+    if (goto_iaqt_page(IAQ_PAGE_VSP_SETUP, aqdata) == false) {
+      LOG(IAQT_LOG, LOG_ERR,
+          "IAQ Touch could not open VSP Setup on attempt %d\n",
+          attempt);
+    } else {
+      field = iaqtFindButtonByIndex(8);
+
+      if (field != NULL &&
+          field->name[0] != '\0' &&
+          field->keycode != NUL) {
+        LOG(IAQT_LOG, LOG_NOTICE,
+            "IAQ Touch VSP Setup ready on attempt %d: "
+            "index=8 value='%s' keycode=0x%02x\n",
+            attempt,
+            field->name,
+            field->keycode);
+        return true;
+      }
+
+      LOG(IAQT_LOG, LOG_WARNING,
+          "IAQ Touch VSP Setup incomplete on attempt %d: "
+          "index=8 value='%s' keycode=0x%02x\n",
+          attempt,
+          field != NULL ? field->name : "<missing>",
+          field != NULL ? field->keycode : 0);
+    }
+
+    if (attempt < 2) {
+      LOG(IAQT_LOG, LOG_NOTICE,
+          "IAQ Touch VSP Setup retry: returning Home\n");
+
+      if (goto_iaqt_page(IAQ_PAGE_HOME, aqdata) == false) {
+        LOG(IAQT_LOG, LOG_ERR,
+            "IAQ Touch VSP Setup retry could not return Home\n");
+        return false;
+      }
+    }
+  }
+
+  LOG(IAQT_LOG, LOG_ERR,
+      "IAQ Touch VSP Setup remained incomplete after 2 attempts\n");
+
+  return false;
+}
+
+
 void *set_aqualink_iaqtouch_vsp_assignments( void *ptr )
 {
   struct programmingThreadCtrl *threadCtrl;
   threadCtrl = (struct programmingThreadCtrl *) ptr;
   struct aqualinkdata *aqdata = threadCtrl->aqdata;
+  struct iaqt_page_button *field;
   waitForSingleThreadOrTerminate(threadCtrl, AQ_GET_IAQTOUCH_VSP_ASSIGNMENT);
 
-  if ( goto_iaqt_page(IAQ_PAGE_VSP_SETUP, aqdata) == false )
+  if (iaqt_open_vsp_setup(aqdata) == false)
     goto f_end;
 
   /* Info:   Button 00|         ePump   | type=0xff | state=0x00 | unknown=0xff  
@@ -1051,6 +1166,55 @@ void *set_aqualink_iaqtouch_vsp_assignments( void *ptr )
    * Info:   Button 23|           :03   | type=0xff | state=0x00 | unknown=0xff 
    *  
 */
+
+  LOG(IAQT_LOG, LOG_NOTICE, "VSP Setup configuration snapshot begin\n");
+
+  for (int pump = 0; pump < 4; pump++) {
+    const int pump_number = pump + 1;
+    const int field_indexes[] = {
+      pump,
+      4 + pump,
+      8 + pump,
+      12 + pump,
+      16 + pump,
+      20 + pump
+    };
+    const char *field_names[] = {
+      "model",
+      "application",
+      "minimum",
+      "maximum",
+      "prime_speed",
+      "prime_duration"
+    };
+
+    LOG(IAQT_LOG, LOG_NOTICE, "VSP Setup Pump %d:\n", pump_number);
+
+    for (int item = 0; item < 6; item++) {
+      field = iaqtFindButtonByIndex(field_indexes[item]);
+
+      if (item == 2 &&
+          field != NULL &&
+          field->name[0] != '\0' &&
+          field->keycode != NUL) {
+        iaqt_cache_vsp_minimum_keycode(
+            pump_number,
+            field->keycode);
+      }
+
+      LOG(IAQT_LOG, LOG_NOTICE,
+          "  %-14s index=%02d value='%s' keycode=0x%02x\n",
+          field_names[item],
+          field_indexes[item],
+          field != NULL && field->name[0] != '\0'
+            ? field->name
+            : "<missing>",
+          field != NULL ? field->keycode : 0);
+    }
+  }
+
+  LOG(IAQT_LOG, LOG_NOTICE, "VSP Setup configuration snapshot end\n");
+
   f_end:
   goto_iaqt_page(IAQ_PAGE_HOME, aqdata);
   cleanAndTerminateThread(threadCtrl);
@@ -1058,6 +1222,161 @@ void *set_aqualink_iaqtouch_vsp_assignments( void *ptr )
   // just stop compiler error, ptr is not valid as it's just been freed
   return ptr;
 }
+
+void *set_aqualink_iaqtouch_vsp_minimum( void *ptr )
+{
+  struct programmingThreadCtrl *threadCtrl;
+  threadCtrl = (struct programmingThreadCtrl *) ptr;
+  struct aqualinkdata *aqdata = threadCtrl->aqdata;
+  struct iaqt_page_button *field;
+
+#ifdef NEW_AQ_PROGRAMMER
+  struct programmerArgs *pargs = &threadCtrl->pArgs;
+  int requestedMinimum = pargs->value;
+  int pumpIndex = pargs->alt_value;
+#else
+  char *buf = (char *)threadCtrl->thread_args;
+  int requestedMinimum = atoi(buf);
+  int pumpIndex = 1;
+#endif
+
+  int fieldIndex;
+  int verifiedMinimum;
+  unsigned char minimumKeycode = NUL;
+
+  waitForSingleThreadOrTerminate(
+      threadCtrl,
+      AQ_SET_IAQTOUCH_VSP_MINIMUM);
+
+  if (pumpIndex < 1 || pumpIndex > 4) {
+    LOG(IAQT_LOG, LOG_ERR,
+        "VSP minimum write rejected: invalid pump index %d\n",
+        pumpIndex);
+    goto f_end;
+  }
+
+  if (requestedMinimum < 600 || requestedMinimum > 3450) {
+    LOG(IAQT_LOG, LOG_ERR,
+        "VSP minimum write rejected: Pump %d RPM %d outside 600-3450\n",
+        pumpIndex,
+        requestedMinimum);
+    goto f_end;
+  }
+
+  fieldIndex = 8 + pumpIndex - 1;
+
+  /*
+   * Navigate to VSP Setup even when the controller returns an empty
+   * button table. A complete startup snapshot has already preserved
+   * the minimum-field keycodes for this session.
+   */
+  if (goto_iaqt_page(IAQ_PAGE_VSP_SETUP, aqdata) == false) {
+    LOG(IAQT_LOG, LOG_ERR,
+        "VSP minimum write could not open VSP Setup\n");
+    goto f_end;
+  }
+
+  field = iaqtFindButtonByIndex(fieldIndex);
+
+  if (field != NULL &&
+      field->name[0] != '\0' &&
+      field->keycode != NUL) {
+    minimumKeycode = field->keycode;
+
+    iaqt_cache_vsp_minimum_keycode(
+        pumpIndex,
+        minimumKeycode);
+
+    LOG(IAQT_LOG, LOG_NOTICE,
+        "VSP minimum writer using live field: Pump %d index=%d "
+        "value='%s' keycode=0x%02x\n",
+        pumpIndex,
+        fieldIndex,
+        field->name,
+        minimumKeycode);
+  } else {
+    minimumKeycode =
+        iaqt_get_cached_vsp_minimum_keycode(pumpIndex);
+
+    if (minimumKeycode == NUL) {
+      LOG(IAQT_LOG, LOG_ERR,
+          "VSP minimum write has no live or cached keycode: "
+          "Pump %d index=%d value='%s'\n",
+          pumpIndex,
+          fieldIndex,
+          field != NULL ? field->name : "<missing>");
+      goto f_end;
+    }
+
+    LOG(IAQT_LOG, LOG_NOTICE,
+        "VSP minimum writer using cached field: Pump %d index=%d "
+        "keycode=0x%02x\n",
+        pumpIndex,
+        fieldIndex,
+        minimumKeycode);
+  }
+
+  LOG(IAQT_LOG, LOG_NOTICE,
+      "VSP minimum write begin: Pump %d index=%d current='%s' "
+      "requested=%d keycode=0x%02x\n",
+      pumpIndex,
+      fieldIndex,
+      field != NULL && field->name[0] != '\0'
+        ? field->name
+        : "<cached>",
+      requestedMinimum,
+      minimumKeycode);
+
+  send_aqt_cmd(minimumKeycode);
+  waitfor_iaqt_queue2empty();
+
+  queue_iaqt_control_command(icct_setrpm, requestedMinimum);
+  waitfor_iaqt_ctrl_queue2empty();
+  waitfor_iaqt_nextPage(aqdata);
+
+  if (goto_iaqt_page(IAQ_PAGE_VSP_SETUP, aqdata) == false) {
+    LOG(IAQT_LOG, LOG_ERR,
+        "VSP minimum verification could not reopen VSP Setup\n");
+    goto f_end;
+  }
+
+  field = iaqtFindButtonByIndex(fieldIndex);
+
+  if (field == NULL || field->name[0] == '\0') {
+    LOG(IAQT_LOG, LOG_ERR,
+        "VSP minimum verification could not read Pump %d field %d\n",
+        pumpIndex,
+        fieldIndex);
+    goto f_end;
+  }
+
+  verifiedMinimum = rsm_atoi(field->name);
+
+  if (verifiedMinimum == requestedMinimum) {
+    LOG(IAQT_LOG, LOG_NOTICE,
+        "VSP minimum write PASS: Pump %d requested=%d verified=%d "
+        "display='%s'\n",
+        pumpIndex,
+        requestedMinimum,
+        verifiedMinimum,
+        field->name);
+  } else {
+    LOG(IAQT_LOG, LOG_ERR,
+        "VSP minimum write FAIL: Pump %d requested=%d verified=%d "
+        "display='%s'\n",
+        pumpIndex,
+        requestedMinimum,
+        verifiedMinimum,
+        field->name);
+  }
+
+f_end:
+  goto_iaqt_page(IAQ_PAGE_HOME, aqdata);
+  cleanAndTerminateThread(threadCtrl);
+
+  return ptr;
+}
+
 
 void *get_aqualink_iaqtouch_freezeprotect( void *ptr )
 {
