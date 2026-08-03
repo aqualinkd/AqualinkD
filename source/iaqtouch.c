@@ -960,6 +960,15 @@ bool process_iaqtouch_packet(unsigned char *packet, int length, struct aqualinkd
     SET_IF_CHANGED(aqdata->is_display_message_programming, false, aqdata->is_dirty);
     LOG(IAQT_LOG,LOG_DEBUG, "Turning IAQ SEND off\n");
     set_iaq_cansend(false);
+    LOG(IAQT_LOG, LOG_NOTICE,
+        "IAQ cache PAGE_START: old_page=0x%02x loading=0x%02x "
+        "table=%p index8_before='%s' keycode=0x%02x\n",
+        _currentPage,
+        packet[PKT_IAQT_PAGTYPE],
+        (void *)_pageButtons,
+        _pageButtons[8].name,
+        _pageButtons[8].keycode);
+
     _currentPageLoading = packet[PKT_IAQT_PAGTYPE];
     _currentPage = NUL;
     memset(_pageButtons, 0, IAQ_PAGE_BUTTONS * sizeof(struct iaqt_page_button));
@@ -977,6 +986,15 @@ bool process_iaqtouch_packet(unsigned char *packet, int length, struct aqualinkd
     LOG(IAQT_LOG,LOG_DEBUG, "Turning IAQ SEND on\n");
     if (_currentPageLoading != NUL) {
       _currentPage = _currentPageLoading;
+
+      LOG(IAQT_LOG, LOG_NOTICE,
+          "IAQ cache PAGE_END: page=0x%02x table=%p "
+          "index8_after='%s' keycode=0x%02x\n",
+          _currentPage,
+          (void *)_pageButtons,
+          _pageButtons[8].name,
+          _pageButtons[8].keycode);
+
       //_currentPageLoading = NUL;
     } else {
       LOG(IAQT_LOG,LOG_DEBUG, "Page end message without proceding page start, ignoring!\n");
@@ -1002,6 +1020,17 @@ bool process_iaqtouch_packet(unsigned char *packet, int length, struct aqualinkd
   } else if (packet[PKT_CMD] == CMD_IAQ_PAGE_MSG) {
     processPageMessage(packet, length);
   } else if (packet[PKT_CMD] == CMD_IAQ_PAGE_BUTTON) {
+    if (_currentPageLoading == IAQ_PAGE_VSP_SETUP ||
+        _currentPage == IAQ_PAGE_VSP_SETUP) {
+      LOG(IAQT_LOG, LOG_NOTICE,
+          "VSP PAGE_BUTTON packet: current=0x%02x loading=0x%02x "
+          "length=%d index=0x%02x\n",
+          _currentPage,
+          _currentPageLoading,
+          length,
+          length > 4 ? packet[4] : 0);
+    }
+
     processPageButton(packet, length, aqdata);
     // Second page on status doesn't send start & end, but button is message, so use that to kick off next page. 
     if (_currentPage == IAQ_PAGE_STATUS) {
