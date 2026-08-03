@@ -83,16 +83,8 @@ unsigned char pop_iaqt_cmd(unsigned char receive_type)
     _iaqt_pgm_command = NUL;
   } 
 
-  if (cmd != NUL) {
-    LOG(IAQT_LOG, LOG_NOTICE,
-        "IAQ ACK TX: rx=0x%02x tx=0x%02x "
-        "page=0x%02x loading=0x%02x\n",
-        receive_type,
-        cmd,
-        iaqtCurrentPage(),
-        iaqtCurrentPageLoading());
-  }
-
+  if (cmd != NUL)
+    LOG(IAQT_LOG,LOG_DEBUG, "Sending '0x%02hhx' to controller\n", cmd);
   return cmd;
 }
 
@@ -406,17 +398,9 @@ bool goto_iaqt_page(const unsigned char pageID, struct aqualinkdata *aqdata) {
              pageID == IAQ_PAGE_SYSTEM_SETUP || pageID == IAQ_PAGE_FREEZE_PROTECT || pageID == IAQ_PAGE_LABEL_AUX || 
              pageID == IAQ_PAGE_VSP_SETUP) {
     // All other pages require us to go to Menu page
-    LOG(IAQT_LOG, LOG_NOTICE,
-        "VSP navigation: sending MENU from page=0x%02x\n",
-        iaqtCurrentPage());
-
     send_aqt_cmd(KEY_IAQTCH_MENU);
 
     unsigned char menuPage = waitfor_iaqt_nextPage(aqdata);
-
-    LOG(IAQT_LOG, LOG_NOTICE,
-        "VSP navigation: MENU result page=0x%02x\n",
-        menuPage);
 
     if (menuPage != IAQ_PAGE_MENU) {
       LOG(IAQT_LOG, LOG_ERR, "IAQ Touch did not find Menu page\n");
@@ -457,17 +441,9 @@ bool goto_iaqt_page(const unsigned char pageID, struct aqualinkdata *aqdata) {
     }
 
     // All pages now require us to goto System Setup
-    LOG(IAQT_LOG, LOG_NOTICE,
-        "VSP navigation: sending SYSTEM_SETUP from page=0x%02x\n",
-        iaqtCurrentPage());
-
     send_aqt_cmd(KEY_IAQTCH_SYSTEM_SETUP);
 
     unsigned char setupPage = waitfor_iaqt_nextPage(aqdata);
-
-    LOG(IAQT_LOG, LOG_NOTICE,
-        "VSP navigation: SYSTEM_SETUP result page=0x%02x\n",
-        setupPage);
 
     if (setupPage != IAQ_PAGE_SYSTEM_SETUP) {
       LOG(IAQT_LOG, LOG_ERR, "IAQ Touch did not find System Setup page\n");
@@ -497,16 +473,6 @@ bool goto_iaqt_page(const unsigned char pageID, struct aqualinkdata *aqdata) {
 
     button = iaqtFindButtonByLabel(menuText);
 
-    if (pageID == IAQ_PAGE_VSP_SETUP) {
-      LOG(IAQT_LOG, LOG_NOTICE,
-          "VSP navigation: menu lookup label='%s' field=%p "
-          "value='%s' keycode=0x%02x current_page=0x%02x\n",
-          menuText,
-          (void *)button,
-          button != NULL ? button->name : "<missing>",
-          button != NULL ? button->keycode : 0,
-          iaqtCurrentPage());
-    }
     if (button == NULL) {
       //send_aqt_cmd(KEY_IAQTCH_NEXT_PAGE);
       // Try Next Page
@@ -518,25 +484,9 @@ bool goto_iaqt_page(const unsigned char pageID, struct aqualinkdata *aqdata) {
       //}
     }
     // send_aqt_cmd(KEY_IAQTCH_KEY01);
-    if (pageID == IAQ_PAGE_VSP_SETUP) {
-      LOG(IAQT_LOG, LOG_NOTICE,
-          "VSP navigation: sending VSP_SETUP keycode=0x%02x "
-          "from page=0x%02x\n",
-          button->keycode,
-          iaqtCurrentPage());
-    }
-
     send_aqt_cmd(button->keycode);
 
     unsigned char targetPage = waitfor_iaqt_nextPage(aqdata);
-
-    if (pageID == IAQ_PAGE_VSP_SETUP) {
-      LOG(IAQT_LOG, LOG_NOTICE,
-          "VSP navigation: VSP_SETUP result page=0x%02x "
-          "current_page=0x%02x\n",
-          targetPage,
-          iaqtCurrentPage());
-    }
 
     if (targetPage != pageID) {
       LOG(IAQT_LOG, LOG_ERR, "IAQ Touch did not find %s page\n", menuText);
@@ -1314,11 +1264,6 @@ void *set_aqualink_iaqtouch_vsp_minimum( void *ptr )
   }
 
   fieldIndex = 8 + pumpIndex - 1;
-
-  LOG(IAQT_LOG, LOG_NOTICE,
-      "VSP writer acquiring page: current_page=0x%02x index=%d\n",
-      iaqtCurrentPage(),
-      fieldIndex);
 
   /*
    * Navigate to VSP Setup even when the controller returns an empty
