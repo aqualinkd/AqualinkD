@@ -616,3 +616,10 @@ AqualinkD was designed for Jandy Aqualink RS and works with AqualinkRS and iAqua
 ---
 
 **For installation & upgrade instructions, please see:** https://github.com/aqualinkd/AqualinkD/wiki
+
+## IAQ Touch VSP minimum-speed programming
+
+- Added an HTTP API endpoint for setting Pump 1 through Pump 4 minimum RPM.
+- Added startup discovery and caching of VSP minimum-field keycodes.
+- Added cached fallback for later incomplete VSP Setup pages.
+- Added controller read-back verification with PASS and FAIL logging.
