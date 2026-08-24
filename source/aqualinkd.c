@@ -726,8 +726,12 @@ void caculate_ack_packet(int rs_fd, unsigned char *packet_buffer, emulation_type
 
   switch (source) {
     case ALLBUTTON:
-      send_extended_ack(rs_fd, (packet_buffer[PKT_CMD]==CMD_MSG_LONG?ACK_SCREEN_BUSY_SCROLL:ACK_NORMAL), pop_allb_cmd(&_aqualink_data));
+    {
+      unsigned char command = pop_allb_cmd(&_aqualink_data);
+      send_extended_ack(rs_fd, (packet_buffer[PKT_CMD]==CMD_MSG_LONG?ACK_SCREEN_BUSY_SCROLL:ACK_NORMAL), command);
+      allbutton_command_sent(command);
       //DEBUG_TIMER_STOP(_rs_packet_timer,AQUA_LOG,"AllButton Emulation type Processed packet in");
+    }
     break;
     case RSSADAPTER:
       send_jandy_command(rs_fd, get_rssa_cmd(packet_buffer[PKT_CMD]), 4);
@@ -768,7 +772,9 @@ void caculate_ack_packet(int rs_fd, unsigned char *packet_buffer, emulation_type
         LOG(PDA_LOG,LOG_DEBUG, "PDA Aqualink daemon in sleep mode\n");
         return;
       } else {
-        send_extended_ack(rs_fd, ACK_PDA, pop_pda_cmd(&_aqualink_data));
+        unsigned char command = pop_pda_cmd(&_aqualink_data);
+        send_extended_ack(rs_fd, ACK_PDA, command);
+        allbutton_command_sent(command);
       }
       //DEBUG_TIMER_STOP(_rs_packet_timer,AQUA_LOG,"PDA Emulation type Processed packet in");
     break;
@@ -875,6 +881,8 @@ void main_loop()
 
   pthread_mutex_init(&_aqualink_data.active_thread.thread_mutex, NULL);
   pthread_cond_init(&_aqualink_data.active_thread.thread_cond, NULL);
+  pthread_mutex_init(&_aqualink_data.active_thread.lifecycle_mutex, NULL);
+  pthread_cond_init(&_aqualink_data.active_thread.lifecycle_cond, NULL);
 
   //for (i=0; i < MAX_PUMPS; i++) {
   for (i=0; i < _aqualink_data.num_pumps; i++) {

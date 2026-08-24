@@ -128,6 +128,8 @@ struct programmingthread {
   pthread_t *thread_id;
   pthread_mutex_t thread_mutex;
   pthread_cond_t thread_cond;
+  pthread_mutex_t lifecycle_mutex;
+  pthread_cond_t lifecycle_cond;
   program_type ptype;
   //void *thread_args;
 };

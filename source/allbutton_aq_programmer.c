@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <time.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -22,11 +23,7 @@ bool waitForEitherMessage(struct aqualinkdata *aqdata, char* message1, char* mes
 bool select_sub_menu_item(struct aqualinkdata *aqdata, char* item_string);
 bool select_menu_item(struct aqualinkdata *aqdata, char* item_string);
 
-void send_cmd(unsigned char cmd);
 void cancel_menu();
-
-void waitfor_queue2empty();
-void longwaitfor_queue2empty();
 
 int _expectNextMessage = 0;
 unsigned char _allb_last_sent_command = NUL;
@@ -39,6 +36,26 @@ unsigned char _allb_pgm_command = NUL;
 //unsigned char _ot_allb_pgm_command = NUL;
 
 bool _last_sent_was_cmd = false;
+
+static pthread_mutex_t _pgm_command_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t _pgm_command_sent_cond = PTHREAD_COND_INITIALIZER;
+typedef enum {
+  PGM_COMMAND_IDLE,
+  PGM_COMMAND_QUEUED,
+  PGM_COMMAND_SENDING
+} pgm_command_state;
+static pgm_command_state _pgm_command_state = PGM_COMMAND_IDLE;
+
+static void set_command_timeout(struct timespec *timeout, unsigned int milliseconds)
+{
+  clock_gettime(CLOCK_REALTIME, timeout);
+  timeout->tv_sec += milliseconds / 1000;
+  timeout->tv_nsec += (milliseconds % 1000) * 1000000L;
+  if (timeout->tv_nsec >= 1000000000L) {
+    timeout->tv_sec++;
+    timeout->tv_nsec -= 1000000000L;
+  }
+}
 
 bool push_allb_cmd(unsigned char cmd);
 
@@ -92,17 +109,19 @@ unsigned char pop_allb_cmd(struct aqualinkdata *aqdata)
   // Are we in programming mode and it's not ONETOUCH programming mode
   if (in_programming_mode(aqdata) && ( in_ot_programming_mode(aqdata) == false  && in_iaqt_programming_mode(aqdata) == false )) {
   //if (aqdata->active_thread.thread_id != 0) {
-    if ( _allb_pgm_command != NUL && aqdata->last_packet_type == CMD_STATUS) {
+    pthread_mutex_lock(&_pgm_command_mutex);
+    if (_pgm_command_state == PGM_COMMAND_QUEUED && aqdata->last_packet_type == CMD_STATUS) {
       cmd = _allb_pgm_command;
-      _allb_pgm_command = NUL;
       if (cmd) {
         LOG(ALLB_LOG, LOG_DEBUG_SERIAL, "RS SEND cmd %s '0x%02hhx' (programming)\n", cmd_to_string(cmd), cmd);
       }
-    } else if (_allb_pgm_command != NUL) {
+      _pgm_command_state = PGM_COMMAND_SENDING;
+    } else if (_pgm_command_state != PGM_COMMAND_IDLE) {
       LOG(ALLB_LOG, LOG_DEBUG_SERIAL, "RS Waiting to send cmd '0x%02hhx' (programming)\n", _allb_pgm_command);
     } else {
       LOG(ALLB_LOG, LOG_DEBUG_SERIAL, "RS SEND cmd '0x%02hhx' empty queue (programming)\n", cmd);
     }
+    pthread_mutex_unlock(&_pgm_command_mutex);
   } else if (_allb_stack_place > 0 && aqdata->last_packet_type == CMD_STATUS ) {
     cmd = _allb_commands[0];
     _allb_stack_place--;
@@ -121,6 +140,20 @@ unsigned char pop_allb_cmd(struct aqualinkdata *aqdata)
   }
   
   return cmd;
+}
+
+void allbutton_command_sent(unsigned char cmd)
+{
+  if (cmd == NUL)
+    return;
+
+  pthread_mutex_lock(&_pgm_command_mutex);
+  if (_pgm_command_state == PGM_COMMAND_SENDING && _allb_pgm_command == cmd) {
+    _allb_pgm_command = NUL;
+    _pgm_command_state = PGM_COMMAND_IDLE;
+    pthread_cond_broadcast(&_pgm_command_sent_cond);
+  }
+  pthread_mutex_unlock(&_pgm_command_mutex);
 }
 
 
@@ -1314,52 +1347,102 @@ void send_cmd(unsigned char cmd, struct aqualinkdata *aqdata)
 
 void _waitfor_queue2empty(bool longwait)
 {
-  int i=0;
+  int ret = 0;
+  struct timespec max_wait;
 
-  if (_allb_pgm_command != NUL) {
+  set_command_timeout(&max_wait, PROGRAMMING_POLL_DELAY_TIME * PROGRAMMING_POLL_COUNTER * (longwait ? 2 : 1));
+
+  pthread_mutex_lock(&_pgm_command_mutex);
+  if (_pgm_command_state != PGM_COMMAND_IDLE) {
     LOG(ALLB_LOG, LOG_DEBUG, "Waiting for queue to empty\n");
   } else {
     LOG(ALLB_LOG, LOG_DEBUG, "Queue empty!\n");
+    pthread_mutex_unlock(&_pgm_command_mutex);
     return;
   }
 
-  while ( (_allb_pgm_command != NUL) && ( i++ < (PROGRAMMING_POLL_COUNTER*(longwait?2:1) ) ) ) {
-    delay(PROGRAMMING_POLL_DELAY_TIME);
+  while (_pgm_command_state != PGM_COMMAND_IDLE) {
+    ret = pthread_cond_timedwait(&_pgm_command_sent_cond, &_pgm_command_mutex, &max_wait);
+    if (ret != 0)
+      break;
   }
 
-  if (_allb_pgm_command != NUL) {
-    LOG(ALLB_LOG, LOG_WARNING, "Send command Queue did not empty, timeout\n");
+  if (_pgm_command_state != PGM_COMMAND_IDLE) {
+    LOG(ALLB_LOG, LOG_WARNING, "Send command queue did not empty: %s\n", strerror(ret));
   } else {
     LOG(ALLB_LOG, LOG_DEBUG, "Queue now empty!\n");
   }
-
+  pthread_mutex_unlock(&_pgm_command_mutex);
 }
 
-void waitfor_queue2empty()
+void waitfor_queue2empty(void)
 {
   _waitfor_queue2empty(false);
 }
-void longwaitfor_queue2empty()
+void longwaitfor_queue2empty(void)
 {
   _waitfor_queue2empty(true);
 }
 
-void send_cmd(unsigned char cmd)
+bool send_cmd(unsigned char cmd)
 {
-  waitfor_queue2empty();
-  
-  _allb_pgm_command = cmd;
-  //delay(200);
+  bool ret = true;
+  int pret = 0;
+  struct timespec max_wait;
 
+  if (cmd == NUL) {
+    LOG(PROG_LOG, LOG_ERR, "Refusing to queue empty programming command\n");
+    return false;
+  }
+
+  set_command_timeout(&max_wait, 5000);
+
+  pthread_mutex_lock(&_pgm_command_mutex);
+  while (_pgm_command_state != PGM_COMMAND_IDLE) {
+    pret = pthread_cond_timedwait(&_pgm_command_sent_cond,
+                                 &_pgm_command_mutex, &max_wait);
+    if (pret != 0) {
+      LOG(PROG_LOG, LOG_ERR, "send_cmd 0x%02hhx could not acquire command slot: %s\n",
+                         cmd, strerror(pret));
+      pthread_mutex_unlock(&_pgm_command_mutex);
+      return false;
+    }
+  }
+
+  _allb_pgm_command = cmd;
+  _pgm_command_state = PGM_COMMAND_QUEUED;
   LOG(ALLB_LOG, LOG_INFO, "Queue send %s '0x%02hhx' to controller (programming)\n", cmd_to_string(_allb_pgm_command), _allb_pgm_command);
+  while (_pgm_command_state != PGM_COMMAND_IDLE) {
+    if ((pret = pthread_cond_timedwait(&_pgm_command_sent_cond,
+                                      &_pgm_command_mutex, &max_wait))) {
+      if (_pgm_command_state == PGM_COMMAND_QUEUED) {
+        _allb_pgm_command = NUL;
+        _pgm_command_state = PGM_COMMAND_IDLE;
+        pthread_cond_broadcast(&_pgm_command_sent_cond);
+        LOG(PROG_LOG, LOG_ERR, "send_cmd 0x%02hhx canceled before transmission: %s\n",
+                           cmd, strerror(pret));
+      } else {
+        LOG(PROG_LOG, LOG_ERR, "send_cmd 0x%02hhx transmission not confirmed: %s\n",
+                           cmd, strerror(pret));
+      }
+      ret = false;
+      break;
+    }
+  }
+  if (ret)
+    LOG(PROG_LOG, LOG_INFO, "sent '0x%02hhx' to controller\n", cmd);
+  pthread_mutex_unlock(&_pgm_command_mutex);
+
+  return ret;
 }
 
 void force_queue_delete()
 {
-  //if (_allb_pgm_command != NUL)
-  //  LOG(ALLB_LOG, LOG_INFO, "Really bad coding, don't use this in release\n");
-
+  pthread_mutex_lock(&_pgm_command_mutex);
   _allb_pgm_command = NUL;
+  _pgm_command_state = PGM_COMMAND_IDLE;
+  pthread_cond_broadcast(&_pgm_command_sent_cond);
+  pthread_mutex_unlock(&_pgm_command_mutex);
 }
 
 
