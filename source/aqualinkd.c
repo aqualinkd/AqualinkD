@@ -1281,13 +1281,15 @@ void main_loop()
       blank_read = 0;
       //changed = false;
 
+      bool simulator_packet = false;
+
       if (_aqualink_data.simulator_active != SIM_NONE) {
         // Check if we have a valid connection
         if ( _aqualink_data.simulator_id != NUL && packet_buffer[PKT_DEST] == _aqualink_data.simulator_id) {
-          // Action comand and Send to web
-          processSimulatorPacket(packet_buffer, packet_length, &_aqualink_data);
+          // ACK before broadcasting to WebSockets.  The broadcast can block long
+          // enough for the panel to retransmit and collide with a late ACK.
           caculate_ack_packet(rs_fd, packet_buffer, SIMULATOR);
-          DEBUG_TIMER_STOP(_rs_packet_timer,AQUA_LOG,"Simulator Emulation Processed packet in");
+          simulator_packet = true;
         }
         else if ( _aqualink_data.simulator_id == NUL   
                   && packet_buffer[PKT_CMD] == CMD_PROBE 
@@ -1299,12 +1301,11 @@ void main_loop()
             _aqualink_data.simulator_id = packet_buffer[PKT_DEST];
             // reply to probe
             LOG(SIM_LOG,LOG_NOTICE, "Got probe on '0x%02hhx', using for simulator ID\n",packet_buffer[PKT_DEST]);
-            processSimulatorPacket(packet_buffer, packet_length, &_aqualink_data);
             caculate_ack_packet(rs_fd, packet_buffer, SIMULATOR);
+            simulator_packet = true;
           } else {
             LOG(SIM_LOG,LOG_INFO, "Got probe on '0x%02hhx' Still waiting for valid simulator probe\n",packet_buffer[PKT_DEST]);
           }
-          DEBUG_TIMER_STOP(_rs_packet_timer,AQUA_LOG,"Simulator Emulation Processed packet in");
         }
       }
 
@@ -1320,27 +1321,33 @@ void main_loop()
         switch(getJandyDeviceType(packet_buffer[PKT_DEST])){
           case ALLBUTTON:
             process_allbutton_packet(packet_buffer, packet_length, &_aqualink_data);
-            caculate_ack_packet(rs_fd, packet_buffer, ALLBUTTON);
+            if (!simulator_packet)
+              caculate_ack_packet(rs_fd, packet_buffer, ALLBUTTON);
           break;
           case RSSADAPTER:
             process_rssadapter_packet(packet_buffer, packet_length, &_aqualink_data);
-            caculate_ack_packet(rs_fd, packet_buffer, RSSADAPTER);    
+            if (!simulator_packet)
+              caculate_ack_packet(rs_fd, packet_buffer, RSSADAPTER);
           break;
           case IAQTOUCH:
             process_iaqtouch_packet(packet_buffer, packet_length, &_aqualink_data);
-            caculate_ack_packet(rs_fd, packet_buffer, IAQTOUCH);
+            if (!simulator_packet)
+              caculate_ack_packet(rs_fd, packet_buffer, IAQTOUCH);
           break;
           case ONETOUCH:
             process_onetouch_packet(packet_buffer, packet_length, &_aqualink_data);
-            caculate_ack_packet(rs_fd, packet_buffer, ONETOUCH);
+            if (!simulator_packet)
+              caculate_ack_packet(rs_fd, packet_buffer, ONETOUCH);
           break;
           case AQUAPDA:
             process_pda_packet(packet_buffer, packet_length);
-            caculate_ack_packet(rs_fd, packet_buffer, AQUAPDA);
+            if (!simulator_packet)
+              caculate_ack_packet(rs_fd, packet_buffer, AQUAPDA);
           break;
           case IAQUALNK:
             process_iaqualink_packet(packet_buffer, packet_length, &_aqualink_data);
-            caculate_ack_packet(rs_fd, packet_buffer, IAQUALNK);
+            if (!simulator_packet)
+              caculate_ack_packet(rs_fd, packet_buffer, IAQUALNK);
           break;
           default:
           break;
@@ -1352,7 +1359,7 @@ void main_loop()
 #endif
       }
       // Process any packets to readonly devices.
-      else if (packet_length > 0 && _aqconfig_.read_RS485_devmask > 0)
+      else if (!simulator_packet && packet_length > 0 && _aqconfig_.read_RS485_devmask > 0)
       {
         if (getProtocolType(packet_buffer) == JANDY)
         {
@@ -1364,8 +1371,15 @@ void main_loop()
           // In the future probably add code to catch device offline (ie missing reply message)
         }
         DEBUG_TIMER_STOP(_rs_packet_timer,AQUA_LOG,"Processed (readonly) packet in");
-      } else {
+      } else if (!simulator_packet) {
         DEBUG_TIMER_CLEAR(_rs_packet_timer); // Clear timer, no need to print anything
+      }
+
+      if (simulator_packet) {
+        // Keep normal device processing above when the simulator shares the
+        // configured PDA ID, but publish the packet only after its ACK is sent.
+        processSimulatorPacket(packet_buffer, packet_length, &_aqualink_data);
+        DEBUG_TIMER_STOP(_rs_packet_timer,AQUA_LOG,"Simulator Emulation Processed packet in");
       }
     }
     // Any unactioned commands
