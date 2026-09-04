@@ -26,7 +26,43 @@
 
 #define TIME_CHECK_INTERVAL  3600
 //#define TIME_CHECK_INTERVAL  100 // DEBUG ONLY
-#define ACCEPTABLE_TIME_DIFF 120
+/* How far the panel clock may be out before we re-set it.
+
+   This cannot usefully go below ~35.  The panel reports HH:MM with no seconds, so its
+   clock is estimated as the midpoint of the minute it is displaying, which means every
+   measurement carries +/-30s of quantisation noise even when the panel is perfect:
+
+       measured diff = -offset + (s - 30),   s = panel seconds-into-minute, 0..59
+
+   At 30 or below a perfectly synced panel would resync itself forever.  40 leaves ~10s
+   of headroom for that noise plus the latency between the panel rendering its display
+   and us parsing the message.  Panel crystal drift is ~0.2s/hour so real drift between
+   hourly checks is negligible; what this needs to catch is a panel that lost power.
+   NOTE the old value of 120 could never detect a panel a minute out, which is why one
+   stayed a minute slow indefinitely. */
+#define ACCEPTABLE_TIME_DIFF 40
+/* Tolerance used when the offset was timed from the panel's minute rollover instead of
+   read off its HH:MM display.  That measurement is good to about +/-(gap/2), ~4s on an
+   RS panel whose display cycles every 8s, so it can be held to a much tighter figure.
+   See the rollover block in aqualinkd.c. */
+#define ACCEPTABLE_TIME_DIFF_PRECISE 15
+/* Reject a rollover seen across a gap wider than this.  Beyond ~30s the estimate is no
+   better than the HH:MM midpoint it would replace, so there is nothing to gain.
+   Do NOT set this near the panel's display cycle: it is not a quality cutoff, the
+   tolerance is scaled by the measured window instead (see AQ_ROLLOVER_SLACK).  An RS
+   panel cycles every 8s, alternating to 10s, and stretches past 13s whenever
+   programming perturbs the display - a tight limit here just throws away good data. */
+#define AQ_ROLLOVER_MAX_WINDOW 30
+/* Added to a rollover's own +/- uncertainty to get the tolerance used against it, so a
+   loosely pinned rollover degrades gracefully instead of being discarded. */
+#define AQ_ROLLOVER_SLACK 8
+/* ...and reject one this old, so we never judge on a stale observation. A rollover
+   happens every minute, so a good one is normally well under this. */
+#define AQ_ROLLOVER_MAX_AGE 75
+/* How long after startup the forced panel time sync waits before it runs.  Setting the
+   panel clock takes over the panel's menus, so doing it during init stalls everything
+   else AqualinkD is trying to read.  Let startup finish, then sync in the background. */
+#define AQ_STARTUP_TIME_SYNC_DELAY 60
 
 
 #define MAX_ZERO_READ_BEFORE_RECONNECT 10

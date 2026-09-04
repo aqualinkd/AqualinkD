@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
 
 #include "aqualink.h"
 #include "allbutton_aq_programmer.h"
@@ -27,6 +28,37 @@ void cancel_menu();
 
 void waitfor_queue2empty();
 void longwaitfor_queue2empty();
+
+/*
+* set_allbutton_time() commits the panel clock on a minute boundary, because the panel has
+* no seconds field and starts counting from HH:MM:00 the instant the entry is committed.
+*
+* The menu walk has to FINISH just before that boundary.  We do not know up front how long
+* it takes (the MINUTE field is one keypress per minute of travel, up to 59 of them), so
+* the duration of the last walk is remembered and used to decide when to start the next
+* one.  The wait happens BEFORE the menu is opened, so the panel is not held in a
+* programming menu, and neither is AqualinkD's programming thread.
+*/
+#define AQ_SETTIME_WALK_MARGIN   8   /* slack added to the remembered walk duration */
+#define AQ_SETTIME_WALK_DEFAULT 20   /* first guess, before we have ever measured one */
+#define AQ_SETTIME_WALK_MIN     10   /* never trust an estimate shorter than this */
+#define AQ_SETTIME_WALK_MAX     90   /* do not let a pathological walk push the lead out */
+
+static int _settime_walk_secs = AQ_SETTIME_WALK_DEFAULT;
+
+/*
+* Sleep until 'until', bailing out early if AqualinkD is shutting down.
+* Returns false if we gave up because of a shutdown.
+*/
+static bool settime_wait_until(time_t until)
+{
+  while (time(0) < until) {
+    if (isAqualinkDStopping())
+      return false;
+    delay(100);
+  }
+  return true;
+}
 
 int _expectNextMessage = 0;
 unsigned char _allb_last_sent_command = NUL;
@@ -125,12 +157,25 @@ unsigned char pop_allb_cmd(struct aqualinkdata *aqdata)
 
 
 
-bool setAqualinkNumericField_new(struct aqualinkdata *aqdata, char *value_label, int value, int increment);
+bool setAqualinkNumericField_ex(struct aqualinkdata *aqdata, char *value_label, int value, int increment, bool sendEnter);
 bool setAqualinkNumericField(struct aqualinkdata *aqdata, char *value_label, int value)
 {
-  return setAqualinkNumericField_new(aqdata, value_label, value, 1);
+  return setAqualinkNumericField_ex(aqdata, value_label, value, 1, true);
 }
 bool setAqualinkNumericField_new(struct aqualinkdata *aqdata, char *value_label, int value, int increment)
+{
+  return setAqualinkNumericField_ex(aqdata, value_label, value, increment, true);
+}
+/*
+* Park the field on `value` but leave the ENTER to the caller.  Only useful for the
+* last field of a menu, where that ENTER is what commits the entry and the caller
+* needs to control when that happens (see set_allbutton_time).
+*/
+bool setAqualinkNumericField_noenter(struct aqualinkdata *aqdata, char *value_label, int value)
+{
+  return setAqualinkNumericField_ex(aqdata, value_label, value, 1, false);
+}
+bool setAqualinkNumericField_ex(struct aqualinkdata *aqdata, char *value_label, int value, int increment, bool sendEnter)
 {
   LOG(ALLB_LOG, LOG_DEBUG,"Setting menu item '%s' to %d\n",value_label, value);
   //char leading[10];  // description of the field (POOL, SPA, FRZ)
@@ -165,14 +210,17 @@ bool setAqualinkNumericField_new(struct aqualinkdata *aqdata, char *value_label,
       send_cmd(KEY_LEFT);
     }
     else {
-      // Just send ENTER. We are at the right value.
+      // We are at the right value.  Send ENTER to accept it, unless the caller asked
+      // to keep hold of that keypress.
       sprintf(searchBuf, "%s %d", value_label, current_val);
-      send_cmd(KEY_ENTER);
+      if (sendEnter)
+        send_cmd(KEY_ENTER);
     }
 
     if (i++ >= 100) {
       LOG(ALLB_LOG, LOG_WARNING, "AQ_Programmer Could not set numeric input '%s', to '%d'\n",value_label,value);
-      send_cmd(KEY_ENTER);
+      if (sendEnter)
+        send_cmd(KEY_ENTER);
       break;
     }
   } while(value != current_val); 
@@ -1082,36 +1130,167 @@ void *set_allbutton_freeze_heater_temps( void *ptr )
   return ptr;
 }
 
+/*
+* Build the SET TIME menu's HOUR line for a 0-23 hour, e.g. 16 -> "HOUR 4 PM".
+*/
+static void hour_menu_string(char *out, size_t size, int hour24)
+{
+  if (hour24 == 0)
+    snprintf(out, size, "HOUR 12 AM");
+  else if (hour24 <= 11)
+    snprintf(out, size, "HOUR %d AM", hour24);
+  else if (hour24 == 12)
+    snprintf(out, size, "HOUR 12 PM");
+  else
+    snprintf(out, size, "HOUR %d PM", hour24 - 12);
+}
+
+/*
+* Read a 0-23 hour back out of a panel HOUR line. false if it is not one.
+*/
+static bool parse_hour_menu(const char *msg, int *hour24)
+{
+  char *p = stristr(msg, "HOUR");
+  int h12;
+  char mer[4];
+
+  if (p == NULL)
+    return false;
+  if (sscanf(p, "%*s %d %3s", &h12, mer) != 2)
+    return false;
+  if (h12 < 1 || h12 > 12)
+    return false;
+
+  if (mer[0] == 'A' || mer[0] == 'a')
+    *hour24 = (h12 == 12) ? 0 : h12;
+  else if (mer[0] == 'P' || mer[0] == 'p')
+    *hour24 = (h12 == 12) ? 12 : h12 + 12;
+  else
+    return false;
+
+  return true;
+}
+
+/*
+* Set the SET TIME menu's HOUR field, leaving the panel on the next field.
+*
+* Neither of the generic helpers is safe here.  setAqualinkNumericField() cannot parse a
+* field with a meridiem on it, and select_sub_menu_item() waits only for the FINAL target
+* string, which loses a race the panel wins every time: coming out of the DAY field the
+* last message received is still the DAY line, so its opening comparison fails, it presses
+* RIGHT before it has ever seen the hour, and then matches the pre-keypress "HOUR n xM"
+* the panel had already queued - committing an hour too far.  That is where the "panel is
+* an hour ahead" came from.
+*
+* So do what setAqualinkNumericField() does and wait for the specific value the keypress
+* we just sent should produce.  Every step re-reads the field, so a stale or buffered
+* message cannot make us lose count.
+*
+* Only KEY_RIGHT is used.  It is the proven direction for this field and wraps 11 PM round
+* to 12 AM, so any hour is reachable in at most 23 presses.  KEY_LEFT would halve the
+* worst case but is unverified on this field, and guessing wrong here sets the clock wrong.
+*/
+static bool setAqualinkHourField(struct aqualinkdata *aqdata, int hour24)
+{
+  char target[20];
+  char expect[20];
+  int cur24 = -1;
+  int i = 0;
+
+  hour_menu_string(target, sizeof(target), hour24);
+
+  /* Get a real HOUR line before deciding anything, the last message is still the DAY
+     field at this point. */
+  if ( waitForMessage(aqdata, "HOUR", 4) != true ) {
+    LOG(ALLB_LOG, LOG_WARNING, "Never saw the HOUR field on the panel\n");
+    return false;
+  }
+
+  while (i++ <= 24) {
+    if ( parse_hour_menu(aqdata->last_message, &cur24) != true ) {
+      LOG(ALLB_LOG, LOG_WARNING, "Could not read panel hour from '%s'\n", aqdata->last_message);
+      return false;
+    }
+
+    if (cur24 == hour24) {
+      LOG(ALLB_LOG, LOG_DEBUG, "Panel hour is '%s', accepting\n", target);
+      send_cmd(KEY_ENTER);
+      waitForMessage(aqdata, NULL, 1); // let the panel move to the next field
+      return true;
+    }
+
+    hour_menu_string(expect, sizeof(expect), (cur24 + 1) % 24);
+    LOG(ALLB_LOG, LOG_DEBUG, "Stepping panel hour to '%s' (want '%s')\n", expect, target);
+    send_cmd(KEY_RIGHT);
+    waitfor_queue2empty();
+    if ( waitForMessage(aqdata, expect, 4) != true ) {
+      LOG(ALLB_LOG, LOG_WARNING, "Panel hour did not step to '%s'\n", expect);
+      return false;
+    }
+  }
+
+  LOG(ALLB_LOG, LOG_WARNING, "Gave up stepping panel hour to '%s'\n", target);
+  return false;
+}
+
 void *set_allbutton_time( void *ptr )
 {
   struct programmingThreadCtrl *threadCtrl;
   threadCtrl = (struct programmingThreadCtrl *) ptr;
   struct aqualinkdata *aqdata = threadCtrl->aqdata;
   
-  waitForSingleThreadOrTerminate(threadCtrl, AQ_SET_TIME);
-  //LOG(ALLB_LOG, LOG_NOTICE, "Setting time on aqualink\n");
-
   time_t now = time(0);   // get time now
-  struct tm *result = localtime(&now);
+  time_t target, walk_start;
+  struct tm tm_target;
   char hour[20];
+  char buf[40];
+  int lead, walked;
 
-  // Add 10 seconds to time since this can take a while to program.
-  // 10 to 20 seconds whould be right, but since there are no seconds we can set, add 30 seconds to get close to minute.
-  // Should probably set this to program the next minute then wait before hitting the final enter command.
-  result->tm_sec += 30;
-  mktime(result);
-  
-  if (result->tm_hour == 0)
-    sprintf(hour, "HOUR 12 AM");
-  else if (result->tm_hour <= 11)
-    sprintf(hour, "HOUR %d AM", result->tm_hour); // Need to fix compiler warning on new GCC, but %2d or %.2d does NOT give correct string
-  else if (result->tm_hour == 12)
-    sprintf(hour, "HOUR 12 PM");
-  else // Must be 13 or more
-    sprintf(hour, "HOUR %d PM", result->tm_hour - 12);
-  
+  /* The SET TIME menu has no seconds field, the panel starts its clock at HH:MM:00 the
+     moment the entry is committed.  So the accuracy of the sync is decided by *when* we
+     press the final ENTER, not by how cleverly we round the minute we type in.
 
-  LOG(ALLB_LOG, LOG_DEBUG, "Setting time to %d/%d/%d %d:%d\n", result->tm_mon + 1, result->tm_mday, result->tm_year + 1900, result->tm_hour + 1, result->tm_min);
+     Programming is slow.  Every digit is a keypress that has to round trip through the
+     panel display, and the MINUTE field can be up to 59 presses away from where it
+     starts.  Reading the clock up front and adding a fixed 30 seconds (what we used to
+     do) therefore left the panel behind by however long the programming happened to
+     take, which is where the "panel is always about a minute slow" came from.
+
+     So: pick the minute boundary we will commit on, wait out here until it is nearly
+     time, and only then open the menu and walk the fields.  Waiting before we open the
+     menu means the panel is not sat in a programming menu for a minute (where it may
+     time out on its own), and the programming thread is not claimed either, so anything
+     else AqualinkD wants to do can still get through. */
+  lead = _settime_walk_secs + AQ_SETTIME_WALK_MARGIN;
+  target = ((now + lead) / 60) * 60;                 // boundary at or before now+lead
+  if (target < now + lead)
+    target += 60;                                    // first boundary at or after
+
+  if (target - now > AQ_SETTIME_WALK_MARGIN) {
+    LOG(ALLB_LOG, LOG_DEBUG, "Waiting %d seconds before opening SET TIME menu (last walk took %ds)\n",
+        (int)(target - now - _settime_walk_secs), _settime_walk_secs);
+    if (! settime_wait_until(target - _settime_walk_secs)) {
+      LOG(ALLB_LOG, LOG_WARNING, "Shutting down, abandoning panel time set\n");
+      cleanAndTerminateThread(threadCtrl);
+      return ptr;
+    }
+  }
+
+  waitForSingleThreadOrTerminate(threadCtrl, AQ_SET_TIME);
+  walk_start = time(0);
+
+  localtime_r(&target, &tm_target);
+
+  hour_menu_string(hour, sizeof(hour), tm_target.tm_hour);
+
+  strftime(buf, sizeof(buf), "%m/%d/%y %I:%M %p", &tm_target);
+  // NOTICE, not INFO: the companion "Time is NOT accurate" line is NOTICE, and with this
+  // at INFO the one line that says what we actually sent the panel was invisible at the
+  // default log level.  '%s' is the literal hour menu string, so a wrong hour is obvious.
+  // Re-read the clock: 'now' was taken before the pre-wait, so using it here reported the
+  // countdown from when the thread started rather than from now.
+  LOG(ALLB_LOG, LOG_NOTICE, "Setting panel time to %s ('%s'), committing in %d seconds\n",
+      buf, hour, (int)(target - time(0)));
 
   if ( select_menu_item(aqdata, "SET TIME") != true ) {
     LOG(ALLB_LOG, LOG_WARNING, "Could not select SET TIME menu\n");
@@ -1121,14 +1300,55 @@ void *set_allbutton_time( void *ptr )
     return ptr;
   }
   
-  setAqualinkNumericField(aqdata, "YEAR", result->tm_year + 1900);
-  setAqualinkNumericField(aqdata, "MONTH", result->tm_mon + 1);
-  setAqualinkNumericField(aqdata, "DAY", result->tm_mday);
+  setAqualinkNumericField(aqdata, "YEAR", tm_target.tm_year + 1900);
+  setAqualinkNumericField(aqdata, "MONTH", tm_target.tm_mon + 1);
+  setAqualinkNumericField(aqdata, "DAY", tm_target.tm_mday);
   //setAqualinkNumericFieldExtra(aqdata, "HOUR", 11, "PM");
-  select_sub_menu_item(aqdata, hour); // This will keep looping until it finds the right message
-  setAqualinkNumericField(aqdata, "MINUTE", result->tm_min);
-  
-  send_cmd(KEY_ENTER);
+  /* Getting the hour wrong silently sets the panel clock wrong, so this one is neither
+     ignored nor left to select_sub_menu_item(). See setAqualinkHourField(). */
+  if ( setAqualinkHourField(aqdata, tm_target.tm_hour) != true ) {
+    LOG(ALLB_LOG, LOG_ERR, "Could not set panel hour to '%s', abandoning panel time set\n", hour);
+    cancel_menu();
+    cleanAndTerminateThread(threadCtrl);
+    return ptr;
+  }
+  // MINUTE is the last field, so its ENTER is the one that commits.  Park the field on
+  // the target minute but keep hold of that keypress.
+  setAqualinkNumericField_noenter(aqdata, "MINUTE", tm_target.tm_min);
+
+  /* Remember how long that took so the next sync knows when to start.  Rise immediately
+     but decay only a second per sync: a walk where every field already matched measures
+     about 4s, and letting the estimate collapse to that would make the next hard walk
+     (up to 23 hour presses plus 59 minute presses, ~0.26s each) overrun the boundary. */
+  walked = (int)(time(0) - walk_start);
+  if (walked < 1) walked = 1;
+  if (walked > _settime_walk_secs)
+    _settime_walk_secs = walked;
+  else if (_settime_walk_secs > AQ_SETTIME_WALK_MIN)
+    _settime_walk_secs--;
+  if (_settime_walk_secs < AQ_SETTIME_WALK_MIN) _settime_walk_secs = AQ_SETTIME_WALK_MIN;
+  if (_settime_walk_secs > AQ_SETTIME_WALK_MAX) _settime_walk_secs = AQ_SETTIME_WALK_MAX;
+
+  if (! settime_wait_until(target)) {
+    LOG(ALLB_LOG, LOG_WARNING, "Shutting down, abandoning panel time set\n");
+    cancel_menu();
+    cleanAndTerminateThread(threadCtrl);
+    return ptr;
+  }
+
+  now = time(0);
+  if (now > target) {
+    // The walk took longer than the lead we allowed. Commit anyway and let
+    // checkAqualinkTime() retry; _settime_walk_secs has just been updated with the real
+    // duration, so the retry will start early enough.
+    LOG(ALLB_LOG, LOG_WARNING, "SET TIME walk took %ds and overran the target by %ds, panel will be slow. Will re-check on next cycle\n",
+        walked, (int)(now - target));
+  } else {
+    LOG(ALLB_LOG, LOG_DEBUG, "SET TIME walk took %ds, committing on the boundary\n", walked);
+  }
+
+  send_cmd(KEY_ENTER); // Accept the MINUTE field, this is what starts the panel clock.
+  send_cmd(KEY_ENTER); // Commit / leave the SET TIME menu.
 
   cleanAndTerminateThread(threadCtrl);
   

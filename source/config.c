@@ -611,6 +611,16 @@ void init_parameters (struct aqconfig * parms)
   _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_true;
 
   _numCfgParams++;
+  _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.force_panel_time_sync_at_startup;
+  _cfgParams[_numCfgParams].value_type = CFG_BOOL;
+  _cfgParams[_numCfgParams].name = CFG_N_force_panel_time_sync_at_startup;
+  // No CFG_GRP_ADVANCED: sync_panel_time above is visible by default and this is its
+  // companion, hiding one behind the 'show advanced' toggle splits the pair.
+  // Note this option is only read once, when startup() arms the one shot, so a change
+  // here does not take effect until AqualinkD is restarted.
+  _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_false;
+
+  _numCfgParams++;
   _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.display_warnings_web;
   _cfgParams[_numCfgParams].value_type = CFG_BOOL;
   _cfgParams[_numCfgParams].name = "display_warnings_in_web";
