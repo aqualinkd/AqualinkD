@@ -381,22 +381,32 @@ bool checkAqualinkTime()
   /* Prefer the rollover timed offset when we have a usable one.  It is roughly an
      order of magnitude tighter than reading HH:MM and assuming the midpoint, so it
      is judged against a correspondingly tighter tolerance. */
-  int tolerance = ACCEPTABLE_TIME_DIFF;
+  /* How close the panel can actually be held depends on which setter AQ_SET_TIME lands
+     on.  Only the allbutton one commits on a minute boundary; the iAQ Touch and PDA
+     setters cannot land closer than a few tens of seconds, so tightening the tolerance
+     for them would just re-program the panel every hour to the same wrong time. */
+  bool boundary_aware = isPanelTimeSetterBoundaryAware();
+  int tolerance = boundary_aware ? ACCEPTABLE_TIME_DIFF : ACCEPTABLE_TIME_DIFF_LEGACY;
   int precise, accuracy;
   if (panel_rollover_offset(now, &precise, &accuracy))
   {
-    /* Only act on an offset bigger than what we can actually resolve.  Scaling by the
-       measured window rather than applying a fixed cutoff means a rollover we only
-       pinned loosely still gets used, just held to a looser figure - and it is never
-       worse than the coarse path it replaces. */
-    tolerance = accuracy + AQ_ROLLOVER_SLACK;
-    if (tolerance < ACCEPTABLE_TIME_DIFF_PRECISE)
-      tolerance = ACCEPTABLE_TIME_DIFF_PRECISE;
-    if (tolerance > ACCEPTABLE_TIME_DIFF)
-      tolerance = ACCEPTABLE_TIME_DIFF;
+    /* The rollover measurement is good regardless of which setter we use, so always
+       prefer it for the figure we report and act on.  Only the TOLERANCE depends on what
+       the setter can achieve. */
+    time_difference = precise;
+    if (boundary_aware) {
+      /* Only act on an offset bigger than what we can actually resolve.  Scaling by the
+         measured window rather than applying a fixed cutoff means a rollover we only
+         pinned loosely still gets used, just held to a looser figure - and it is never
+         worse than the coarse path it replaces. */
+      tolerance = accuracy + AQ_ROLLOVER_SLACK;
+      if (tolerance < ACCEPTABLE_TIME_DIFF_PRECISE)
+        tolerance = ACCEPTABLE_TIME_DIFF_PRECISE;
+      if (tolerance > ACCEPTABLE_TIME_DIFF)
+        tolerance = ACCEPTABLE_TIME_DIFF;
+    }
     LOG(AQUA_LOG,LOG_INFO, "Panel clock is %+d seconds off system time (+/-%ds, timed from the panel's minute rollover over %ds), tolerance %ds\n",
         precise, accuracy, _ro_window, tolerance);
-    time_difference = precise;
   }
 
   if (force_due)

@@ -41,6 +41,13 @@
    NOTE the old value of 120 could never detect a panel a minute out, which is why one
    stayed a minute slow indefinitely. */
 #define ACCEPTABLE_TIME_DIFF 40
+/* Tolerance for panels whose set-time path is NOT boundary aware (iAQ Touch, PDA).  Those
+   setters read the clock before walking their fields and commit seconds later, so they
+   cannot land closer than a few tens of seconds.  Holding them to the tighter figures
+   above would just make them re-program every hour to the same wrong time, so they keep
+   the original tolerance until their setters are fixed.  See
+   isPanelTimeSetterBoundaryAware(). */
+#define ACCEPTABLE_TIME_DIFF_LEGACY 120
 /* Tolerance used when the offset was timed from the panel's minute rollover instead of
    read off its HH:MM display.  That measurement is good to about +/-(gap/2), ~4s on an
    RS panel whose display cycles every 8s, so it can be held to a much tighter figure.
