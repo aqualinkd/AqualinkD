@@ -221,7 +221,9 @@ bool setAqualinkNumericField_ex(struct aqualinkdata *aqdata, char *value_label, 
       LOG(ALLB_LOG, LOG_WARNING, "AQ_Programmer Could not set numeric input '%s', to '%d'\n",value_label,value);
       if (sendEnter)
         send_cmd(KEY_ENTER);
-      break;
+      // Was 'break', which then fell through to 'return true' and reported a field we
+      // never managed to set as successful.
+      return false;
     }
   } while(value != current_val); 
   
@@ -1308,21 +1310,34 @@ void *set_allbutton_time( void *ptr )
     return ptr;
   }
   
-  setAqualinkNumericField(aqdata, "YEAR", tm_target.tm_year + 1900);
-  setAqualinkNumericField(aqdata, "MONTH", tm_target.tm_mon + 1);
-  setAqualinkNumericField(aqdata, "DAY", tm_target.tm_mday);
+  /* Every field is checked.  Getting any of them wrong silently sets the panel clock
+     wrong, and for MINUTE it is worse than that: on failure the helper has already
+     cancelled the menu, so carrying on would wait for the boundary and then fire two
+     ENTERs into whatever the panel is showing by then. */
+  if ( setAqualinkNumericField(aqdata, "YEAR", tm_target.tm_year + 1900) != true ) {
+    LOG(ALLB_LOG, LOG_ERR, "Could not set panel year, abandoning panel time set\n");
+    goto settime_failed;
+  }
+  if ( setAqualinkNumericField(aqdata, "MONTH", tm_target.tm_mon + 1) != true ) {
+    LOG(ALLB_LOG, LOG_ERR, "Could not set panel month, abandoning panel time set\n");
+    goto settime_failed;
+  }
+  if ( setAqualinkNumericField(aqdata, "DAY", tm_target.tm_mday) != true ) {
+    LOG(ALLB_LOG, LOG_ERR, "Could not set panel day, abandoning panel time set\n");
+    goto settime_failed;
+  }
   //setAqualinkNumericFieldExtra(aqdata, "HOUR", 11, "PM");
-  /* Getting the hour wrong silently sets the panel clock wrong, so this one is neither
-     ignored nor left to select_sub_menu_item(). See setAqualinkHourField(). */
+  /* See setAqualinkHourField() for why this does not use select_sub_menu_item(). */
   if ( setAqualinkHourField(aqdata, tm_target.tm_hour) != true ) {
     LOG(ALLB_LOG, LOG_ERR, "Could not set panel hour to '%s', abandoning panel time set\n", hour);
-    cancel_menu();
-    cleanAndTerminateThread(threadCtrl);
-    return ptr;
+    goto settime_failed;
   }
   // MINUTE is the last field, so its ENTER is the one that commits.  Park the field on
   // the target minute but keep hold of that keypress.
-  setAqualinkNumericField_noenter(aqdata, "MINUTE", tm_target.tm_min);
+  if ( setAqualinkNumericField_noenter(aqdata, "MINUTE", tm_target.tm_min) != true ) {
+    LOG(ALLB_LOG, LOG_ERR, "Could not set panel minute, abandoning panel time set\n");
+    goto settime_failed;
+  }
 
   /* Remember how long that took so the next sync knows when to start.  Rise immediately
      but decay only a second per sync: a walk where every field already matched measures
@@ -1361,6 +1376,13 @@ void *set_allbutton_time( void *ptr )
   cleanAndTerminateThread(threadCtrl);
   
   // just stop compiler error, ptr is not valid as it's just been freed
+  return ptr;
+
+settime_failed:
+  /* Leave the panel out of the menu rather than parked mid-entry.  checkAqualinkTime()
+     will notice the clock is still wrong and try again on the next cycle. */
+  cancel_menu();
+  cleanAndTerminateThread(threadCtrl);
   return ptr;
 }
 
