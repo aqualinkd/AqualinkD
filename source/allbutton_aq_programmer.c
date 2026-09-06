@@ -1239,7 +1239,7 @@ void *set_allbutton_time( void *ptr )
   threadCtrl = (struct programmingThreadCtrl *) ptr;
   struct aqualinkdata *aqdata = threadCtrl->aqdata;
   
-  time_t now = time(0);   // get time now
+  time_t now;             // read after the programming slot is claimed, see below
   time_t target, walk_start;
   struct tm tm_target;
   char hour[20];
@@ -1261,11 +1261,21 @@ void *set_allbutton_time( void *ptr )
      menu means the panel is not sat in a programming menu for a minute (where it may
      time out on its own), and the programming thread is not claimed either, so anything
      else AqualinkD wants to do can still get through. */
+  /* Claim the programming slot BEFORE picking the boundary.  waitForSingleThreadOrTerminate()
+     sleeps up to 120s waiting for another programmer to finish, so choosing the target
+     first meant it could be minutes in the past by the time we got the slot - we would
+     then program a past minute, skip the boundary wait entirely and commit immediately,
+     leaving the panel behind by however long we waited. */
+  waitForSingleThreadOrTerminate(threadCtrl, AQ_SET_TIME);
+
+  now = time(0);                                     // slot acquisition may have blocked
   lead = _settime_walk_secs + AQ_SETTIME_WALK_MARGIN;
   target = ((now + lead) / 60) * 60;                 // boundary at or before now+lead
   if (target < now + lead)
     target += 60;                                    // first boundary at or after
 
+  /* Wait out here, before the menu is opened, so the panel is not sat in a programming
+     menu (where it may time out on its own) for any longer than the walk needs. */
   if (target - now > AQ_SETTIME_WALK_MARGIN) {
     LOG(ALLB_LOG, LOG_DEBUG, "Waiting %d seconds before opening SET TIME menu (last walk took %ds)\n",
         (int)(target - now - _settime_walk_secs), _settime_walk_secs);
@@ -1275,8 +1285,6 @@ void *set_allbutton_time( void *ptr )
       return ptr;
     }
   }
-
-  waitForSingleThreadOrTerminate(threadCtrl, AQ_SET_TIME);
   walk_start = time(0);
 
   localtime_r(&target, &tm_target);
