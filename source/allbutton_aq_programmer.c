@@ -52,6 +52,7 @@ void longwaitfor_queue2empty();
 #define AQ_SETTIME_STAGE_BASE     3  /* fixed cost of staging, on top of the presses */
 #define AQ_SETTIME_NAV_ALLOWANCE 12  /* menu walk to SET TIME; measured 3.5s, retries x3 */
 #define AQ_SETTIME_PRESSES_MAX  140  /* used when the panel display cannot be parsed */
+#define AQ_SETTIME_DEADLINE_SLACK 15 /* added to the derived staging time for the deadline */
 
 /*
 * Read the date and time the panel is currently displaying, e.g. "09/04/26 FRI" and
@@ -136,6 +137,60 @@ static int settime_panel_offset(struct aqualinkdata *aqdata, time_t now)
     return INT_MAX;
 
   return abs((int)(now - panel));
+}
+
+/*
+* Choose the boundary to commit on, together with the staging cost FOR THAT BOUNDARY.
+*
+* The two are circular: the press count depends on the target minute, the target minute
+* depends on the lead, and the lead depends on the press count.  So iterate to a fixed
+* point, then recompute once more against whatever we settled on.  That last step is the
+* important one - the numeric fields do not wrap, so a target one minute later can cost
+* wildly more (a panel showing 12:58 needs 1 press for a 12:59 target and 58 for 13:00),
+* and figures describing a target we are not using are worse than useless.
+*
+* Guarantees on return: presses/stage/lead all describe *target, and target is far enough
+* out to fit them.
+*/
+static void settime_plan(struct aqualinkdata *aqdata, time_t now, time_t *target_out,
+                         int *presses_out, int *stage_out, int *lead_out)
+{
+  struct tm tm_t;
+  time_t target = now;
+  int presses = AQ_SETTIME_PRESSES_MAX;   /* conservative seed for the first pass */
+  int stage, lead, next, i;
+
+  for (i = 0; i < 4; i++) {
+    stage = settime_stage_secs(presses);
+    lead  = AQ_SETTIME_NAV_ALLOWANCE + stage;
+    target = ((now + lead) / 60) * 60;               // boundary at or before now+lead
+    if (target < now + lead)
+      target += 60;                                  // first boundary at or after
+    localtime_r(&target, &tm_t);
+    next = settime_expected_presses(aqdata, &tm_t);
+    if (next == presses)
+      break;                                         // settled
+    presses = next;
+  }
+
+  /* Make the figures describe the target we are actually returning, and step out a
+     minute at a time if that makes it unreachable.  Terminates: lead can never exceed
+     settime_stage_secs(AQ_SETTIME_PRESSES_MAX) + AQ_SETTIME_NAV_ALLOWANCE, so a couple
+     of minutes of headroom always wins. */
+  for (i = 0; i < 4; i++) {
+    localtime_r(&target, &tm_t);
+    presses = settime_expected_presses(aqdata, &tm_t);
+    stage   = settime_stage_secs(presses);
+    lead    = AQ_SETTIME_NAV_ALLOWANCE + stage;
+    if (target - now >= lead)
+      break;
+    target += 60;
+  }
+
+  *target_out = target;
+  *presses_out = presses;
+  *stage_out = stage;
+  *lead_out = lead;
 }
 
 /*
@@ -249,25 +304,34 @@ unsigned char pop_allb_cmd(struct aqualinkdata *aqdata)
 
 
 
-bool setAqualinkNumericField_ex(struct aqualinkdata *aqdata, char *value_label, int value, int increment, bool sendEnter);
+bool setAqualinkNumericField_ex(struct aqualinkdata *aqdata, char *value_label, int value, int increment, bool sendEnter, time_t deadline);
 bool setAqualinkNumericField(struct aqualinkdata *aqdata, char *value_label, int value)
 {
-  return setAqualinkNumericField_ex(aqdata, value_label, value, 1, true);
+  return setAqualinkNumericField_ex(aqdata, value_label, value, 1, true, 0);
 }
 bool setAqualinkNumericField_new(struct aqualinkdata *aqdata, char *value_label, int value, int increment)
 {
-  return setAqualinkNumericField_ex(aqdata, value_label, value, increment, true);
+  return setAqualinkNumericField_ex(aqdata, value_label, value, increment, true, 0);
+}
+/*
+* As above but give up if 'deadline' (absolute, 0 for none) passes.  The iteration cap
+* below bounds the number of KEYPRESSES, not the time they take, so a panel that answers
+* slowly but keeps answering could otherwise hold a programming menu open for minutes.
+*/
+bool setAqualinkNumericField_until(struct aqualinkdata *aqdata, char *value_label, int value, time_t deadline)
+{
+  return setAqualinkNumericField_ex(aqdata, value_label, value, 1, true, deadline);
 }
 /*
 * Park the field on `value` but leave the ENTER to the caller.  Only useful for the
 * last field of a menu, where that ENTER is what commits the entry and the caller
 * needs to control when that happens (see set_allbutton_time).
 */
-bool setAqualinkNumericField_noenter(struct aqualinkdata *aqdata, char *value_label, int value)
+bool setAqualinkNumericField_noenter(struct aqualinkdata *aqdata, char *value_label, int value, time_t deadline)
 {
-  return setAqualinkNumericField_ex(aqdata, value_label, value, 1, false);
+  return setAqualinkNumericField_ex(aqdata, value_label, value, 1, false, deadline);
 }
-bool setAqualinkNumericField_ex(struct aqualinkdata *aqdata, char *value_label, int value, int increment, bool sendEnter)
+bool setAqualinkNumericField_ex(struct aqualinkdata *aqdata, char *value_label, int value, int increment, bool sendEnter, time_t deadline)
 {
   LOG(ALLB_LOG, LOG_DEBUG,"Setting menu item '%s' to %d\n",value_label, value);
   //char leading[10];  // description of the field (POOL, SPA, FRZ)
@@ -280,6 +344,12 @@ bool setAqualinkNumericField_ex(struct aqualinkdata *aqdata, char *value_label, 
   int i=0;
   do 
   {
+    /* Checked before the wait, so an already-expired deadline returns without touching
+       the panel at all. */
+    if (deadline != 0 && time(0) > deadline) {
+      LOG(ALLB_LOG, LOG_WARNING, "Ran out of time setting '%s' to '%d'\n", value_label, value);
+      return false;
+    }
     if (waitForMessage(aqdata, searchBuf, 4) != true) {
       LOG(ALLB_LOG, LOG_WARNING, "AQ_Programmer Could not set numeric input '%s', not found\n",value_label);
       cancel_menu();
@@ -1284,7 +1354,7 @@ static bool parse_hour_menu(const char *msg, int *hour24)
 * to 12 AM, so any hour is reachable in at most 23 presses.  KEY_LEFT would halve the
 * worst case but is unverified on this field, and guessing wrong here sets the clock wrong.
 */
-static bool setAqualinkHourField(struct aqualinkdata *aqdata, int hour24)
+static bool setAqualinkHourField(struct aqualinkdata *aqdata, int hour24, time_t deadline)
 {
   char target[20];
   char expect[20];
@@ -1292,6 +1362,15 @@ static bool setAqualinkHourField(struct aqualinkdata *aqdata, int hour24)
   int i = 0;
 
   hour_menu_string(target, sizeof(target), hour24);
+
+  /* Before the first wait, so an already-expired deadline gives up without blocking.
+     NOTE this cannot interrupt a wait already in progress: waitForMessage() uses
+     pthread_cond_wait() with no timeout, so a panel that goes completely silent still
+     parks the thread. Bounding that needs pthread_cond_timedwait() throughout. */
+  if (deadline != 0 && time(0) > deadline) {
+    LOG(ALLB_LOG, LOG_WARNING, "Ran out of time before setting the panel hour to '%s'\n", target);
+    return false;
+  }
 
   /* Get a real HOUR line before deciding anything, the last message is still the DAY
      field at this point. */
@@ -1301,6 +1380,10 @@ static bool setAqualinkHourField(struct aqualinkdata *aqdata, int hour24)
   }
 
   while (i++ <= 24) {
+    if (deadline != 0 && time(0) > deadline) {
+      LOG(ALLB_LOG, LOG_WARNING, "Ran out of time setting the panel hour to '%s'\n", target);
+      return false;
+    }
     if ( parse_hour_menu(aqdata->last_message, &cur24) != true ) {
       LOG(ALLB_LOG, LOG_WARNING, "Could not read panel hour from '%s'\n", aqdata->last_message);
       return false;
@@ -1340,6 +1423,7 @@ void *set_allbutton_time( void *ptr )
   char buf[40];
   int lead, stage_secs, presses, i;
   int panel_offset_at_start, would_be_slow;
+  time_t stage_deadline;
 
   /* The SET TIME menu has no seconds field, the panel starts its clock at HH:MM:00 the
      moment the entry is committed.  So the accuracy of the sync is decided by *when* we
@@ -1366,22 +1450,9 @@ void *set_allbutton_time( void *ptr )
   now = time(0);                                     // slot acquisition may have blocked
   panel_offset_at_start = settime_panel_offset(aqdata, now);
 
-  /* Derive how long staging will take from what the panel is showing, then pick the first
+  /* Derive how long staging will take from what the panel is showing, and pick the first
      boundary that leaves room for the menu walk plus that staging. */
-  target = now;
-  for (i = 0; i < 2; i++) {
-    /* Two passes: the press count depends on the target minute, which depends on the
-       press count. One refinement is enough - a minute either way changes the MINUTE
-       field by at most one press. */
-    localtime_r(&target, &tm_target);
-    presses = (i == 0) ? AQ_SETTIME_PRESSES_MAX
-                       : settime_expected_presses(aqdata, &tm_target);
-    stage_secs = settime_stage_secs(presses);
-    lead = AQ_SETTIME_NAV_ALLOWANCE + stage_secs;
-    target = ((now + lead) / 60) * 60;               // boundary at or before now+lead
-    if (target < now + lead)
-      target += 60;                                  // first boundary at or after
-  }
+  settime_plan(aqdata, now, &target, &presses, &stage_secs, &lead);
   localtime_r(&target, &tm_target);
 
   /* Wait out here, before the menu is opened, so the panel is not sat in a programming
@@ -1425,43 +1496,58 @@ void *set_allbutton_time( void *ptr )
      becomes the better answer. */
   now = time(0);
   if (target - now < stage_secs) {
-    if (target + 60 - now < stage_secs) {
-      LOG(ALLB_LOG, LOG_ERR, "Menu walk left only %ds before %s, not enough for %ds of staging. Abandoning\n",
-          (int)(target - now), buf, stage_secs);
+    /* Step out a minute at a time, recomputing the cost for each candidate.  The numeric
+       fields do not wrap, so the next boundary is NOT simply one press further away -
+       from a panel showing 12:58 a 12:59 target costs 1 press and 13:00 costs 58, about
+       20 seconds more.  Reusing the old figure here would accept a boundary that staging
+       cannot reach, and would also hand the field setters a deadline far too tight. */
+    for (i = 0; i < 2 && target - now < stage_secs; i++) {
+      target += 60;
+      localtime_r(&target, &tm_target);
+      presses = settime_expected_presses(aqdata, &tm_target);
+      stage_secs = settime_stage_secs(presses);
+    }
+    if (target - now < stage_secs) {
+      LOG(ALLB_LOG, LOG_ERR, "Menu walk ran long, and no reachable boundary needs less than %ds of staging. Abandoning\n",
+          stage_secs);
       goto settime_failed;
     }
-    target += 60;
-    localtime_r(&target, &tm_target);
     hour_menu_string(hour, sizeof(hour), tm_target.tm_hour);
     strftime(buf, sizeof(buf), "%m/%d/%y %I:%M %p", &tm_target);
-    LOG(ALLB_LOG, LOG_NOTICE, "Menu walk ran long, retargeting to %s ('%s')\n", buf, hour);
+    LOG(ALLB_LOG, LOG_NOTICE, "Menu walk ran long, retargeting to %s ('%s'), %d presses / %ds staging\n",
+        buf, hour, presses, stage_secs);
   }
+
+  /* Bound the staging itself.  stage_secs is derived at 350ms/press against a measured
+     264ms, so it already carries headroom; the slack covers a panel that is simply
+     slower than this one. */
+  stage_deadline = now + stage_secs + AQ_SETTIME_DEADLINE_SLACK;
 
   /* Every field is checked.  Getting any of them wrong silently sets the panel clock
      wrong, and for MINUTE it is worse than that: on failure the helper has already
      cancelled the menu, so carrying on would wait for the boundary and then fire two
      ENTERs into whatever the panel is showing by then. */
-  if ( setAqualinkNumericField(aqdata, "YEAR", tm_target.tm_year + 1900) != true ) {
+  if ( setAqualinkNumericField_until(aqdata, "YEAR", tm_target.tm_year + 1900, stage_deadline) != true ) {
     LOG(ALLB_LOG, LOG_ERR, "Could not set panel year, abandoning panel time set\n");
     goto settime_failed;
   }
-  if ( setAqualinkNumericField(aqdata, "MONTH", tm_target.tm_mon + 1) != true ) {
+  if ( setAqualinkNumericField_until(aqdata, "MONTH", tm_target.tm_mon + 1, stage_deadline) != true ) {
     LOG(ALLB_LOG, LOG_ERR, "Could not set panel month, abandoning panel time set\n");
     goto settime_failed;
   }
-  if ( setAqualinkNumericField(aqdata, "DAY", tm_target.tm_mday) != true ) {
+  if ( setAqualinkNumericField_until(aqdata, "DAY", tm_target.tm_mday, stage_deadline) != true ) {
     LOG(ALLB_LOG, LOG_ERR, "Could not set panel day, abandoning panel time set\n");
     goto settime_failed;
   }
   //setAqualinkNumericFieldExtra(aqdata, "HOUR", 11, "PM");
   /* See setAqualinkHourField() for why this does not use select_sub_menu_item(). */
-  if ( setAqualinkHourField(aqdata, tm_target.tm_hour) != true ) {
+  if ( setAqualinkHourField(aqdata, tm_target.tm_hour, stage_deadline) != true ) {
     LOG(ALLB_LOG, LOG_ERR, "Could not set panel hour to '%s', abandoning panel time set\n", hour);
     goto settime_failed;
   }
   // MINUTE is the last field, so its ENTER is the one that commits.  Park the field on
   // the target minute but keep hold of that keypress.
-  if ( setAqualinkNumericField_noenter(aqdata, "MINUTE", tm_target.tm_min) != true ) {
+  if ( setAqualinkNumericField_noenter(aqdata, "MINUTE", tm_target.tm_min, stage_deadline) != true ) {
     LOG(ALLB_LOG, LOG_ERR, "Could not set panel minute, abandoning panel time set\n");
     goto settime_failed;
   }
