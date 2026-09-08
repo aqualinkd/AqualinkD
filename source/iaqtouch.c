@@ -1145,7 +1145,7 @@ if not programming && poll packet {
               nextPageRequestKey = KEY_IAQTCH_STATUS;
           break;
           case IAQ_PAGE_DEVICES3:
-            if (_devicePageButtons[1][16].type == 0x03) 
+            if (_devicePageButtons[2][16].type == 0x03)
               nextPageRequestKey = KEY_IAQTCH_NEXT_PAGE;
             else
               nextPageRequestKey = KEY_IAQTCH_STATUS;
@@ -1245,7 +1245,7 @@ const char *iaqt_page_name(const unsigned char page)
       return "Devices #2";
     break;
     case IAQ_PAGE_DEVICES3:
-      return "Devices #2";
+      return "Devices #3";
     break;
     case IAQ_PAGE_SET_TEMP:
       return "Set Temp";

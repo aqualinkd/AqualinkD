@@ -532,11 +532,12 @@ void *set_aqualink_iaqtouch_device_on_off( void *ptr )
       pButton = iaqtFindButtonByLabel(((altlabel_detail *)button->special_mask_ptr)->altlabel);
     }
  
-  // If not found see if page has next
-    if (pButton == NULL && iaqtFindButtonByIndex(16)->type == 0x03 ) {
+  // If not found, keep advancing through further device pages while each one says it has more.
+  // Bounded to match _devicePageButtons' 3 known pages (this page + 2 more), so a
+  // misbehaving/wrapping page sequence can't spin this loop forever.
+    for (int _devPage = 0; pButton == NULL && _devPage < 2 && iaqtFindButtonByIndex(16)->type == 0x03; _devPage++) {
       iaqt_queue_cmd(KEY_IAQTCH_NEXT_PAGE);
       waitfor_iaqt_nextPage(aqdata);
-    // This will fail, since not looking at device page 2 buttons
       pButton = iaqtFindButtonByLabel(button->label);
     }
   }
@@ -612,16 +613,17 @@ void *set_aqualink_iaqtouch_device_on_off( void *ptr )
       button = iaqtFindButtonByLabel(((altlabel_detail *)aqdata->aqbuttons[device].special_mask_ptr)->altlabel);
     }
  
-  // If not found see if page has next
-    if (button == NULL && iaqtFindButtonByIndex(16)->type == 0x03 ) {
+  // If not found, keep advancing through further device pages while each one says it has more.
+  // Bounded to match _devicePageButtons' 3 known pages (this page + 2 more), so a
+  // misbehaving/wrapping page sequence can't spin this loop forever.
+    for (int _devPage = 0; button == NULL && _devPage < 2 && iaqtFindButtonByIndex(16)->type == 0x03; _devPage++) {
       iaqt_queue_cmd(KEY_IAQTCH_NEXT_PAGE);
       waitfor_iaqt_nextPage(aqdata);
-    // This will fail, since not looking at device page 2 buttons
       button = iaqtFindButtonByLabel(aqdata->aqbuttons[device].label);
     }
   }
 
-  if (button == NULL) {  
+  if (button == NULL) {
     LOG(IAQT_LOG, LOG_ERR, "IAQ Touch did not find '%s' button on device list\n", aqdata->aqbuttons[device].label);
     goto f_end;
   }
@@ -781,11 +783,12 @@ void *set_aqualink_iaqtouch_light_colormode( void *ptr )
     pButton = iaqtFindButtonByLabel(key->label);
  
 //DPRINTF("Second button find = %s\n",pButton==NULL?"null":pButton->name);
-  // If not found see if page has next
-    if (pButton == NULL && iaqtFindButtonByIndex(16)->type == 0x03 ) {
+  // If not found, keep advancing through further device pages while each one says it has more.
+  // Bounded to match _devicePageButtons' 3 known pages (this page + 2 more), so a
+  // misbehaving/wrapping page sequence can't spin this loop forever.
+    for (int _devPage = 0; pButton == NULL && _devPage < 2 && iaqtFindButtonByIndex(16)->type == 0x03; _devPage++) {
       iaqt_queue_cmd(KEY_IAQTCH_NEXT_PAGE);
       waitfor_iaqt_nextPage(aqdata);
-    // This will fail, since not looking at device page 2 buttons
       pButton = iaqtFindButtonByLabel(key->label);
 //DPRINTF("Third button find = %s\n",pButton==NULL?"null":pButton->name);
     }
