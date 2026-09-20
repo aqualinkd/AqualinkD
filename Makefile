@@ -13,6 +13,10 @@
 AQ_PDA  = true
 AQ_MANAGER = true
 
+# Number of virtual buttons. Leave unset for the default of 8 (see VIRTUAL_BUTTONS in aq_panel.h).
+# Can also be passed on the command line, ie `make AQ_VIRTUAL_BUTTONS=32`
+#AQ_VIRTUAL_BUTTONS = 32
+
 #AQ_CONTAINER = false // this is for compiling for containers
 
 # define the C compiler(s) to use
@@ -86,6 +90,10 @@ SRCS = aqualinkd.c utils.c config.c aq_serial.c aq_panel.c aq_programmer.c allbu
 
 AQ_FLAGS =
 # Add source and flags depending on protocols to support.
+ifdef AQ_VIRTUAL_BUTTONS
+  AQ_FLAGS := $(AQ_FLAGS) -D VIRTUAL_BUTTONS=$(AQ_VIRTUAL_BUTTONS)
+endif
+
 ifeq ($(AQ_PDA), true)
   SRCS := $(SRCS) pda.c pda_menu.c pda_aq_programmer.c
   AQ_FLAGS := $(AQ_FLAGS) -D AQ_PDA

@@ -137,7 +137,9 @@ int PANEL_SIZE();
 // If we need to increase virtual buttons, then increase below.
 
 
+#ifndef VIRTUAL_BUTTONS
 #define VIRTUAL_BUTTONS 8 // This is the only parameter to change if we need more virtual buttons.
+#endif
 
 #define TOTAL_BUTTONS 20+VIRTUAL_BUTTONS // Biggest jandy panel is 20 buttons (RS16)
 
