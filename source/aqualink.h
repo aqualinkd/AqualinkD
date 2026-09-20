@@ -66,6 +66,12 @@
 /* ...and reject one this old, so we never judge on a stale observation. A rollover
    happens every minute, so a good one is normally well under this. */
 #define AQ_ROLLOVER_MAX_AGE 75
+/* The rollover estimate and the coarse HH:MM estimate measure the same thing by different
+   routes, so they cannot legitimately disagree by more than the sum of their errors
+   (+/-30s coarse, +/-16s rollover at the widest usable window).  A bigger gap than this
+   means the rollover state is stale or the panel's date and time messages are out of step
+   with each other, so the rollover figure is not to be trusted. */
+#define AQ_ROLLOVER_SANITY 60
 /* How long after startup the forced panel time sync waits before it runs.  Setting the
    panel clock takes over the panel's menus, so doing it during init stalls everything
    else AqualinkD is trying to read.  Let startup finish, then sync in the background. */

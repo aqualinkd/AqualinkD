@@ -276,6 +276,24 @@ static void observe_panel_rollover(time_t now)
   _ro_prev_sample = now;
 }
 
+/*
+* Throw away what we know about the panel's minute rollover.
+*
+* Called when we are about to rewrite the panel clock.  After that the panel's reported
+* time JUMPS, and a jump is not a rollover - treating it as one measures the size of the
+* correction we just made rather than any error, which is how a 903,657,588 second offset
+* got reported.  Clearing _ro_prev_sample also makes the first message after the change
+* establish a baseline instead of being paired with one from before it.
+*/
+static void panel_rollover_forget(void)
+{
+  _ro_last_time[0] = '\0';
+  _ro_prev_sample  = 0;
+  _ro_at           = 0;
+  _ro_window       = 0;
+  _ro_panel_min    = 0;
+}
+
 /* Offset in seconds, positive meaning the panel clock is BEHIND system time -
    the same sense as the coarse difftime() comparison. */
 static bool panel_rollover_offset(time_t now, int *offset, int *accuracy)
@@ -429,6 +447,17 @@ bool checkAqualinkTime()
     /* The rollover measurement is good regardless of which setter we use, so always
        prefer it for the figure we report and act on.  Only the TOLERANCE depends on what
        the setter can achieve. */
+    /* Both figures measure the same thing by different routes, so a wild disagreement
+       means the rollover reading is not sound - stale state, or the panel's date and time
+       messages momentarily describing different moments (they arrive separately). Keep
+       the coarse figure, which cannot be skewed that way. */
+    if (abs(precise - time_difference) > AQ_ROLLOVER_SANITY) {
+      LOG(AQUA_LOG,LOG_WARNING, "Ignoring minute rollover estimate of %+ds, it disagrees with the %+ds from the panel display by more than %ds\n",
+          precise, time_difference, AQ_ROLLOVER_SANITY);
+      panel_rollover_forget();
+      goto rollover_unusable;
+    }
+
     time_difference = precise;
     if (boundary_aware) {
       /* Only act on an offset bigger than what we can actually resolve.  Scaling by the
@@ -444,6 +473,7 @@ bool checkAqualinkTime()
     LOG(AQUA_LOG,LOG_INFO, "Panel clock is %+d seconds off system time (+/-%ds, timed from the panel's minute rollover over %ds), tolerance %ds\n",
         precise, accuracy, _ro_window, tolerance);
   }
+rollover_unusable:
 
   if (force_due)
   {
@@ -453,6 +483,7 @@ bool checkAqualinkTime()
     _force_panel_time_sync_after = 0;
     LOG(AQUA_LOG,LOG_NOTICE, "Forcing panel time sync (%s=yes), panel is off by %d seconds\n",
         CFG_N_force_panel_time_sync_at_startup, time_difference);
+    panel_rollover_forget();
     return false;
   }
 
@@ -467,6 +498,13 @@ bool checkAqualinkTime()
   if (! panel_time_sync_allowed_now(now, time_difference))
     return true;
 
+  /* The clock is about to be set, so a forced startup sync still waiting to fire would
+     only take the panel over a second time for nothing. */
+  if (_force_panel_time_sync_after != 0) {
+    LOG(AQUA_LOG,LOG_INFO, "Setting the clock now, so the pending startup sync is no longer needed\n");
+    _force_panel_time_sync_after = 0;
+  }
+  panel_rollover_forget();
   return false;
 }
 
