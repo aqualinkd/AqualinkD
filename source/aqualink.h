@@ -70,6 +70,10 @@
    panel clock takes over the panel's menus, so doing it during init stalls everything
    else AqualinkD is trying to read.  Let startup finish, then sync in the background. */
 #define AQ_STARTUP_TIME_SYNC_DELAY 60
+/* An offset this large is not drift - the panel has lost its clock, or somebody has set
+   it by hand.  Worth interrupting whatever is going on rather than leaving it wrong until
+   the quiet window comes round, which could be most of a day away. */
+#define AQ_TIME_DIFF_URGENT 300
 
 
 #define MAX_ZERO_READ_BEFORE_RECONNECT 10

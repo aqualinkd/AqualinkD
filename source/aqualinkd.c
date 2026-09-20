@@ -213,6 +213,42 @@ static bool panel_minute_start(time_t now, time_t *out)
   return true;
 }
 
+/*
+* Is now a reasonable moment to take over the panel's menus and rewrite its clock?
+*
+* Setting the clock holds SET TIME for up to a minute, so routine corrections are confined
+* to a configured quiet window.  A gross offset is not routine - the panel has lost its
+* clock rather than drifted - and does not wait for the window.
+*/
+static bool panel_time_sync_allowed_now(time_t now, int time_difference)
+{
+  struct tm tm_now;
+  int start = _aqconfig_.panel_time_sync_start_hour;
+  int end   = _aqconfig_.panel_time_sync_end_hour;
+
+  if (abs(time_difference) >= AQ_TIME_DIFF_URGENT) {
+    LOG(AQUA_LOG,LOG_NOTICE, "Panel clock is %d seconds out, too far to wait for the quiet window\n",
+        time_difference);
+    return true;
+  }
+
+  if (start == end)                       /* window disabled, any time will do */
+    return true;
+
+  localtime_r(&now, &tm_now);
+  if (start < end) {
+    if (tm_now.tm_hour >= start && tm_now.tm_hour < end)
+      return true;
+  } else {                                /* window wraps midnight, e.g. 22 to 4 */
+    if (tm_now.tm_hour >= start || tm_now.tm_hour < end)
+      return true;
+  }
+
+  LOG(AQUA_LOG,LOG_INFO, "Panel clock is %d seconds out, waiting for the %02d:00-%02d:00 window to correct it\n",
+      time_difference, start, end);
+  return false;
+}
+
 /* Called for every panel time message, before any of the rate limiting below. */
 static void observe_panel_rollover(time_t now)
 {
@@ -425,6 +461,11 @@ bool checkAqualinkTime()
     // Within tolerance, leave the panel alone.
     return true;
   }
+
+  /* Out of tolerance, but rewriting the clock takes over the panel for up to a minute,
+     so unless it is badly out this waits for the quiet window. */
+  if (! panel_time_sync_allowed_now(now, time_difference))
+    return true;
 
   return false;
 }

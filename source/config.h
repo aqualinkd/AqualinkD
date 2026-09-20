@@ -123,6 +123,8 @@ struct aqconfig
   bool mqtt_timed_update;
   bool sync_panel_time;
   bool force_panel_time_sync_at_startup;
+  int  panel_time_sync_start_hour;
+  int  panel_time_sync_end_hour;
   bool enable_scheduler;
   int8_t schedule_event_mask; // Was int16_t, but no need
   int  sched_chk_pumpon_hour;
@@ -285,6 +287,10 @@ int _numCfgParams;
    deliberately does NOT start with "sync_panel_time" - a name like
    "sync_panel_time_on_startup" would be swallowed by "sync_panel_time" above. */
 #define CFG_N_force_panel_time_sync_at_startup  "force_panel_time_sync_at_startup"
+/* Same prefix-matching caveat as above: these deliberately do not start with
+   "sync_panel_time", which would swallow them. */
+#define CFG_N_panel_time_sync_start_hour        "panel_time_sync_start_hour"
+#define CFG_N_panel_time_sync_end_hour          "panel_time_sync_end_hour"
 
 #define CFG_N_extended_device_id_programming    "extended_device_id_programming"
 #define CFG_N_enable_iaqualink                  "enable_iaqualink"

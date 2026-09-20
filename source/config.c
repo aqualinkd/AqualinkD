@@ -175,6 +175,8 @@ const int           _dcfg_light_programming_initial_off = 12;
 
 
 const int           _dcfg_sensor_poll_time = 300;
+const int           _dcfg_panel_time_sync_start_hour = 1;
+const int           _dcfg_panel_time_sync_end_hour = 6;
 
 void init_parameters (struct aqconfig * parms)
 {
@@ -619,6 +621,21 @@ void init_parameters (struct aqconfig * parms)
   // Note this option is only read once, when startup() arms the one shot, so a change
   // here does not take effect until AqualinkD is restarted.
   _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_false;
+
+  /* The quiet window for routine clock corrections.  Setting the clock takes over the
+     panel's menus for up to a minute, so it is confined to a window when nobody is
+     likely to be using the panel.  start == end means any time. */
+  _numCfgParams++;
+  _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.panel_time_sync_start_hour;
+  _cfgParams[_numCfgParams].value_type = CFG_INT;
+  _cfgParams[_numCfgParams].name = CFG_N_panel_time_sync_start_hour;
+  _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_panel_time_sync_start_hour;
+
+  _numCfgParams++;
+  _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.panel_time_sync_end_hour;
+  _cfgParams[_numCfgParams].value_type = CFG_INT;
+  _cfgParams[_numCfgParams].name = CFG_N_panel_time_sync_end_hour;
+  _cfgParams[_numCfgParams].default_value = (void *)&_dcfg_panel_time_sync_end_hour;
 
   _numCfgParams++;
   _cfgParams[_numCfgParams].value_ptr = &_aqconfig_.display_warnings_web;
