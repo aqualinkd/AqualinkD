@@ -125,12 +125,21 @@ unsigned char pop_allb_cmd(struct aqualinkdata *aqdata)
 
 
 
-bool setAqualinkNumericField_new(struct aqualinkdata *aqdata, char *value_label, int value, int increment);
+bool setAqualinkNumericField_ex(struct aqualinkdata *aqdata, char *value_label, int value, int increment, bool sendEnter);
 bool setAqualinkNumericField(struct aqualinkdata *aqdata, char *value_label, int value)
 {
-  return setAqualinkNumericField_new(aqdata, value_label, value, 1);
+  return setAqualinkNumericField_ex(aqdata, value_label, value, 1, true);
 }
 bool setAqualinkNumericField_new(struct aqualinkdata *aqdata, char *value_label, int value, int increment)
+{
+  return setAqualinkNumericField_ex(aqdata, value_label, value, increment, true);
+}
+// Set the field but leave it unaccepted, for the last field of a menu where the caller times the ENTER.
+bool setAqualinkNumericField_noenter(struct aqualinkdata *aqdata, char *value_label, int value)
+{
+  return setAqualinkNumericField_ex(aqdata, value_label, value, 1, false);
+}
+bool setAqualinkNumericField_ex(struct aqualinkdata *aqdata, char *value_label, int value, int increment, bool sendEnter)
 {
   LOG(ALLB_LOG, LOG_DEBUG,"Setting menu item '%s' to %d\n",value_label, value);
   //char leading[10];  // description of the field (POOL, SPA, FRZ)
@@ -167,13 +176,15 @@ bool setAqualinkNumericField_new(struct aqualinkdata *aqdata, char *value_label,
     else {
       // Just send ENTER. We are at the right value.
       sprintf(searchBuf, "%s %d", value_label, current_val);
-      send_cmd(KEY_ENTER);
+      if (sendEnter)
+        send_cmd(KEY_ENTER);
     }
 
     if (i++ >= 100) {
       LOG(ALLB_LOG, LOG_WARNING, "AQ_Programmer Could not set numeric input '%s', to '%d'\n",value_label,value);
-      send_cmd(KEY_ENTER);
-      break;
+      if (sendEnter)
+        send_cmd(KEY_ENTER);
+      return false;   // was 'break', which reported a field it never set as success
     }
   } while(value != current_val); 
   
@@ -1082,6 +1093,71 @@ void *set_allbutton_freeze_heater_temps( void *ptr )
   return ptr;
 }
 
+/*
+* sync_time_accurately: the panel has no seconds field and starts its clock at HH:MM:00 on the
+* final ENTER, so hold that ENTER until the minute actually changes.  How long staging takes
+* depends on the RS485 bus, so it is not predicted - if staging ran past the target minute,
+* step MINUTE on one and aim at the next.
+*/
+#define AQ_SETTIME_LEAD         15  // aim at a boundary at least this far ahead
+#define AQ_SETTIME_KEEPALIVE    20  // nudge the menu this often so SET TIME does not time out
+#define AQ_SETTIME_NUDGE_GUARD  15  // but not this close to the boundary
+#define AQ_SETTIME_COMMIT_SLOP   5  // commit up to this late, otherwise step on a minute
+#define AQ_SETTIME_MAX_STEPS     5
+
+// Wait for 'target', nudging MINUTE one step and back so the menu stays open.  The numeric
+// fields do not wrap, so from 0 step up rather than down.
+static bool settime_hold_until(struct aqualinkdata *aqdata, time_t target, int min)
+{
+  time_t next_nudge = time(0) + AQ_SETTIME_KEEPALIVE;
+  int other = (min > 0) ? min - 1 : min + 1;
+
+  while (time(0) < target) {
+    if (isAqualinkDStopping())
+      return false;
+    if (time(0) >= next_nudge && target - time(0) > AQ_SETTIME_NUDGE_GUARD) {
+      if (! setAqualinkNumericField_noenter(aqdata, "MINUTE", other) ||
+          ! setAqualinkNumericField_noenter(aqdata, "MINUTE", min))
+        return false;
+      next_nudge = time(0) + AQ_SETTIME_KEEPALIVE;
+    }
+    delay(100);
+  }
+  return true;
+}
+
+// Stage MINUTE, hold for the boundary, then commit.  False means cancel the menu.
+static bool settime_commit_on_boundary(struct aqualinkdata *aqdata, time_t target, int min)
+{
+  int steps = 0;
+
+  if (! setAqualinkNumericField_noenter(aqdata, "MINUTE", min))
+    return false;
+
+  for (;;) {
+    if (time(0) < target) {
+      if (! settime_hold_until(aqdata, target, min))
+        return false;
+      if (time(0) - target <= AQ_SETTIME_COMMIT_SLOP)
+        break;
+    }
+    // Boundary gone.  Past 59 would need HOUR, which is already accepted.
+    if (min == 59 || ++steps > AQ_SETTIME_MAX_STEPS) {
+      LOG(ALLB_LOG, LOG_WARNING, "Missed the minute to set the panel time on, will try again later\n");
+      return false;
+    }
+    min++;
+    target += 60;
+    LOG(ALLB_LOG, LOG_NOTICE, "Setting panel time took longer than a minute, stepping on to minute %d\n", min);
+    if (! setAqualinkNumericField_noenter(aqdata, "MINUTE", min))
+      return false;
+  }
+
+  send_cmd(KEY_ENTER);   // accept MINUTE, the panel clock starts at HH:MM:00 here
+  send_cmd(KEY_ENTER);   // leave SET TIME
+  return true;
+}
+
 void *set_allbutton_time( void *ptr )
 {
   struct programmingThreadCtrl *threadCtrl;
@@ -1094,12 +1170,21 @@ void *set_allbutton_time( void *ptr )
   time_t now = time(0);   // get time now
   struct tm *result = localtime(&now);
   char hour[20];
+  time_t target = 0;
+  struct tm tm_target;
 
-  // Add 10 seconds to time since this can take a while to program.
-  // 10 to 20 seconds whould be right, but since there are no seconds we can set, add 30 seconds to get close to minute.
-  // Should probably set this to program the next minute then wait before hitting the final enter command.
-  result->tm_sec += 30;
-  mktime(result);
+  if (_aqconfig_.sync_time_accurately) {
+    target = ((now + AQ_SETTIME_LEAD + 59) / 60) * 60;   // first minute boundary >= now + lead
+    // localtime_r: localtime()'s buffer is shared by every thread and this is held for up to a minute.
+    result = localtime_r(&target, &tm_target);
+    LOG(ALLB_LOG, LOG_NOTICE, "Setting panel time accurately, committing at %02d:%02d\n", result->tm_hour, result->tm_min);
+  } else {
+    // Add 10 seconds to time since this can take a while to program.
+    // 10 to 20 seconds whould be right, but since there are no seconds we can set, add 30 seconds to get close to minute.
+    // sync_time_accurately above does the "program the next minute then wait" this used to suggest.
+    result->tm_sec += 30;
+    mktime(result);
+  }
   
   if (result->tm_hour == 0)
     sprintf(hour, "HOUR 12 AM");
@@ -1126,9 +1211,13 @@ void *set_allbutton_time( void *ptr )
   setAqualinkNumericField(aqdata, "DAY", result->tm_mday);
   //setAqualinkNumericFieldExtra(aqdata, "HOUR", 11, "PM");
   select_sub_menu_item(aqdata, hour); // This will keep looping until it finds the right message
-  setAqualinkNumericField(aqdata, "MINUTE", result->tm_min);
-  
-  send_cmd(KEY_ENTER);
+
+  if (! _aqconfig_.sync_time_accurately) {
+    setAqualinkNumericField(aqdata, "MINUTE", result->tm_min);
+    send_cmd(KEY_ENTER);
+  } else if (! settime_commit_on_boundary(aqdata, target, result->tm_min)) {
+    cancel_menu();
+  }
 
   cleanAndTerminateThread(threadCtrl);
   
