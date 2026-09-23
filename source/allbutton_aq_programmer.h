@@ -1,6 +1,7 @@
 #ifndef ALLBUTTON_PROGRAMMER_H_
 #define ALLBUTTON_PROGRAMMER_H_
 
+#include <stdbool.h>
 
 void *set_allbutton_pool_heater_temps( void *ptr );
 void *set_allbutton_spa_heater_temps( void *ptr );
@@ -19,9 +20,13 @@ void *set_allbutton_SWG( void *ptr );
 void *set_allbutton_boost( void *ptr );
 
 unsigned char pop_allb_cmd(struct aqualinkdata *aq_data);
+void allbutton_command_sent(unsigned char cmd);
 
 
 
 void aq_send_allb_cmd(unsigned char cmd);
+bool send_cmd(unsigned char cmd);
+void waitfor_queue2empty(void);
+void longwaitfor_queue2empty(void);
 
 #endif //ALLBUTTON_PROGRAMMER_H_

@@ -34,6 +34,7 @@
 #include "pda_aq_programmer.h"
 #include "config.h"
 #include "aq_panel.h"
+#include "allbutton_aq_programmer.h"
 #include "rs_msg_utils.h"
 #include "color_lights.h"
 
@@ -62,9 +63,6 @@ static pda_type _PDA_Type;
 
 #ifndef USE_ALLBUTTON_QUEUE
 /* Forcing all these to allbutton for the moment */
-void waitfor_queue2empty();
-void send_cmd(unsigned char cmd);
-unsigned char pop_allb_cmd(struct aqualinkdata *aqdata);
 int get_allb_queue_length();
 
 void waitfor_pda_queue2empty() {
