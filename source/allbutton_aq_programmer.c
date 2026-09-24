@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
+#include <time.h>
 
 #include "aqualink.h"
 #include "allbutton_aq_programmer.h"
@@ -12,6 +14,7 @@
 #include "aq_serial.h"
 #include "color_lights.h"
 #include "devices_jandy.h"
+#include "timespec_subtract.h"
 
 
 
@@ -1093,37 +1096,85 @@ void *set_allbutton_freeze_heater_temps( void *ptr )
   return ptr;
 }
 
-/*
-* sync_time_accurately: the panel has no seconds field and starts its clock at HH:MM:00 on the
-* final ENTER, so hold that ENTER until the minute actually changes.  How long staging takes
-* depends on the RS485 bus, so it is not predicted - if staging ran past the target minute,
-* step MINUTE on one and aim at the next.
-*/
+/* sync_time_accurately: the panel starts its clock at HH:MM:00 on the final ENTER, so hold that
+   ENTER for the minute change.  Staging time depends on the bus, so if it overruns step MINUTE on. */
 #define AQ_SETTIME_LEAD         15  // aim at a boundary at least this far ahead
 #define AQ_SETTIME_KEEPALIVE    20  // nudge the menu this often so SET TIME does not time out
 #define AQ_SETTIME_NUDGE_GUARD  15  // but not this close to the boundary
 #define AQ_SETTIME_COMMIT_SLOP   5  // commit up to this late, otherwise step on a minute
 #define AQ_SETTIME_MAX_STEPS     5
+#define AQ_SETTIME_MAX_HOLD     (AQ_SETTIME_LEAD + 60)  // a target can never legitimately be further away
 
-// Wait for 'target', nudging MINUTE one step and back so the menu stays open.  The numeric
-// fields do not wrap, so from 0 step up rather than down.
+static bool settime_sleep_for(struct timespec remaining)
+{
+  while (nanosleep(&remaining, &remaining) != 0) {
+    if (errno != EINTR || isAqualinkDStopping())
+      return false;
+  }
+  return !isAqualinkDStopping();
+}
+
+// Wait for target (wall clock), nudging MINUTE one step and back so the menu stays open.  The nudge
+// timer is CLOCK_MONOTONIC so a clock correction cannot stop it; fields do not wrap, so 0 steps up.
 static bool settime_hold_until(struct aqualinkdata *aqdata, time_t target, int min)
 {
-  time_t next_nudge = time(0) + AQ_SETTIME_KEEPALIVE;
-  int other = (min > 0) ? min - 1 : min + 1;
+  const struct timespec target_time = { .tv_sec = target, .tv_nsec = 0 };
+  struct timespec next_nudge;
 
-  while (time(0) < target) {
+  if (clock_gettime(CLOCK_MONOTONIC, &next_nudge) != 0)
+    return false;
+  next_nudge.tv_sec += AQ_SETTIME_KEEPALIVE;
+
+  for (;;) {
+    struct timespec realtime;
+    struct timespec monotonic;
+    struct timespec until_target;
+    struct timespec until_nudge;
+    struct timespec sleep_for;
+    bool nudge_due;
+    bool can_nudge;
+
     if (isAqualinkDStopping())
       return false;
-    if (time(0) >= next_nudge && target - time(0) > AQ_SETTIME_NUDGE_GUARD) {
-      if (! setAqualinkNumericField_noenter(aqdata, "MINUTE", other) ||
-          ! setAqualinkNumericField_noenter(aqdata, "MINUTE", min))
-        return false;
-      next_nudge = time(0) + AQ_SETTIME_KEEPALIVE;
+    if (clock_gettime(CLOCK_REALTIME, &realtime) != 0 ||
+        clock_gettime(CLOCK_MONOTONIC, &monotonic) != 0)
+      return false;
+    if (timespec_subtract(&until_target, &target_time, &realtime) ||
+        (until_target.tv_sec == 0 && until_target.tv_nsec == 0))
+      return true;
+
+    // A backwards clock step moves the target away; do not hold SET TIME open indefinitely.
+    if (until_target.tv_sec > AQ_SETTIME_MAX_HOLD) {
+      LOG(ALLB_LOG, LOG_WARNING, "System clock changed while setting the panel time, giving up\n");
+      return false;
     }
-    delay(100);
+
+    can_nudge = until_target.tv_sec > AQ_SETTIME_NUDGE_GUARD ||
+                (until_target.tv_sec == AQ_SETTIME_NUDGE_GUARD &&
+                 until_target.tv_nsec > 0);
+    nudge_due =
+        timespec_subtract(&until_nudge, &next_nudge, &monotonic);
+
+    if (can_nudge && nudge_due) {
+      int other = min > 0 ? min - 1 : min + 1;
+      if (!setAqualinkNumericField_noenter(aqdata, "MINUTE", other) ||
+          !setAqualinkNumericField_noenter(aqdata, "MINUTE", min))
+        return false;
+      if (clock_gettime(CLOCK_MONOTONIC, &next_nudge) != 0)
+        return false;
+      next_nudge.tv_sec += AQ_SETTIME_KEEPALIVE;
+      continue;
+    }
+
+    sleep_for = until_target;
+    if (can_nudge && !nudge_due &&
+        (until_nudge.tv_sec < sleep_for.tv_sec ||
+         (until_nudge.tv_sec == sleep_for.tv_sec &&
+          until_nudge.tv_nsec < sleep_for.tv_nsec)))
+      sleep_for = until_nudge;
+    if (!settime_sleep_for(sleep_for))
+      return false;
   }
-  return true;
 }
 
 // Stage MINUTE, hold for the boundary, then commit.  False means cancel the menu.
@@ -1167,21 +1218,32 @@ void *set_allbutton_time( void *ptr )
   waitForSingleThreadOrTerminate(threadCtrl, AQ_SET_TIME);
   //LOG(ALLB_LOG, LOG_NOTICE, "Setting time on aqualink\n");
 
-  time_t now = time(0);   // get time now
-  struct tm *result = localtime(&now);
-  char hour[20];
+  time_t now;
   time_t target = 0;
-  struct tm tm_target;
+  struct tm tm_result;
+  struct tm *result;
+  char hour[20];
 
+  if ( select_menu_item(aqdata, "SET TIME") != true ) {
+    LOG(ALLB_LOG, LOG_WARNING, "Could not select SET TIME menu\n");
+    LOG(ALLB_LOG, LOG_ERR, "%s failed\n", ptypeName( aqdata->active_thread.ptype ) );
+    cancel_menu();
+    cleanAndTerminateThread(threadCtrl);
+    return ptr;
+  }
+
+  // Read the clock once SET TIME is up, so the menu walk is not part of the wait.  localtime_r as
+  // localtime()'s buffer is shared with other threads.
+  now = time(0);
   if (_aqconfig_.sync_time_accurately) {
     target = ((now + AQ_SETTIME_LEAD + 59) / 60) * 60;   // first minute boundary >= now + lead
-    // localtime_r: localtime()'s buffer is shared by every thread and this is held for up to a minute.
-    result = localtime_r(&target, &tm_target);
+    result = localtime_r(&target, &tm_result);
     LOG(ALLB_LOG, LOG_NOTICE, "Setting panel time accurately, committing at %02d:%02d\n", result->tm_hour, result->tm_min);
   } else {
     // Add 10 seconds to time since this can take a while to program.
     // 10 to 20 seconds whould be right, but since there are no seconds we can set, add 30 seconds to get close to minute.
     // sync_time_accurately above does the "program the next minute then wait" this used to suggest.
+    result = localtime_r(&now, &tm_result);
     result->tm_sec += 30;
     mktime(result);
   }
@@ -1198,14 +1260,6 @@ void *set_allbutton_time( void *ptr )
 
   LOG(ALLB_LOG, LOG_DEBUG, "Setting time to %d/%d/%d %d:%d\n", result->tm_mon + 1, result->tm_mday, result->tm_year + 1900, result->tm_hour + 1, result->tm_min);
 
-  if ( select_menu_item(aqdata, "SET TIME") != true ) {
-    LOG(ALLB_LOG, LOG_WARNING, "Could not select SET TIME menu\n");
-    LOG(ALLB_LOG, LOG_ERR, "%s failed\n", ptypeName( aqdata->active_thread.ptype ) );
-    cancel_menu();
-    cleanAndTerminateThread(threadCtrl);
-    return ptr;
-  }
-  
   setAqualinkNumericField(aqdata, "YEAR", result->tm_year + 1900);
   setAqualinkNumericField(aqdata, "MONTH", result->tm_mon + 1);
   setAqualinkNumericField(aqdata, "DAY", result->tm_mday);
