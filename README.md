@@ -1,11 +1,23 @@
+
+
+<div align="right">
+  <a href="https://aquadaemon.org">
+    <img src="https://aquadaemon.org/images/aquadaemon-project2.png" height="48" alt="AquaDaemon">
+  </a>
+</div>
+
 <p align="center">
-  <img src="web/aqualinkd.png" width="120" alt="AqualinkD logo">
+  <img src="web/aqualinkd.png" width="120" alt="AquachemD">
 </p>
+
 
 <h1 align="center">AqualinkD</h1>
 <p align="center"><b>Open-source, Linux daemon to control Jandy Aqualink RS pool controllers.</b></p>
 
-#
+---
+
+
+
 Linux daemon to control Aqualink RS pool controllers. Provides web UI, MQTT client & HTTP API endpoints. Control your pool equipment from any phone/tablet or computer.  Is also compatible with most Home control systems including Apple HomeKit, Home Assistant, Samsung, Alexa, Google, etc.
 
 <br>
