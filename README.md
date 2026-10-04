@@ -1,10 +1,21 @@
-# Aqualinkd  
+<p align="center">
+  <img src="web/aqualinkd.png" width="120" alt="AqualinkD logo">
+</p>
+
+<h1 align="center">AqualinkD</h1>
+<p align="center"><b>Open-source, Linux daemon to control Jandy Aqualink RS pool controllers.</b></p>
+
+#
 Linux daemon to control Aqualink RS pool controllers. Provides web UI, MQTT client & HTTP API endpoints. Control your pool equipment from any phone/tablet or computer.  Is also compatible with most Home control systems including Apple HomeKit, Home Assistant, Samsung, Alexa, Google, etc.
 
 <br>
-Binaries are supplied for Raspberry Pi both 32 & 64 bit OS, Has been, and can be compiled for many different SBC's, and a Docker is also available.
+Binaries are supplied for Raspberry Pi both 32 & 64 bit OS, Has been, and can be compiled for many different SBC's, Docker images also available.
 
-### It does not, and will never provide any layer of security. NEVER directly expose the device running this software to the outside world; only indirectly through the use of Home Automation hub's or other security measures. e.g. VPNs.
+
+### Security
+
+**NEVER directly expose AqualinkD to the Internet. AqualinkD provides no user/password authentication. Remote access should be through a secured web proxy, VPN, or equivalent security layer. TLS client certificates (mTLS) are supported for client authentication.**
+
 
 ---
 ### Donation
