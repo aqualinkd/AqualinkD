@@ -7,7 +7,9 @@
 </div>
 
 <p align="center">
-  <img src="web/aqualinkd.png" width="120" alt="AquachemD">
+  <a href="https://aqualinkd.com">
+    <img src="https://aquadaemon.org/images/inline/aqualinkd.png" width="120" alt="AquachemD">
+  </a>
 </p>
 
 
