@@ -36,6 +36,7 @@ struct mg_connection {
 #define AQ_MG_CON_WS_SIM   MG_F_USER_2
 #define AQ_MG_CON_WS_AQM   MG_F_USER_3
 #define AQ_MG_CON_MQTT_CONNECTING  MG_F_USER_4
+#define AQ_MG_CON_MQTT_OPEN  MG_F_USER_5  // MQTT CONNACK received; safe to send PINGREQ
 
 /*
 In mongose.h about line 1673 make sure to add aq_flags to the mg_connection strut

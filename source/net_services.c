@@ -129,6 +129,19 @@ static void set_websocket_aqmanager(struct mg_connection *nc) {
 static int is_websocket_aqmanager(const struct mg_connection *nc) {
   return nc->aq_flags & AQ_MG_CON_WS_AQM;
 }
+#define AQ_MQTT_KEEPALIVE_S 30
+#define AQ_MQTT_PING_MS 15000
+
+// Send MQTT PINGREQ on every open MQTT connection, so the broker can enforce the keepalive and publish
+// our last will within ~1.5x AQ_MQTT_KEEPALIVE_S if this Pi or its network goes away.
+static void mqtt_keepalive_timer(void *arg) {
+  struct mg_mgr *mgr = (struct mg_mgr *)arg;
+  for (struct mg_connection *c = mgr->conns; c != NULL; c = c->next) {
+    if ((c->aq_flags & AQ_MG_CON_MQTT_OPEN) && !c->is_closing)
+      mg_mqtt_ping(c);
+  }
+}
+
 static int is_mqtt(const struct mg_connection *nc) {
   //return nc->aq_flags & AQ_MG_CON_MQTT;
   return nc->aq_flags & (AQ_MG_CON_MQTT | AQ_MG_CON_MQTT_CONNECTING);
@@ -2724,6 +2737,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
       static uint8_t qos=0;// PUT IN FUNCTION HEADDER can't be bothered with ack, so set to 0
 
       LOG(NET_LOG,LOG_DEBUG, "MQTT: Connection open %lu\n", nc->id);
+      nc->aq_flags |= AQ_MG_CON_MQTT_OPEN;
 
       snprintf(aq_topic, 29, "%s/#", _aqconfig_.mqtt_aq_topic);
       //mqtt_subscribe(nc, aq_topic);
@@ -2837,7 +2851,9 @@ void start_mqtt(struct mg_mgr *mgr) {
     //opts.client_id = mg_str(_aqconfig_.mqtt_ID);
     opts.client_id = mg_str(mqtt_ID);
 
-    //opts.keepalive = 5; // This seems to kill connection for some reason, and not sent heartbeat
+    // Mongoose never sends PINGREQ by itself, so a keepalive with no pings got us dropped at 1.5x.
+    // mqtt_keepalive_timer() below pings every AQ_MQTT_PING_MS, well inside the keepalive.
+    opts.keepalive = AQ_MQTT_KEEPALIVE_S;
     opts.clean = true;
     //opts.version = 4; // Maybe 5
     opts.message = mg_str(MQTT_OFF); // will_message
@@ -2887,6 +2903,7 @@ bool _start_net_services(struct mg_mgr *mgr, struct aqualinkdata *aqdata) {
 
   const char *nameserver = get_ip_address_of_nameserver();
   mg_mgr_init(mgr);
+  mg_timer_add(mgr, AQ_MQTT_PING_MS, MG_TIMER_REPEAT, mqtt_keepalive_timer, mgr);
 
   if (nameserver != NULL)
     mgr->dns4.url = nameserver;
