@@ -1455,7 +1455,8 @@ bool populateLightData(struct aqualinkdata *aqdata, char *lightcfg ,aqkey *butto
   if (strncasecmp(lightcfg, "lightModeCacheValue", 19) == 0) {
     light->lastValue = strtoul(value, NULL, 10);
     return true;
-  } else if (strncasecmp(lightcfg, "lightMode", 9) == 0) {
+  } else if (strncasecmp(lightcfg, "lightMode", 9) == 0 ||
+             strncasecmp(lightcfg, "lightProgrammingMode", 20) == 0) {
     light->lightType = strtoul(value, NULL, 10);
     if (light->lightType < LC_PROGRAMABLE || light->lightType >= NUMBER_LIGHT_COLOR_TYPES) {
       LOG(AQUA_LOG,LOG_ERR, "Config error, unknown light mode '%d'\n",light->lightType);
@@ -1465,6 +1466,30 @@ bool populateLightData(struct aqualinkdata *aqdata, char *lightcfg ,aqkey *butto
                 button->label, LC_DIMMER2,LC_DIMMER);
       light->lightType = LC_DIMMER;
     }
+    if (light->lightType == LC_PROGRAMABLE) {
+      // Populate default values. These will get reset later if configured
+      light->pulseOnOff = _aqconfig_.light_programming_mode;
+      light->initialOn = _aqconfig_.light_programming_initial_on;
+      light->resetOff = _aqconfig_.light_programming_initial_off;
+    }
+    return true;
+  } else if (strncasecmp(lightcfg, "lightColorModes", 15) == 0) {
+    light->lightColorModes = strtoul(value, NULL, 10);
+    if (light->lightColorModes < LC_PROGRAMABLE || light->lightType >= NUMBER_LIGHT_COLOR_TYPES) {
+      LOG(AQUA_LOG,LOG_ERR, "Config error, unknown light color mode '%d'\n",light->lightColorModes);
+      light->lightColorModes = 0;
+    }
+    return true;
+  } else if (strncasecmp(lightcfg, "lightProgrammingPulseOnOff", 26) == 0) {
+    char *tmpval = cleanalloc(value);
+    light->pulseOnOff = atof(tmpval);
+    free(tmpval);
+    return true;
+  } else if (strncasecmp(lightcfg, "lightProgrammingInitialOn", 25) == 0) {
+    light->initialOn = strtoul(value, NULL, 10);
+    return true;
+  } else if (strncasecmp(lightcfg, "lightProgrammingResetOff", 24) == 0) {
+    light->resetOff = strtoul(value, NULL, 10);
     return true;
   } else if (strncasecmp(lightcfg, "lightID", 7) == 0) {
     light->lightID = strtoul(cleanwhitespace(value), NULL, 16);

@@ -506,6 +506,7 @@ function getTileExtraStatusText(id) {
 
 function acd_update_device(device) {
   if (_config.ACD_tilePlugin.ACD_entity_ids.includes(device.id)) {
+    device.orig_status = device.status;
     device.status = device.status.toLowerCase();
     device.state = device.status.toLowerCase();
     device.name = device.label;
@@ -529,12 +530,16 @@ function acd_update_device(device) {
     switch (device.type) {
       case "sensor":
       case "average":
+      case "level_sensor":
         if (device.id.startsWith("TEMP")) {
           device.type = "temperature";
           uom = '&deg;';
         } else if (device.id.startsWith("ORP")) {
           device.type = "value";
           uom = 'mV';
+        } else if (device.id.startsWith("TNK")) {
+          device.type = "value";
+          uom = '%';
         } else {
           device.type = "value";
         }
@@ -590,7 +595,7 @@ function acd_update_device(device) {
         //setTileOn(device.id, ((device.state == 'off') ? 'off' : 'on'), null);
         if (device.int_status == 3) { // disabled is not a known type for AqualinkD
           setTileOn(device.id, 'off');
-          setElementHTML(device.id + '_status', formatSatus(device.status));
+          setElementHTML(device.id + '_status', formatSatus(device.orig_status));
         } else {
           setTileOn(device.id, device.status.toLowerCase());
           //setTileOnText(device.id, formatSatus(device.status));
@@ -598,6 +603,7 @@ function acd_update_device(device) {
         }
         break;
       case "sensor":
+      case "level_sensor":
         setTileValue(device.id, device.value);
         if (device.int_status == 3) { // disabled is not a known type for AqualinkD
           setTileOn(device.id, 'off');
@@ -619,7 +625,18 @@ function acd_update_device(device) {
           setTileOn(device.id, ((device.state == 'off') ? 'off' : 'on'), null);
           setTileValue(device.id, device.value);
         }
-        //setTileValue(device.id, device.value);
+
+        if (device.orig_type == "level_sensor") {
+          // Get existing label (incase some range warning)
+          //let ext = document.getElementById(`${device?.id}_status`)?.innerHTML ?? null;
+          const statusText = document.getElementById(device.id + "_status");
+          if (statusText.innerHTML == 'Sampling') {
+            setTileOnText(device.id, parseFloat(device.alt_value.value).toFixed(2) + formatUOM(device.alt_value.uom));
+          } else {
+            setTileOnText(device.id, statusText.innerHTML + " " +parseFloat(device.alt_value.value).toFixed(2) + formatUOM(device.alt_value.uom));
+          }
+        }
+        
         break;
       case "binary_sensor":
         if (device.int_status == 4) { // delay is not a known type for AqualinkD (=flash)
@@ -707,11 +724,12 @@ function acd_start_websocket(server) {
     }
     _acd_socket_di.onclose = function (event) {
       // something went wrong
+      /*
       console.log("WebSocket Closed:");
       console.log("Code:   " + event.code);    // Numeric code (e.g., 1000, 1006)
       console.log("Reason: " + event.reason);  // Text explanation from server
       console.log("Clean:  " + event.wasClean); // Boolean: did the TCP handshake close properly?
-
+      */
       setElementHTML("message", '  Connection error!  ');
       document.getElementById("header").classList.add("error");
 

@@ -726,7 +726,7 @@ ot_menu_type get_onetouch_menu_type()
     return OTM_FREEZE_PROTECT;
   else if (rsm_strcmp(_menu[0],"Boost Pool") == 0)
     return OTM_BOOST;
-  else if (rsm_strcmp(_menu[0],"Set AQUAPURE") == 0)
+  else if (rsm_strcmp(_menu[0],"Set AQUAPURE") == 0 || rsm_strcmp(_menu[0],"Set AQUARITE") == 0)
     return OTM_SET_AQUAPURE;
   else if (rsm_strcmp(_menu[7],"REV") == 0) // NSF Need a better check.
     return OTM_VERSION;

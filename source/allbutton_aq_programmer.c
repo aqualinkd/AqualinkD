@@ -16,11 +16,12 @@
 
 
 bool waitForButtonState(struct aqualinkdata *aqdata, aqkey* button, aqledstate state, int numMessageReceived);
-bool waitForMessage(struct aqualinkdata *aqdata, char* message, int numMessageReceived);
-bool waitForEitherMessage(struct aqualinkdata *aqdata, char* message1, char* message2, int numMessageReceived);
+bool waitForMessage(struct aqualinkdata *aqdata, const char* message, int numMessageReceived);
+bool waitForEitherMessage(struct aqualinkdata *aqdata, const char* message1, const char* message2, int numMessageReceived);
 
-bool select_sub_menu_item(struct aqualinkdata *aqdata, char* item_string);
-bool select_menu_item(struct aqualinkdata *aqdata, char* item_string);
+bool select_sub_menu_item(struct aqualinkdata *aqdata, const char* item_string);
+bool select_menu_item(struct aqualinkdata *aqdata, const char* item_string);
+bool select_menu_item_noerror(struct aqualinkdata *aqdata, const char* item_string);
 
 void send_cmd(unsigned char cmd);
 void cancel_menu();
@@ -239,6 +240,36 @@ void *threadded_send_cmd( void *ptr )
 }
 */
 
+
+typedef enum { SWG_M_BOOST_UNKNOWN = 0, SWG_M_BOOST, SWG_M_SUPERCHLORINATE } swg_boost_menu_t;
+
+// Returns true if a menu was selected; remembers which one worked.
+static bool select_chlorinator_boost_menu(struct aqualinkdata *aqdata)
+{
+  static swg_boost_menu_t s_swg_boost_menu = SWG_M_BOOST_UNKNOWN;   // detected on first successful run
+  const bool can_be_superchlor = (aqdata->panel_rev[0] < 'L');
+
+  switch (s_swg_boost_menu) {
+    case SWG_M_BOOST:
+      return select_menu_item(aqdata, "BOOST POOL");
+
+    case SWG_M_SUPERCHLORINATE:
+      return select_menu_item(aqdata, "SUPERCHLORINATE");
+
+    default:  // SWG_BOOST_UNKNOWN: probe once
+      if (select_menu_item(aqdata, "BOOST POOL")) {
+        s_swg_boost_menu = SWG_M_BOOST;
+        return true;
+      }
+      if (can_be_superchlor && select_menu_item(aqdata, "SUPERCHLORINATE")) {
+        s_swg_boost_menu = SWG_M_SUPERCHLORINATE;
+        return true;
+      }
+      s_swg_boost_menu = SWG_M_BOOST_UNKNOWN;   // optional: re-detect next run
+      return false;
+  }
+}
+
 void *set_allbutton_boost( void *ptr )
 {
   struct programmingThreadCtrl *threadCtrl;
@@ -273,9 +304,17 @@ STOP BOOST POOL
   int val = atoi((char*)threadCtrl->thread_args);
 #endif
 
+  // stop/start Messages when BOOT is the term are below.
+  //const char *start_msg = "TO START BOOST POOL";
+  //const char *stop_msg = "TO STOP BOOST POOL";
+  // stop/start Messages when SUPERCHLORINATE are unknown, so just look for START/STOP in message.
+  const char *start_msg = "START";
+  const char *stop_msg = "STOP";
+
   LOG(ALLB_LOG, LOG_DEBUG, "programming BOOST to %s\n", val==true?"On":"Off");
 
-  if ( select_menu_item(aqdata, "BOOST POOL") != true ) {
+  //if ( select_menu_item(aqdata, "BOOST POOL") != true ) {
+  if ( select_chlorinator_boost_menu(aqdata) != true ) {
     LOG(ALLB_LOG, LOG_WARNING, "Could not select BOOST POOL menu\n");
     cancel_menu();
     cleanAndTerminateThread(threadCtrl);
@@ -283,7 +322,7 @@ STOP BOOST POOL
   }
 
   if (val==true) {
-    waitForMessage(threadCtrl->aqdata, "TO START BOOST POOL", 5);
+    waitForMessage(threadCtrl->aqdata, start_msg, 5);
     send_cmd(KEY_ENTER);
     longwaitfor_queue2empty();
   } else {
@@ -291,8 +330,8 @@ STOP BOOST POOL
     int i=0;
     while( i++ < wait_messages) 
     {
-      waitForMessage(aqdata, "STOP BOOST POOL", 1);
-      if (stristr(aqdata->last_message, "STOP BOOST POOL") != NULL) {
+      waitForMessage(aqdata, stop_msg, 1);
+      if (stristr(aqdata->last_message, stop_msg) != NULL) {
         // This is a really bad hack, message sequence is out for boost for some reason, so as soon as we see stop message, force enter key.
         //_allb_pgm_command = KEY_ENTER;
         send_cmd(KEY_ENTER);
@@ -302,7 +341,7 @@ STOP BOOST POOL
       } else {
         LOG(ALLB_LOG, LOG_DEBUG, "Find item in Menu: loop %d of %d looking for 'STOP BOOST POOL' received message '%s'\n",i,wait_messages,aqdata->last_message);
         delay(200);
-        if (stristr(aqdata->last_message, "STOP BOOST POOL") != NULL) {
+        if (stristr(aqdata->last_message, stop_msg) != NULL) {
           //_allb_pgm_command = KEY_ENTER;
           send_cmd(KEY_ENTER);
           LOG(ALLB_LOG, LOG_DEBUG, "**** FOUND STOP BOOST POOL ****\n");
@@ -342,6 +381,35 @@ STOP BOOST POOL
 }
 
 
+typedef enum { SWG_UNKNOWN = 0, SWG_AQUAPURE, SWG_AQUARITE } swg_menu_t;
+
+// Returns true if a menu was selected; remembers which one worked.
+static bool select_chlorinator_menu(struct aqualinkdata *aqdata)
+{
+  static swg_menu_t s_swg_menu = SWG_UNKNOWN;   // detected on first successful run
+  //const bool can_be_aquarite = (aqdata->panel_rev[0] < 'L');
+
+  switch (s_swg_menu) {
+    case SWG_AQUAPURE:
+      return select_menu_item(aqdata, "SET AQUAPURE");
+
+    case SWG_AQUARITE:
+      return select_menu_item(aqdata, "SET AQUARITE");
+
+    default:  // SWG_UNKNOWN: probe once
+      if (select_menu_item_noerror(aqdata, "SET AQUAPURE")) {
+        s_swg_menu = SWG_AQUAPURE;
+        return true;
+      }
+      if (select_menu_item_noerror(aqdata, "SET AQUARITE")) {
+        s_swg_menu = SWG_AQUARITE;
+        return true;
+      }
+      s_swg_menu = SWG_UNKNOWN;   // optional: re-detect next run
+      return false;
+  }
+}
+
 void *set_allbutton_SWG( void *ptr )
 {
   struct programmingThreadCtrl *threadCtrl;
@@ -360,13 +428,16 @@ void *set_allbutton_SWG( void *ptr )
 
   //LOG(ALLB_LOG, LOG_NOTICE, "programming SWG percent to %d\n", val);
 
-  if ( select_menu_item(aqdata, "SET AQUAPURE") != true ) {
-    LOG(ALLB_LOG, LOG_WARNING, "Could not select SET AQUAPURE menu\n");
-    LOG(ALLB_LOG, LOG_ERR, "%s failed\n", ptypeName( aqdata->active_thread.ptype ) );
+  // On revisions I to K (prior to L) can also see "SET AquaRite" in menu
+  if (!select_chlorinator_menu(aqdata)) {
+    LOG(ALLB_LOG, LOG_WARNING, "Could not select SET AQUAPURE/AQUARITE menu\n");
+    LOG(ALLB_LOG, LOG_ERR, "%s failed\n", ptypeName(aqdata->active_thread.ptype));
+    //_s_swg_menu = SWG_UNKNOWN;   // optional: re-detect next run
     cancel_menu();
     cleanAndTerminateThread(threadCtrl);
     return ptr;
   }
+
 
   // If spa is on, set SWG for spa, if not set SWG for pool
   if (aqdata->aqbuttons[SPA_INDEX].led->state != OFF) {
@@ -1372,14 +1443,14 @@ void cancel_menu()
 * added functionality, if start of string is ^ use that as must start with in comparison
 */
 
-bool waitForEitherMessage(struct aqualinkdata *aqdata, char* message1, char* message2, int numMessageReceived)
+bool waitForEitherMessage(struct aqualinkdata *aqdata, const char* message1, const char* message2, int numMessageReceived)
 {
   //LOG(ALLB_LOG, LOG_DEBUG, "waitForMessage %s %d %d\n",message,numMessageReceived,cmd);
   waitfor_queue2empty();  // MAke sure the last command was sent
   int i=0;
   pthread_mutex_lock(&aqdata->active_thread.thread_mutex);
-  char* msgS1 = "";
-  char* msgS2 = "";
+  const char* msgS1 = "";
+  const char* msgS2 = "";
   char* ptr = NULL;
   
   
@@ -1440,7 +1511,7 @@ bool waitForEitherMessage(struct aqualinkdata *aqdata, char* message1, char* mes
 
 
 
-bool waitForMessage(struct aqualinkdata *aqdata, char* message, int numMessageReceived)
+bool waitForMessage(struct aqualinkdata *aqdata, const char* message, int numMessageReceived)
 {
   LOG(ALLB_LOG, LOG_DEBUG, "waitForMessage %s %d\n",message,numMessageReceived);
   // NSF Need to come back to this, as it stops on test enviornment but not real panel, so must be speed related.
@@ -1448,7 +1519,7 @@ bool waitForMessage(struct aqualinkdata *aqdata, char* message, int numMessageRe
 
   int i=0;
   pthread_mutex_lock(&aqdata->active_thread.thread_mutex);
-  char* msgS;
+  const char* msgS;
   char* ptr = NULL;
   
   if (message != NULL) {
@@ -1497,7 +1568,42 @@ bool waitForMessage(struct aqualinkdata *aqdata, char* message, int numMessageRe
   return true;
 }
 
-bool select_menu_item(struct aqualinkdata *aqdata, char* item_string)
+
+//bool select_sub_menu_item(char* item_string, struct aqualinkdata *aqdata)
+bool _select_sub_menu_item(struct aqualinkdata *aqdata, const char* item_string, bool supress_err)
+{
+  int wait_messages = 28;
+  int i=0;
+ 
+  waitfor_queue2empty();
+
+  while( (stristr(aqdata->last_message, item_string) == NULL) && ( i++ < wait_messages) )
+  {
+    LOG(ALLB_LOG, LOG_DEBUG, "Find item in Menu: loop %d of %d looking for '%s' received message '%s'\n",i,wait_messages,item_string,aqdata->last_message);
+    send_cmd(KEY_RIGHT);
+    waitfor_queue2empty(); // ADDED BACK MAY 2023 setting time warked better
+    //waitForMessage(aqdata, NULL, 1);
+    waitForMessage(aqdata, item_string, 1);
+  }
+
+  if (stristr(aqdata->last_message, item_string) == NULL) {
+    if (!supress_err) {
+      LOG(ALLB_LOG, LOG_ERR, "Could not find menu item '%s'\n",item_string);
+    }
+    return false;
+  }
+  
+  LOG(ALLB_LOG, LOG_DEBUG, "Find item in Menu: loop %d of %d FOUND menu item '%s', sending ENTER command\n",i,wait_messages, item_string);
+  // Enter the mode specified by the argument.
+  
+  send_cmd(KEY_ENTER);
+  waitForMessage(aqdata, NULL, 1);
+  
+  return true;
+ 
+}
+
+bool _select_menu_item(struct aqualinkdata *aqdata, const char* item_string, bool supress_err)
 {
   char* expectedMsg = "PRESS ENTER* TO SELECT";
   //char* expectedMsg = "PROGRAM";
@@ -1519,69 +1625,18 @@ bool select_menu_item(struct aqualinkdata *aqdata, char* item_string)
   //send_cmd(KEY_ENTER, aqdata);
   //waitForMessage(aqdata, NULL, 1);
   
-  return select_sub_menu_item(aqdata, item_string);
+  return _select_sub_menu_item(aqdata, item_string, supress_err);
 }
-/*
-bool select_menu_item(struct aqualinkdata *aqdata, char* item_string)
-{
-  char* expectedMsg = "PRESS ENTER* TO SELECT";
-  int wait_messages = 6;
-  //int i=0;
 
-  // Select the MENU and wait to get the RS8 respond.
-  send_cmd(KEY_MENU, aqdata);
- 
-  if (waitForMessage(aqdata, expectedMsg, wait_messages) == false)
-    return false;
 
-  send_cmd(KEY_ENTER, aqdata);
-  waitForMessage(aqdata, NULL, 1);
-  
-  // Blindly wait for next message
-  //sendCmdWaitForReturn(aqdata, KEY_ENTER);
-  // Can't determin the first response 
-  //delay(500);
-  
-  return select_sub_menu_item(aqdata, item_string);
+bool select_sub_menu_item(struct aqualinkdata *aqdata, const char* item_string){
+  return _select_sub_menu_item(aqdata, item_string, false);
 }
-*/
-
-//bool select_sub_menu_item(char* item_string, struct aqualinkdata *aqdata)
-bool select_sub_menu_item(struct aqualinkdata *aqdata, char* item_string)
-{
-  int wait_messages = 28;
-  int i=0;
- 
-  waitfor_queue2empty();
-
-  while( (stristr(aqdata->last_message, item_string) == NULL) && ( i++ < wait_messages) )
-  {
-    LOG(ALLB_LOG, LOG_DEBUG, "Find item in Menu: loop %d of %d looking for '%s' received message '%s'\n",i,wait_messages,item_string,aqdata->last_message);
-    send_cmd(KEY_RIGHT);
-    waitfor_queue2empty(); // ADDED BACK MAY 2023 setting time warked better
-    //waitForMessage(aqdata, NULL, 1);
-    waitForMessage(aqdata, item_string, 1);
-  }
-
-  if (stristr(aqdata->last_message, item_string) == NULL) {
-    LOG(ALLB_LOG, LOG_ERR, "Could not find menu item '%s'\n",item_string);
-    return false;
-  }
-  
-  LOG(ALLB_LOG, LOG_DEBUG, "Find item in Menu: loop %d of %d FOUND menu item '%s', sending ENTER command\n",i,wait_messages, item_string);
-  // Enter the mode specified by the argument.
-  
-  
-  send_cmd(KEY_ENTER);
-  
- 
-  waitForMessage(aqdata, NULL, 1);
-  
-  
-   //sendCmdWaitForReturn(aqdata, KEY_ENTER);
-  
-  return true;
- 
+bool select_menu_item(struct aqualinkdata *aqdata, const char* item_string){
+  return _select_menu_item(aqdata, item_string, false);
+}
+bool select_menu_item_noerror(struct aqualinkdata *aqdata, const char* item_string){
+  return _select_menu_item(aqdata, item_string, true);
 }
 
 // NSF Need to test this, then use it for the color change mode. 

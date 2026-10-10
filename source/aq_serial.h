@@ -401,6 +401,7 @@ SPILLOVER IS DISABLED WHILE SPA IS ON
 */
 
 #define MSG_SWG_PCT   "AQUAPURE"  // AquaPure 55%
+#define MSG_SWG_PCT2  "AQUARITE"  // AquaPure 55%
 #define MSG_SWG_PPM   "SALT"  // Salt 3000 PPM 
 #define MSG_SWG_PCT_LEN  8
 #define MSG_SWG_PPM_LEN  4
@@ -409,6 +410,11 @@ SPILLOVER IS DISABLED WHILE SPA IS ON
 #define MSG_SWG_LOW_SALT  "Check AQUAPURE Low Salt"
 #define MSG_SWG_HIGH_SALT "Check AQUAPURE High Salt"
 #define MSG_SWG_FAULT     "Check AQUAPURE General Fault"
+
+#define MSG_SWG_NO_FLOW2   "Check AQUARITE No Flow"
+#define MSG_SWG_LOW_SALT2  "Check AQUARITE Low Salt"
+#define MSG_SWG_HIGH_SALT2 "Check AQUARITE High Salt"
+#define MSG_SWG_FAULT2     "Check AQUARITE General Fault"
 
 #define MSG_PMP_RPM   "RPM:" 
 #define MSG_PMP_WAT   "Watts:"  

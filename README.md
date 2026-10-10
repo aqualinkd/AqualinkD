@@ -198,6 +198,7 @@ READ air/pool/spa temp from RS_serial protocol.  https://github.com/aqualinkd/Aq
 * Changes for VSP and Virtual VSP for panel rev Yg
 * Added Pump Efficiency, can monitor when filter / skimmers need cleaning on VSP pumps.[Click for more details](https://github.com/aqualinkd/VSP_Efficiency.md)
 * Added support for Jandy Infinite Watercolor (RS485)
+* Support for AquaRite on panel rev prior to L
 
 ## Release 3.1.0 (April 2026)
 * Added device power to watts in MQTT discovery for power monitoring

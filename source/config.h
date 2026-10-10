@@ -91,9 +91,17 @@ struct aqconfig
   //bool mqtt_hass_discover_use_mac;
   bool mqtt_discovery_use_mac;
   //char mqtt_ID[MQTT_ID_LEN+1];
-  float light_programming_mode;
+
+  float light_programming_mode; // This is the pulse timings
   int light_programming_initial_on;
   int light_programming_initial_off;
+
+  // Need to rename the above to below
+  //float light_programming_pulseOnOff;
+  //int light_programming_initialOn;         // Initial stabilization duration (seconds)
+  //int light_programming_resetOff;          // Duration OFF required for mode reset (seconds)
+  
+
   bool light_programming_advance_mode;
   light_program_interface light_programming_interface; // 0=let AqualinkD decide, 1=allbutton, 2=onetouch(N/A), 3=AqualinkTouch, 4=iaqualink(N/A)
   bool light_programming_iaqualink_delay; 

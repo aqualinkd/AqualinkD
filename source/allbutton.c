@@ -502,20 +502,22 @@ void _processMessage(char *message, struct aqualinkdata *aqdata, bool reset)
     //strcpy(aqdata->date, msg);
     SET_IF_CHANGED_STRCPY(aqdata->date, msg, aqdata->is_dirty);
   }
-  else if (stristr(msg, MSG_SWG_PCT) != NULL) 
+  //else if (stristr(msg, MSG_SWG_PCT) != NULL || stristr(msg, MSG_SWG_PCT2) != NULL)
+  else if (contains_either(msg, MSG_SWG_PCT, MSG_SWG_PCT2))
   {
-    if (strncasecmp(msg, MSG_SWG_PCT, MSG_SWG_PCT_LEN) == 0 && strncasecmp(msg, "AQUAPURE HRS", 12) != 0) {
+    if ((strncasecmp(msg, MSG_SWG_PCT, MSG_SWG_PCT_LEN) == 0 || strncasecmp(msg, MSG_SWG_PCT2, MSG_SWG_PCT_LEN) == 0) && strncasecmp(msg, "AQUAPURE HRS", 12) != 0) {
       changeSWGpercent(aqdata, atoi(msg + MSG_SWG_PCT_LEN));
     } 
     else if (strncasecmp(msg, "AQUAPURE HRS", 12) != 0 && strncasecmp(msg, "SET AQUAPURE", 12) != 0) 
     {
-      if (strcasestr(msg, MSG_SWG_NO_FLOW) != NULL)
+      
+      if (contains_either(msg, MSG_SWG_NO_FLOW, MSG_SWG_NO_FLOW2))
         setSWGdeviceStatus(aqdata, ALLBUTTON, SWG_STATUS_NO_FLOW);
-      else if (strcasestr(msg, MSG_SWG_LOW_SALT) != NULL)
+      else if (contains_either(msg, MSG_SWG_LOW_SALT, MSG_SWG_LOW_SALT2))
         setSWGdeviceStatus(aqdata, ALLBUTTON, SWG_STATUS_LOW_SALT);
-      else if (strcasestr(msg, MSG_SWG_HIGH_SALT) != NULL)
+      else if (contains_either(msg, MSG_SWG_HIGH_SALT, MSG_SWG_HIGH_SALT2))
         setSWGdeviceStatus(aqdata, ALLBUTTON, SWG_STATUS_HI_SALT);
-      else if (strcasestr(msg, MSG_SWG_FAULT) != NULL)
+      else if (contains_either(msg, MSG_SWG_FAULT, MSG_SWG_FAULT2))
         setSWGdeviceStatus(aqdata, ALLBUTTON, SWG_STATUS_GENFAULT);
         //setSWGdeviceStatus(aqdata, ALLBUTTON, SWG_STATUS_CHECK_PCB);
       

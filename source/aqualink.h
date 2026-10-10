@@ -334,14 +334,35 @@ typedef enum {
 typedef struct clightd
 {
   clight_type lightType;
+  clight_type lightColorModes; // if lightType=0 then this can be used to define different colormodes for AqualinkD UI's
   aqkey *button;
   unsigned char lightID; // RS485 ID (only Jandy infinate watercolor)
   int currentValue;
   int lastValue;         // Used for AqualinkD self programming
-  int brightness;        // Last known brightness (LC_JANDYINFINATE only, from 0x31 response)
-  int red;               // Last set RGB red channel (LC_JANDYINFINATE, optimistic)
-  int green;             // Last set RGB green channel
-  int blue;              // Last set RGB blue channel
+
+  /* Shared memory block for light-type-specific parameters */
+  union {
+    struct {
+      int brightness;        // Last known brightness (LC_JANDYINFINATE only, from 0x31 response)
+      int red;               // Last set RGB red channel (LC_JANDYINFINATE, optimistic)
+      int green;             // Last set RGB green channel
+      int blue;              // Last set RGB blue channel
+    };
+    struct {
+      int initialOn;         // Initial stabilization duration (seconds)
+      int resetOff;          // Duration OFF required for mode reset (seconds)
+      float pulseOnOff;      // Pulse toggle interval (seconds/milliseconds)
+    };
+  };
+
+  //int brightness;        // Last known brightness (LC_JANDYINFINATE only, from 0x31 response)
+  //int red;               // Last set RGB red channel (LC_JANDYINFINATE, optimistic)
+  //int green;             // Last set RGB green channel
+  //int blue;              // Last set RGB blue channel
+  // Need to add below
+  // initialON
+  // restOFF
+  // pulseONOFF 
   aqledstate RSSDstate;  // state from rs serial adapter
 } clight_detail;
 

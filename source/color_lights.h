@@ -120,3 +120,87 @@ Magenta                                                                         
 75%                                                                                             3
 100%                                                                                            4
 */
+
+
+/*
+ * =============================================================================
+ *  POOL LIGHT POWER-INTERRUPT TIMING SPECIFICATIONS
+ * =============================================================================
+ *
+ *  Overview:
+ *  Multicolor pool lights rely on AC power interrupts (relays) to step their
+ *  internal microcontrollers through mode arrays or trigger state resets.
+ *  While exact timing parameters vary by manufacturer, all major systems
+ *  define specific timing windows for:
+ *
+ *    - Initial ON (X) : Stabilization/charge time before pulse sequence begins
+ *    - Reset OFF  (Y) : Duration off to clear state memory & return to Mode 1
+ *    - Pulse (Z)      : ON/OFF toggle interval to step through light modes
+ *    - Memory Lock    : Minimum OFF duration required to save active mode
+ *
+ * =============================================================================
+ *  MANUFACTURER TIMING SPECIFICATIONS
+ * =============================================================================
+ *
+ *  1. HAYWARD COLORLOGIC
+ *  ---------------------------------------------------------------------------
+ *  - Initial ON (X):    15 seconds
+ *                       Allows internal power supply capacitors to charge and
+ *                       state machine to stabilize.
+ *  - Reset OFF (Y):     12 to 15 seconds
+ *                       Forces light to clear state memory and reset to
+ *                       Mode 1 (Voodoo White).
+ *  - Pulse Cycle (Z):   1.0 second ON / 1.0 second OFF
+ *                       Toggle power N times to jump directly to mode N.
+ *  - Memory Lock:       OFF for > 15 seconds saves active mode to NVM.
+ *
+ * =============================================================================
+ *  2. PENTAIR INTELLIBRITE (5G, MicroBrite, GloBrite)
+ *  ---------------------------------------------------------------------------
+ *  - Initial ON (X):    10 seconds
+ *                       Ensures system is out of previous pulse sequence.
+ *  - Reset/Sync OFF(Y): 10 seconds
+ *                       Resets state machine to Mode 1 (SAm Mode).
+ *  - Pulse Cycle (Z):   0.5 to 1.0 second OFF / 0.5 to 1.0 second ON
+ *                       Toggle power N times to jump to mode N:
+ *                       (1 = SAm, 2 = Party, 3 = Romance, 5 = American, etc.)
+ *  - Memory Lock:       OFF for > 5 seconds saves active mode.
+ *
+ * =============================================================================
+ *  3. JANDY WATERCOLORS LED
+ *  ---------------------------------------------------------------------------
+ *  - Initial ON (X):    10 seconds
+ *  - Reset OFF (Y):     4 to 6 seconds
+ *                       Holding OFF specifically for 4-6 seconds forces a hard
+ *                       reset to Mode 1 (Alpine White).
+ *  - Pulse Cycle (Z):   OFF/ON toggle within < 3.0 seconds total window
+ *                       (typically 0.5s OFF / 0.5s ON) increments mode by 1.
+ *  - Memory Lock:       OFF for > 7 seconds locks in current mode.
+ *
+ * =============================================================================
+ *  4. PENTAIR SAm / SAL (Legacy Motorized Color Wheel)
+ *  ---------------------------------------------------------------------------
+ *  - Initial ON (X):    10 seconds
+ *  - 1st Pulse:         Toggle OFF/ON within < 3 seconds.
+ *                       Fast-forwards mechanical wheel to White, holds for a
+ *                       30-second sync pause, then begins color rotation.
+ *  - 2nd Pulse:         Toggle OFF/ON within < 3 seconds.
+ *                       Locks/holds the color wheel on active color.
+ *  - Reset OFF (Y):     OFF for > 10 seconds retains position.
+ *
+ * =============================================================================
+ *  SUMMARY REFERENCE MATRIX
+ * =============================================================================
+ *
+ *  +-----------------------+------------+-------------+-------------------+------------------+
+ *  | Manufacturer / Model  | Initial X  | Reset OFF Y | Pulse Timing Z    | Memory Save      |
+ *  +-----------------------+------------+-------------+-------------------+------------------+
+ *  | Hayward ColorLogic    | 15 sec     | 12s - 15s   | 1.0s ON / 1.0s OFF| OFF > 15 sec     |
+ *  | Pentair IntelliBrite  | 10 sec     | 10 sec      | 0.5s - 1.0s ON/OFF| OFF > 5 sec      |
+ *  | Jandy WaterColors     | 10 sec     | 4s - 6s     | < 3.0s total      | OFF > 7 sec      |
+ *  | Pentair SAm / SAL     | 10 sec     | 10 sec      | < 3.0s toggle     | OFF > 10 sec     |
+ *  +-----------------------+------------+-------------+-------------------+------------------+
+ *
+ * =============================================================================
+ */
+

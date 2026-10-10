@@ -921,6 +921,16 @@ char* stristr(const char* haystack, const char* needle) {
   } while (*haystack++);
   return 0;
 }
+
+bool contains_either(const char *str, const char *msg1, const char *msg2)
+{
+  if (str == NULL) return false;
+
+  if (msg1 != NULL && stristr(str, msg1) != NULL) return true;
+  if (msg2 != NULL && stristr(str, msg2) != NULL) return true;
+
+  return false;
+}
 /*
 int ascii(char *destination, char *source) {
   unsigned int i;

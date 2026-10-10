@@ -135,6 +135,7 @@ void delay (unsigned int howLong);
 float degFtoC(float degF);
 float degCtoF(float degC);
 char* stristr(const char* haystack, const char* needle);
+bool contains_either(const char *str, const char *msg1, const char *msg2);
 //int ascii(char *destination, char *source);
 char *prittyString(char *str);
 //void writePacketLog(char *buff);

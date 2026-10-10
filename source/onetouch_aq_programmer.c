@@ -329,7 +329,8 @@ bool goto_onetouch_menu(struct aqualinkdata *aqdata, ot_menu_type menu)
       second_menu = "Set Time";
     break;
     case OTM_SET_AQUAPURE:
-      second_menu = "Set AQUAPURE";
+      //second_menu = "Set AQUAPURE";
+      second_menu = "Set AQUA"; // Could be AquaPure or AquaRite
     break;
     case OTM_FREEZE_PROTECT:
       second_menu = "System Setup";
