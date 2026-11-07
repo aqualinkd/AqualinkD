@@ -525,6 +525,11 @@ function acd_update_device(device) {
       device.status = 'on';
     }
 
+    const prefix = _config?.ACD_tilePlugin?.["ACD_" + device.id + "_label_prefix"];
+    if (typeof prefix === "string" && prefix.trim() !== "") {
+      device.name = prefix + device.name;
+    }
+
     let uom = null;
 
     switch (device.type) {
@@ -556,9 +561,6 @@ function acd_update_device(device) {
         _devices.push(device.id);
       }
 
-      if (device?.name == "pH") { device.name = "Water Chemistry pH" }
-      else if (device?.name == "ORP") { device.name = "Water Chemistry ORP" }
-      //console.log(device);
       createTile(device);
 
       if (device.orig_type == 'average') {
@@ -616,6 +618,12 @@ function acd_update_device(device) {
         } else if (device.int_status == 1) {
           setTileOn(device.id, 'on');
           setTileValue(device.id, device.value);
+          
+          if ( _config?.ACD_tilePlugin?.["ACD_" + device.id + "_add_uom2label"] === true) {
+            document.getElementById(device.id + '_name').innerHTML = device.name + " ("+formatUOM(device.uom)+")";
+            setTileUOM(device.id, " ");
+          }
+
           // Can't use setTileOnText() since it will overwitte anc ourofrange colors / text
           const statusText = document.getElementById(device.id + "_status");
           if (statusText.innerHTML == '') { // Only set text if empty, ie no warning messages

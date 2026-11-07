@@ -12,12 +12,13 @@
 #include "aq_serial.h"
 #include "color_lights.h"
 #include "devices_jandy.h"
-
+#include "rs_msg_utils.h"
 
 
 bool waitForButtonState(struct aqualinkdata *aqdata, aqkey* button, aqledstate state, int numMessageReceived);
 bool waitForMessage(struct aqualinkdata *aqdata, const char* message, int numMessageReceived);
 bool waitForEitherMessage(struct aqualinkdata *aqdata, const char* message1, const char* message2, int numMessageReceived);
+bool waitForNumericMessage(struct aqualinkdata *aqdata, const char* text, const unsigned int number, int numMessageReceived);
 
 bool select_sub_menu_item(struct aqualinkdata *aqdata, const char* item_string);
 bool select_menu_item(struct aqualinkdata *aqdata, const char* item_string);
@@ -136,38 +137,46 @@ bool setAqualinkNumericField_new(struct aqualinkdata *aqdata, char *value_label,
   LOG(ALLB_LOG, LOG_DEBUG,"Setting menu item '%s' to %d\n",value_label, value);
   //char leading[10];  // description of the field (POOL, SPA, FRZ)
   int current_val=-1;        // integer value of the current set point
+  int search_val=-1;
   //char trailing[10];      // the degrees and scale
   char searchBuf[20];
-    
+  bool found=false;
+
   sprintf(searchBuf, "^%s", value_label);
   int val_len = strlen(value_label);
   int i=0;
   do 
   {
-    if (waitForMessage(aqdata, searchBuf, 4) != true) {
+    if (search_val == -1) {
+      found = waitForMessage(aqdata, searchBuf, 4);
+    } else {
+      found = waitForNumericMessage(aqdata, value_label, search_val, 4);
+    }
+
+    if (found != true) {
       LOG(ALLB_LOG, LOG_WARNING, "AQ_Programmer Could not set numeric input '%s', not found\n",value_label);
       cancel_menu();
       return false;
     }
-//LOG(ALLB_LOG, LOG_DEBUG,"WAITING for kick value=%d\n",current_val);     
-    //sscanf(aqdata->last_message, "%s %d%s", leading, &current_val, trailing);
-    //sscanf(aqdata->last_message, "%*[^0123456789]%d", &current_val);
+
     sscanf(&aqdata->last_message[val_len], "%*[^0123456789]%d", &current_val);
     LOG(ALLB_LOG, LOG_DEBUG, "%s set to %d, looking for %d\n",value_label,current_val,value);
     
     if(value > current_val) {
       // Increment the field.
-      sprintf(searchBuf, "%s %d", value_label, current_val+increment);
+      //sprintf(searchBuf, "%s %d", value_label, current_val+increment);
+      search_val = current_val+increment;
       send_cmd(KEY_RIGHT);
     }
     else if(value < current_val) {
       // Decrement the field.
-      sprintf(searchBuf, "%s %d", value_label, current_val-increment);
+      //sprintf(searchBuf, "%s %d", value_label, current_val-increment);
+      search_val = current_val-increment;
       send_cmd(KEY_LEFT);
     }
     else {
       // Just send ENTER. We are at the right value.
-      sprintf(searchBuf, "%s %d", value_label, current_val);
+      //sprintf(searchBuf, "%s %d", value_label, current_val);
       send_cmd(KEY_ENTER);
     }
 
@@ -1578,6 +1587,49 @@ bool waitForMessage(struct aqualinkdata *aqdata, const char* message, int numMes
   return true;
 }
 
+
+bool waitForNumericMessage(struct aqualinkdata *aqdata, const char* text, const unsigned int number, int numMessageReceived)
+{
+  LOG(ALLB_LOG, LOG_DEBUG, "waitForMessage %s %d\n",text,numMessageReceived);
+  // NSF Need to come back to this, as it stops on test enviornment but not real panel, so must be speed related.
+  //waitfor_queue2empty();  // MAke sure the last command was sent
+
+  int i=0;
+  pthread_mutex_lock(&aqdata->active_thread.thread_mutex);
+  const char* msgS = NULL;
+  bool found=false;
+  
+  if (text != NULL) {
+    if (text[0] == '^')
+      msgS = &text[1];
+    else
+      msgS = text;
+  }
+  
+  while( ++i <= numMessageReceived)
+  {
+    LOG(ALLB_LOG, LOG_DEBUG, "loop %d of %d looking for '%s .* %d', last message received '%s'\n",i,numMessageReceived,(text==NULL?"":text),number,aqdata->last_message);
+   
+    if (rsm_strncasehasint(aqdata->last_message, msgS, number, AQ_MSGLEN)) {
+      found=true;
+      break;
+    }
+    
+    pthread_cond_wait(&aqdata->active_thread.thread_cond, &aqdata->active_thread.thread_mutex);
+  }
+  
+  pthread_mutex_unlock(&aqdata->active_thread.thread_mutex);
+  
+  if (!found) {
+    //LOG(ALLB_LOG, LOG_ERR, "Could not select MENU of Aqualink control panel\n");
+    LOG(ALLB_LOG, LOG_DEBUG, "did not find '%s .* %d'\n",text,number);
+    return false;
+  } else {
+    LOG(ALLB_LOG, LOG_DEBUG, "found message '%s .* %d' in '%s'\n",text,number,aqdata->last_message);
+  }
+
+  return true;
+}
 
 //bool select_sub_menu_item(char* item_string, struct aqualinkdata *aqdata)
 bool _select_sub_menu_item(struct aqualinkdata *aqdata, const char* item_string, bool supress_err)

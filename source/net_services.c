@@ -21,6 +21,9 @@
 #include <string.h>
 #include <sys/time.h>
 #include <syslog.h>
+#include <ctype.h>
+#include <limits.h>
+
 
 #ifdef AQ_MANAGER
 #include <systemd/sd-journal.h>
@@ -98,7 +101,6 @@ void mqtt_broadcast_aqualinkstate(struct mg_connection *nc);
 
 
 void reset_last_mqtt_status();
-bool uri_strcmp(const char *uri, const char *string);
 
 //static const char *s_http_port = "8080";
 //static struct mg_serve_http_opts _http_server_opts;
@@ -1023,6 +1025,581 @@ void create_PDA_on_off_request(aqkey *button, bool isON)
 #endif
 
 
+#ifndef OLD_URI_LOOKUP
+
+/* Compare one non-NUL-terminated URI path segment with a NUL-terminated string. */
+static bool uri_segment_eq(const char *uri, size_t uri_len,
+                           const char *str, bool ignore_case)
+{
+  if (uri == NULL || str == NULL)
+    return false;
+
+  size_t str_len = strlen(str);
+  if (uri_len != str_len)
+    return false;
+
+  if (!ignore_case)
+    return memcmp(uri, str, uri_len) == 0;
+
+  for (size_t i = 0; i < uri_len; i++) {
+    if (tolower((unsigned char)uri[i]) !=
+        tolower((unsigned char)str[i]))
+      return false;
+  }
+
+  return true;
+}
+
+static bool uri_button_match(const char *uri, size_t uri_len,
+                             const char *button_name)
+{
+  return uri_segment_eq(uri, uri_len, button_name, false);
+}
+
+static bool uri_button_match_any(const char *uri, size_t uri_len,
+                                 const char *name, const char *label,
+                                 const char *altlabel)
+{
+  return uri_button_match(uri, uri_len, name) ||
+         uri_button_match(uri, uri_len, label) ||
+         uri_button_match(uri, uri_len, altlabel);
+}
+
+/* Prefix test for segments such as Pump_12; unlike equality, suffix is allowed. */
+static bool uri_segment_starts_with(const char *uri, size_t uri_len,
+                                    const char *prefix)
+{
+  if (uri == NULL || prefix == NULL)
+    return false;
+
+  size_t prefix_len = strlen(prefix);
+  return uri_len >= prefix_len && memcmp(uri, prefix, prefix_len) == 0;
+}
+
+uriAtype action_URI(request_source from, const char *URI, int uri_length, float value, bool convertTemp, char **rtnmsg) {
+  /* Example URI ()
+  * Note URI is NOT terminated
+  * devices
+  * status
+  * Freeze/setpoint/set
+  * Filter_Pump/set
+  * Pool_Heater/setpoint/set
+  * Pool_Heater/set
+  * SWG/Percent_f/set
+  * Filter_Pump/RPM/set
+  * Pump_1/RPM/set
+  * Pool Light/color/set
+  * Pool Light/program/set
+  */
+  uriAtype rtn = uBad;
+  bool found = false;
+  int i;
+  if (URI == NULL || uri_length <= 0)
+    return uBad;
+
+  const char *uri_end = URI + uri_length;
+  const char *ri1 = URI;
+  const char *ri2 = NULL;
+  const char *ri3 = NULL;
+  size_t ri1_len = 0;
+  size_t ri2_len = 0;
+  size_t ri3_len = 0;
+
+  LOG(NET_LOG,LOG_DEBUG, "%s: URI Request '%.*s': value %.2f\n", actionName[from], uri_length, URI, value);
+
+  // Split the non-NUL-terminated URI into at most three path segments.
+  // Accept one optional leading slash.
+  if (ri1 < uri_end && *ri1 == '/')
+    ri1++;
+
+  const char *slash = memchr(ri1, '/', (size_t)(uri_end - ri1));
+  if (slash != NULL) {
+    ri1_len = (size_t)(slash - ri1);
+    ri2 = slash + 1;
+
+    slash = memchr(ri2, '/', (size_t)(uri_end - ri2));
+    if (slash != NULL) {
+      ri2_len = (size_t)(slash - ri2);
+      ri3 = slash + 1;
+      ri3_len = (size_t)(uri_end - ri3);
+    } else {
+      ri2_len = (size_t)(uri_end - ri2);
+    }
+  } else {
+    ri1_len = (size_t)(uri_end - ri1);
+  }
+
+  //LOG(NET_LOG,LOG_NOTICE, "URI Request: %.*s, %.*s, %.*s | %f\n", uri_length, ri1, uri_length - (ri2 - ri1), ri2, uri_length - (ri3 - ri1), ri3, value);
+  
+  if (uri_segment_eq(ri1, ri1_len, "devices", false)) {
+    return uDevices;
+  } else if (uri_segment_eq(ri1, ri1_len, "status", false)) {
+    return uStatus;
+  } else if (uri_segment_eq(ri1, ri1_len, "homebridge", false)) {
+    return uHomebridge;
+  } else if (uri_segment_eq(ri1, ri1_len, "dynamicconfig", false)) {
+    return uDynamicconf;
+  } else if ((uri_segment_eq(ri1, ri1_len, "schedules", false) && uri_segment_eq(ri2, ri2_len, "set", false))) {
+    return uSetSchedules;
+  } else if (uri_segment_eq(ri1, ri1_len, "schedules", false)) {
+    return uSchedules;
+  } else if ((uri_segment_eq(ri1, ri1_len, "config", false) && uri_segment_eq(ri2, ri2_len, "download", false))) {
+    return uConfigDownload;
+  } else if ((uri_segment_eq(ri1, ri1_len, "config", false) && uri_segment_eq(ri2, ri2_len, "set", false))) {
+    return uSaveConfig;
+  } else if ((uri_segment_eq(ri1, ri1_len, "webconfig", false) && uri_segment_eq(ri2, ri2_len, "set", false))) {
+    return uSaveWebConfig;
+  } else if (uri_segment_eq(ri1, ri1_len, "config", false)) {
+    return uConfig;
+  } else if (uri_segment_eq(ri1, ri1_len, "simulator", false) && from == NET_WS) { // Only valid from websocket.
+    if (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "onetouch", false)) {
+      start_simulator(_aqualink_data, ONETOUCH);
+    } else if (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "allbutton", false)) {
+      start_simulator(_aqualink_data, ALLBUTTON);
+    } else if (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "aquapda", false)) {
+      start_simulator(_aqualink_data, AQUAPDA);
+    } else if (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "iaqtouch", false)) {
+      start_simulator(_aqualink_data, IAQTOUCH);
+    } else  {
+      return uBad;
+    }
+    return uSimulator;
+  } else if (uri_segment_eq(ri1, ri1_len, "simcmd", false) && from == NET_WS) { // Only valid from websocket.
+    simulator_send_cmd((unsigned char)value);
+    return uActioned;
+#ifdef AQ_MANAGER
+  } else if (uri_segment_eq(ri1, ri1_len, "aqmanager", false) && from == NET_WS) { // Only valid from websocket.
+    return uAQmanager;
+  } else if (uri_segment_eq(ri1, ri1_len, "setloglevel", false) && from == NET_WS) { // Only valid from websocket.
+    setSystemLogLevel(round(value));
+    return uAQmanager; // Want to resent updated status
+  } else if (uri_segment_eq(ri1, ri1_len, "addlogmask", false) && from == NET_WS) { // Only valid from websocket.
+    if ( round(value) == RSSD_LOG ) {
+      // Check for filter on RSSD LOG
+      if (ri2 != NULL) {
+        unsigned int n;
+        // ri will be /addlogmask/0x01 0x02 0x03 0x04/
+        for (int i=0; i < MAX_RSSD_LOG_FILTERS; i++) {
+          int index=i*5;
+          if (ri2_len >= (size_t)index + 4 &&
+              ri2[index] == '0' && ri2[index+1] == 'x') {
+            char hex_value[5];
+            memcpy(hex_value, ri2 + index, 4);
+            hex_value[4] = '\0';
+            sscanf(hex_value, "0x%2x", &n);
+            _aqconfig_.RSSD_LOG_filter[i] = n;
+          //_aqconfig_.RSSD_LOG_filter_OLD = strtoul(cleanalloc(ri2), NULL, 16);
+            LOG(NET_LOG,LOG_NOTICE, "Adding RSSD LOG filter 0x%02hhx", _aqconfig_.RSSD_LOG_filter[i]);
+          }
+        }
+      }
+    }
+    addDebugLogMask(round(value));
+    return uAQmanager; // Want to resent updated status
+  } else if (uri_segment_eq(ri1, ri1_len, "removelogmask", false) && from == NET_WS) { // Only valid from websocket.
+    removeDebugLogMask(round(value));
+    if ( round(value) == RSSD_LOG ) {
+      for (int i=0; i < MAX_RSSD_LOG_FILTERS; i++) {
+        _aqconfig_.RSSD_LOG_filter[i] = NUL;
+      }
+      //_aqconfig_.RSSD_LOG_filter_OLD = NUL;
+      //LOG(NET_LOG,LOG_NOTICE, "Removed RSSD LOG filter");
+    }
+    return uAQmanager; // Want to resent updated status
+  } else if (uri_segment_eq(ri1, ri1_len, "logfile", false)) {
+    if (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "download", false)) {
+      LOG(NET_LOG,LOG_INFO, "Received download log request!\n");
+      return uLogDownload;
+    } 
+    return uAQmanager; // Want to resent updated status
+  } else if (uri_segment_eq(ri1, ri1_len, "restart", false) && from == NET_WS) { // Only valid from websocket.
+    LOG(NET_LOG,LOG_NOTICE, "Received restart request!\n");
+    raise(SIGRESTART);
+    return uActioned;
+  } else if (uri_segment_eq(ri1, ri1_len, "installrelease", false) && from == NET_WS) { // Only valid from websocket.
+    if (ri2 != NULL) {
+      size_t version_length = (size_t)(URI + uri_length - ri2);
+
+      LOG(NET_LOG,LOG_NOTICE, "Received install release request, %.*s\n", (int)(uri_end - ri2), ri2);
+      _aqualink_data->upgrade_version = malloc(version_length + 1);
+      if (_aqualink_data->upgrade_version == NULL) {
+        LOG(NET_LOG,LOG_ERR, "Could not allocate upgrade version\n");
+        return uBad;
+      }
+      memcpy(_aqualink_data->upgrade_version, ri2, version_length);
+      _aqualink_data->upgrade_version[version_length] = '\0';
+    } else {
+      LOG(NET_LOG,LOG_NOTICE, "Received install release request, but no version named, using latest!\n");
+      _aqualink_data->upgrade_version = "latest";
+    }
+    raise(SIGRUPGRADE);
+    return uActioned;
+  } else if (uri_segment_eq(ri1, ri1_len, "seriallogger", false) && from == NET_WS) { // Only valid from websocket.
+    LOG(NET_LOG,LOG_NOTICE, "Received request to run rs485mon!\n");
+    _aqualink_data->slogger_packets = round(value);
+    if (ri2 != NULL) {
+      size_t ids_length = ri2_len;
+      ids_length = AQ_MIN(ids_length, sizeof(_aqualink_data->slogger_ids) - 1);
+      memcpy(_aqualink_data->slogger_ids, ri2, ids_length);
+      _aqualink_data->slogger_ids[ids_length] = '\0'; // 0x01 0x02 0x03 0x04
+    } else {
+      _aqualink_data->slogger_ids[0] = '\0';
+    }
+    if (ri3 != NULL && uri_segment_eq(ri3, ri3_len, "true", false)) {
+      _aqualink_data->slogger_debug = true;
+    } else {
+      _aqualink_data->slogger_debug = false;
+    }
+    //LOG(NET_LOG,LOG_NOTICE, "Received request to run rs485mon (%d,%s,%s)!\n",
+    //                        _aqualink_data->slogger_packets,
+    //                        _aqualink_data->slogger_ids[0]!='\0'?_aqualink_data->slogger_ids:" ", 
+    //                        _aqualink_data->slogger_debug?"debug":"" ); 
+    _aqualink_data->run_slogger = true;
+    return uActioned;
+#else // AQ_MANAGER
+  } else if (uri_segment_eq(ri1, ri1_len, "aqmanager", false) && from == NET_WS) { // Only valid from websocket.
+    return uNotAvailable;
+  // BELOW IS FOR OLD DEBUG.HTML, Need to remove in future release with aqmanager goes live
+  } else if (uri_segment_eq(ri1, ri1_len, "debug", false)) {
+    if (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "start", false)) {
+      startInlineDebug();
+    } else if (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "stop", false)) {
+      stopInlineDebug();
+    } else if (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "serialstart", false)) {
+      startInlineSerialDebug();
+    } else if (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "serialstop", false)) {
+      stopInlineDebug();
+    } else if (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "clean", false)) {
+      cleanInlineDebug();
+    } else if (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "download", false)) {
+      return uDebugDownload;
+    } 
+    return uDebugStatus;
+#endif //AQ_MANAGER
+// couple of debug items for testing 
+  } else if (uri_segment_eq(ri1, ri1_len, "set_date_time", false)) {
+    //aq_programmer(AQ_SET_TIME, NULL, _aqualink_data);
+    panel_device_request(_aqualink_data, DATE_TIME, 0, 0, from);
+    return uActioned;
+  } else if (uri_segment_eq(ri1, ri1_len, "startup_program", false)) {
+    if(isRS_PANEL)
+      queueGetProgramData(ALLBUTTON, _aqualink_data);
+    if(isRSSA_ENABLED)
+      queueGetProgramData(RSSADAPTER, _aqualink_data);
+    if(isONET_ENABLED)
+      queueGetProgramData(ONETOUCH, _aqualink_data);
+    if(isIAQT_ENABLED)
+      queueGetProgramData(IAQTOUCH, _aqualink_data);
+#ifdef AQ_PDA
+    if(isPDA_PANEL)
+      queueGetProgramData(AQUAPDA, _aqualink_data);
+#endif
+    return uActioned;
+// Action a setpoint message
+  } else if (ri3 != NULL && (uri_segment_eq(ri2, ri2_len, "setpoint", true)) && (uri_segment_eq(ri3, ri3_len, "increment", true))) {
+    if (!isRSSA_ENABLED) {
+      LOG(NET_LOG,LOG_WARNING, "%s: ignoring %.*s setpoint increment only valid when RS Serial adapter protocol is enabeled\n", actionName[from], uri_length, URI);
+      *rtnmsg = BAD_SETPOINT;
+      return uBad;
+    }
+
+    int val = round(value);
+
+    if (uri_button_match(ri1, ri1_len, BTN_POOL_HTR)) {
+      //create_program_request(from, POOL_HTR_INCREMENT, val, 0);
+      panel_device_request(_aqualink_data, POOL_HTR_INCREMENT, 0, val, from);
+    } else if (uri_button_match(ri1, ri1_len, BTN_SPA_HTR)) {
+      //create_program_request(from, SPA_HTR_INCREMENT, val, 0);
+      panel_device_request(_aqualink_data, SPA_HTR_INCREMENT, 0, val, from);
+    } else {
+      LOG(NET_LOG,LOG_WARNING, "%s: ignoring %.*s setpoint add only valid for pool & spa\n", actionName[from], uri_length, URI);
+      *rtnmsg = BAD_SETPOINT;
+      return uBad;
+    }
+    rtn = uActioned;
+  } else if (ri3 != NULL && (uri_segment_eq(ri2, ri2_len, "setpoint", true)) && (uri_segment_eq(ri3, ri3_len, "set", true))) {
+    int val =  convertTemp? round(degCtoF(value)) : round(value);
+    if (uri_button_match(ri1, ri1_len, BTN_POOL_HTR)) {
+     //create_program_request(from, POOL_HTR_SETPOINT, val, 0);
+      panel_device_request(_aqualink_data, POOL_HTR_SETPOINT, 0, val, from);
+    } else if (uri_button_match(ri1, ri1_len, BTN_SPA_HTR)) {
+      //create_program_request(from, SPA_HTR_SETPOINT, val, 0);
+      panel_device_request(_aqualink_data, SPA_HTR_SETPOINT, 0, val, from);
+    } else if (uri_button_match(ri1, ri1_len, FREEZE_PROTECT)) {
+      //create_program_request(from, FREEZE_SETPOINT, val, 0);
+      panel_device_request(_aqualink_data, FREEZE_SETPOINT, 0, val, from);
+    } else if (uri_button_match(ri1, ri1_len, CHILLER)) {
+      //create_program_request(from, FREEZE_SETPOINT, val, 0);
+      panel_device_request(_aqualink_data, CHILLER_SETPOINT, 0, val, from);
+    } else if (uri_segment_eq(ri1, ri1_len, "SWG", false)) {  // If we get SWG percent as setpoint message it's from homebridge so use the convert
+      //int val = round(degCtoF(value));
+      //int val = convertTemp? round(degCtoF(value)) : round(value);
+      //create_program_request(from, SWG_SETPOINT, val, 0);
+      panel_device_request(_aqualink_data, SWG_SETPOINT, 0, val, from);
+    } else {
+      // Not sure what the setpoint is, ignore.
+      LOG(NET_LOG,LOG_WARNING, "%s: ignoring %.*s don't recognise button setpoint\n", actionName[from], uri_length, URI);
+      *rtnmsg = BAD_SETPOINT;
+      return uBad;
+    }
+    rtn = uActioned;
+  // Action a SWG Percent message
+  } else if ((ri3 != NULL && (uri_segment_eq(ri1, ri1_len, "SWG", false)) && (uri_segment_eq(ri2, ri2_len, "Percent", true)) && (uri_segment_eq(ri3, ri3_len, "set", true)))) {
+    int val;
+    if ( (uri_segment_eq(ri2, ri2_len, "Percent_f", false))  ) {
+      val = _aqualink_data->unactioned.value = round(degCtoF(value));
+    } else {
+      val = _aqualink_data->unactioned.value = round(value);
+    }
+    //create_program_request(from, SWG_SETPOINT, val, 0);
+    panel_device_request(_aqualink_data, SWG_SETPOINT, 0, val, from);
+    rtn = uActioned;
+  // Action a SWG boost message
+  } else if ((ri3 != NULL && (uri_segment_eq(ri1, ri1_len, "SWG", false)) && (uri_segment_eq(ri2, ri2_len, "Boost", true)) && (uri_segment_eq(ri3, ri3_len, "set", true)))) {
+    //create_program_request(from, SWG_BOOST, round(value), 0);
+    panel_device_request(_aqualink_data, SWG_BOOST, 0, round(value), from);
+    if (_aqualink_data->swg_led_state == OFF)
+      rtn = uBad; // Return bad so we repost a mqtt update
+    else
+      rtn = uActioned;
+  // Action Light program.
+  } else if ((ri3 != NULL && ((uri_segment_eq(ri2, ri2_len, "color", true)) || (uri_segment_eq(ri2, ri2_len, "program", true))) && (uri_segment_eq(ri3, ri3_len, "set", true)))) {
+    found = false;
+    for (i=0; i < _aqualink_data->total_buttons; i++) {
+      if (uri_button_match_any(ri1, ri1_len,
+                               _aqualink_data->aqbuttons[i].name,
+                               _aqualink_data->aqbuttons[i].label, NULL))
+      {
+        //char buf[5];
+        found = true;
+        //sprintf(buf,"%.0f",value);
+        //set_light_mode(buf, i);
+        panel_device_request(_aqualink_data, LIGHT_MODE, i, value, from);
+        break;
+      }
+    }
+    if(!found) {
+      *rtnmsg = NO_PLIGHT_DEVICE;
+      LOG(NET_LOG,LOG_WARNING, "%s: Didn't find device that matched URI '%.*s'\n",actionName[from], uri_length, URI);
+      rtn = uBad;
+    } else {
+      rtn = uActioned;
+    }
+  } else if ((ri3 != NULL && (uri_segment_eq(ri2, ri2_len, "brightness", true)) && (uri_segment_eq(ri3, ri3_len, "set", true)))) {
+    found = false;
+    for (i=0; i < _aqualink_data->total_buttons; i++) {
+      
+      if (uri_button_match_any(ri1, ri1_len,
+                               _aqualink_data->aqbuttons[i].name,
+                               _aqualink_data->aqbuttons[i].label, NULL))
+      {
+        found = true;
+        panel_device_request(_aqualink_data, LIGHT_BRIGHTNESS, i, value, from);
+        break;
+      }
+    }
+    if(!found) {
+      *rtnmsg = NO_PLIGHT_DEVICE;
+      LOG(NET_LOG,LOG_WARNING, "%s: Didn't find device that matched URI '%.*s'\n",actionName[from], uri_length, URI);
+      rtn = uBad;
+    } else {
+      rtn = uActioned;
+    }
+  } else if ((ri3 != NULL && (uri_segment_eq(ri2, ri2_len, "rgb", true)) && (uri_segment_eq(ri3, ri3_len, "set", true)))) {
+    found = false;
+    for (i=0; i < _aqualink_data->total_buttons; i++) {
+      if (uri_button_match_any(ri1, ri1_len,
+                               _aqualink_data->aqbuttons[i].name,
+                               _aqualink_data->aqbuttons[i].label, NULL))
+      {
+        found = true;
+        panel_device_request(_aqualink_data, LIGHT_RGB, i, (int)value, from);
+        break;
+      }
+    }
+    if(!found) {
+      *rtnmsg = NO_PLIGHT_DEVICE;
+      LOG(NET_LOG,LOG_WARNING, "%s: Didn't find device that matched URI '%.*s'\n",actionName[from], uri_length, URI);
+      rtn = uBad;
+    } else {
+      rtn = uActioned;
+    }
+  // Action a pump RPM/GPM message
+  } else if ((ri3 != NULL && ((uri_segment_eq(ri2, ri2_len, "RPM", true)) || (uri_segment_eq(ri2, ri2_len, "GPM", true)) || (uri_segment_eq(ri2, ri2_len, "Speed", true)) || (uri_segment_eq(ri2, ri2_len, "VSP", true))) && (uri_segment_eq(ri3, ri3_len, "set", true)))) {
+    found = false;
+    // Is it a pump index or pump name
+    if (uri_segment_starts_with(ri1, ri1_len, "Pump_")) { // Pump by number
+      // ri1 is not NUL-terminated; copy the numeric suffix before parsing it.
+      char pump_index_text[16];
+      size_t pump_index_len = ri1_len - 5;
+      char *pump_index_end = NULL;
+      long parsed_pump_index = -1;
+
+      if (pump_index_len > 0 && pump_index_len < sizeof(pump_index_text)) {
+        memcpy(pump_index_text, ri1 + 5, pump_index_len);
+        pump_index_text[pump_index_len] = '\0';
+        parsed_pump_index = strtol(pump_index_text, &pump_index_end, 10);
+        if (pump_index_end == pump_index_text || *pump_index_end != '\0' ||
+            parsed_pump_index < 0 || parsed_pump_index > INT_MAX)
+          parsed_pump_index = -1;
+      }
+      int pumpIndex = (int)parsed_pump_index;
+      for (i=0; pumpIndex >= 0 && i < _aqualink_data->num_pumps; i++) {
+        if (_aqualink_data->pumps[i].pumpIndex == pumpIndex) {
+          if ((uri_segment_eq(ri2, ri2_len, "VSP", true))) {
+            if (isIAQT_ENABLED) {
+              //LOG(NET_LOG,LOG_NOTICE, "%s: request to change pump %d to program %d\n",actionName[from], pumpIndex+1, round(value));
+              //create_program_request(from, PUMP_VSPROGRAM, round(value), pumpIndex);
+              LOG(NET_LOG,LOG_ERR, "Setting Pump VSP is not supported yet\n");
+              *rtnmsg = NO_VSP_SUPPORT;
+              return uBad;
+            } else {
+              LOG(NET_LOG,LOG_ERR, "Setting Pump VSP only supported if iAqualinkTouch protocol en enabled\n");
+              *rtnmsg = NO_VSP_SUPPORT;
+              return uBad;
+            }
+          } else {
+            if (uri_segment_eq(ri2, ri2_len, "Speed", true)) {
+              int val = convertPumpPercentToSpeed(&_aqualink_data->pumps[i], round(value));
+              LOG(NET_LOG,LOG_NOTICE, "%s: request to change pump %d Speed to %d%%, using %s of %d\n",actionName[from],pumpIndex+1, round(value), (_aqualink_data->pumps[i].pumpType==VFPUMP?"GPM":"RPM" ) ,val);
+              panel_device_request(_aqualink_data, PUMP_RPM, pumpIndex, val, from); 
+            } else {
+              LOG(NET_LOG,LOG_NOTICE, "%s: request to change pump %d %s to %d\n",actionName[from],pumpIndex+1, (uri_segment_eq(ri2, ri2_len, "GPM", true))?"GPM":"RPM", round(value));
+            //create_program_request(from, PUMP_RPM, round(value), pumpIndex);
+              panel_device_request(_aqualink_data, PUMP_RPM, pumpIndex, round(value), from);
+            }
+          }
+          found=true;
+          break;
+        }
+      }
+    } else { // Pump by button name
+      for (i=0; i < _aqualink_data->total_buttons ; i++) {
+        if ( uri_button_match_any(ri1, ri1_len,
+                                 _aqualink_data->aqbuttons[i].name, NULL,
+                                 isVBUTTON_ALTLABEL(_aqualink_data->aqbuttons[i].special_mask)
+                                   ? ((altlabel_detail *)_aqualink_data->aqbuttons[i].special_mask_ptr)->altlabel
+                                   : NULL) ) {
+          int pi;
+          for (pi=0; pi < _aqualink_data->num_pumps; pi++) {
+            if (_aqualink_data->pumps[pi].button == &_aqualink_data->aqbuttons[i]) {
+              if ((uri_segment_eq(ri2, ri2_len, "VSP", true))) {
+                if (isIAQT_ENABLED) {
+                  //LOG(NET_LOG,LOG_NOTICE, "%s: request to change pump %d to program %d\n",actionName[from], pi+1, round(value));
+                  //create_program_request(from, PUMP_VSPROGRAM, round(value), _aqualink_data->pumps[pi].pumpIndex);
+                  LOG(NET_LOG,LOG_ERR, "Setting Pump VSP is not supported yet\n");
+                  *rtnmsg = NO_VSP_SUPPORT;
+                  return uBad;
+                } else {
+                  LOG(NET_LOG,LOG_ERR, "Setting Pump VSP only supported if iAqualinkTouch protocol en enabled\n");
+                  *rtnmsg = NO_VSP_SUPPORT;
+                  return uBad;
+                }
+              } else {
+                if (uri_segment_eq(ri2, ri2_len, "Speed", true)) {
+                  int val = convertPumpPercentToSpeed(&_aqualink_data->pumps[pi], round(value));
+                  LOG(NET_LOG,LOG_NOTICE, "%s: request to change pump %d Speed to %d%%, using %s of %d\n",actionName[from],_aqualink_data->pumps[pi].pumpIndex, round(value), (_aqualink_data->pumps[i].pumpType==VFPUMP?"GPM":"RPM" ) ,val);
+                  panel_device_request(_aqualink_data, PUMP_RPM, _aqualink_data->pumps[pi].pumpIndex, val, from); 
+                } else {
+                  LOG(NET_LOG,LOG_NOTICE, "%s: request to change pump %d %s to %d\n",actionName[from], pi+1, (uri_segment_eq(ri2, ri2_len, "GPM", true))?"GPM":"RPM", round(value));
+                //create_program_request(from, PUMP_RPM, round(value), _aqualink_data->pumps[pi].pumpIndex);
+                  panel_device_request(_aqualink_data, PUMP_RPM, _aqualink_data->pumps[pi].pumpIndex, round(value), from);
+                }
+              }
+              //_aqualink_data->unactioned.type = PUMP_RPM;
+              //_aqualink_data->unactioned.value = round(value);
+              //_aqualink_data->unactioned.id = _aqualink_data->pumps[pi].pumpIndex;
+              found=true;
+              break;
+            }
+          }
+        }
+      }
+    }
+    if(!found) {
+      LOG(NET_LOG,LOG_WARNING, "%s: Didn't find pump from message %.*s\n",actionName[from], uri_length, URI);
+      *rtnmsg = PUMP_NOT_FOUND;
+      rtn = uBad;
+    } else {
+      rtn = uActioned;
+    }
+  } else if ((ri3 != NULL && (uri_segment_eq(ri1, ri1_len, "CHEM", false)) && (uri_segment_eq(ri3, ri3_len, "set", true)))) {
+  //aqualinkd/CHEM/pH/set
+  //aqualinkd/CHEM/ORP/set
+    if ( uri_segment_eq(ri2, ri2_len, "ORP", true) ) {
+      SET_IF_CHANGED(_aqualink_data->orp, round(value), _aqualink_data->is_dirty);
+      rtn = uActioned;
+      LOG(NET_LOG,LOG_INFO, "%s: request to set ORP to %d\n",actionName[from],_aqualink_data->orp);
+    } else if ( uri_segment_eq(ri2, ri2_len, "Ph", true) ) {
+      SET_IF_CHANGED(_aqualink_data->ph, value, _aqualink_data->is_dirty);
+      rtn = uActioned;
+      LOG(NET_LOG,LOG_INFO, "%s: request to set Ph to %.2f\n",actionName[from],_aqualink_data->ph);
+    } else {
+      LOG(NET_LOG,LOG_WARNING,"%s: ignoring, unknown URI %.*s\n",actionName[from],uri_length,URI);
+      rtn = uBad;
+    }
+  // Action a Turn on / off message
+  } else if ( (ri2 != NULL && uri_segment_eq(ri2, ri2_len, "set", true)) ||
+              (ri2 != NULL && ri3 != NULL &&
+               (uri_segment_eq(ri2, ri2_len, "timer", true) ||
+                uri_segment_eq(ri2, ri2_len, "timer_sec", true)) &&
+               uri_segment_eq(ri3, ri3_len, "set", true)) ) {
+    // Must be a switch on / off
+    rtn = uActioned;
+    found = false;
+    //bool istimer = false;
+    action_type atype = ON_OFF;
+    //int timer=0;
+    if (uri_segment_eq(ri2, ri2_len, "timer_sec", true)) {
+      atype = TIMER_SEC;
+    } else if (uri_segment_eq(ri2, ri2_len, "timer", true)) {
+      atype = TIMER; 
+    }else if ( value > 1 || value < 0) {
+      LOG(NET_LOG,LOG_WARNING, "%s: URI %.*s has invalid value %.2f\n", actionName[from], uri_length, URI, value);
+      *rtnmsg = INVALID_VALUE;
+      rtn = uBad;
+      return rtn;
+    }
+
+    for (i=0; i < _aqualink_data->total_buttons && found==false; i++) {
+      // If Label = "Spa", "Spa_Heater" will turn on "Spa", so need to check '/' on label as next character
+      //if (strncmp(ri1, _aqualink_data->aqbuttons[i].name, strlen(_aqualink_data->aqbuttons[i].name)) == 0 ||
+      //   (strncmp(ri1, _aqualink_data->aqbuttons[i].label, strlen(_aqualink_data->aqbuttons[i].label)) == 0 && ri1[strlen(_aqualink_data->aqbuttons[i].label)] == '/'))
+      //if ( uri_strcmp(ri1, _aqualink_data->aqbuttons[i].name) || uri_strcmp(ri1, _aqualink_data->aqbuttons[i].label) )
+
+      if ( uri_button_match_any(ri1, ri1_len,
+                               _aqualink_data->aqbuttons[i].name,
+                               _aqualink_data->aqbuttons[i].label,
+                               isVBUTTON_ALTLABEL(_aqualink_data->aqbuttons[i].special_mask)
+                                 ? ((altlabel_detail *)_aqualink_data->aqbuttons[i].special_mask_ptr)->altlabel
+                                 : NULL) )
+      {
+        found = true;
+        //create_panel_request(from, i, value, istimer);
+        LOG(NET_LOG,LOG_INFO, "%d: MATCH %s to topic %.*s\n",from,_aqualink_data->aqbuttons[i].name,uri_length, URI);
+        LOG(NET_LOG,LOG_INFO, "ri1=%.*s, segment length=%zu\n", (int)ri1_len, ri1, ri1_len );
+        panel_device_request(_aqualink_data, atype, i, value, from);
+      }
+    }
+    if(!found) {
+      *rtnmsg = NO_DEVICE;
+      LOG(NET_LOG,LOG_WARNING, "%s: Didn't find device that matched URI '%.*s'\n",actionName[from], uri_length, URI);
+      rtn = uBad;
+    }
+  } else {
+    // We don's care
+    *rtnmsg = UNKNOWN_REQUEST;
+    LOG(NET_LOG,LOG_WARNING, "%s: ignoring, unknown URI %.*s\n",actionName[from],uri_length,URI);
+    rtn = uBad;
+  }
+
+  return rtn;
+}
+
+#else // OLD_URI_LOOKUP
+
+bool uri_strcmp(const char *uri, const char *string);
+
 //uriAtype action_URI(char *from, const char *URI, int uri_length, float value, bool convertTemp) {
 //uriAtype action_URI(netRequest from, const char *URI, int uri_length, float value, bool convertTemp) {
 uriAtype action_URI(request_source from, const char *URI, int uri_length, float value, bool convertTemp, char **rtnmsg) {
@@ -1341,6 +1918,7 @@ uriAtype action_URI(request_source from, const char *URI, int uri_length, float 
   } else if ((ri3 != NULL && (strncasecmp(ri2, "brightness", 10) == 0) && (strncasecmp(ri3, "set", 3) == 0))) {
     found = false;
     for (i=0; i < _aqualink_data->total_buttons; i++) {
+      
       if (strncmp(ri1, _aqualink_data->aqbuttons[i].name, strlen(_aqualink_data->aqbuttons[i].name)) == 0 ||
           strncmp(ri1, _aqualink_data->aqbuttons[i].label, strlen(_aqualink_data->aqbuttons[i].label)) == 0)
       {
@@ -1526,6 +2104,7 @@ uriAtype action_URI(request_source from, const char *URI, int uri_length, float 
   return rtn;
 }
 
+
 /*
   Quicker and more accurate for us than normal strncmp, since we check for the trailing / at right position
   check Spa against uri /Spa/set /Spa_mode/set / Spa_heater/set
@@ -1548,6 +2127,7 @@ bool uri_strcmp(const char *uri, const char *string) {
 
   return true;
 }
+#endif // OLD_URI_LOOKUP
 
 void action_mqtt_message(struct mg_connection *nc, struct mg_mqtt_message *msg) {
   char *rtnmsg;

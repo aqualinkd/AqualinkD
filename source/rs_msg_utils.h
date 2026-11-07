@@ -14,6 +14,11 @@ char *rsm_strstr(const char *haystack, const char *needle);
 //char *rsm_strnstr(const char *haystack, const char *needle, int length);
 char *rsm_strnstr(const char *haystack, const char *needle, size_t slen);
 char *rsm_strncasestr(const char *haystack, const char *needle, size_t length);
+
+//int rsm_strncasestr_int(const char *haystack, const char *needle_txt, const int needle_int, size_t slen);
+bool rsm_strncasehasint(const char *haystack, const char *needle_txt, const unsigned int needle_int, size_t slen);
+
+
 char *rsm_lastindexof(const char *haystack, const char *needle, size_t length);
 
 int rsm_strmatch(const char *haystack, const char *needle);

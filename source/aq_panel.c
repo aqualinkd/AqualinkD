@@ -1655,6 +1655,11 @@ void programDeviceLightBrightness(struct aqualinkdata *aqdata, int value, int de
   
   clight_detail *light = getProgramableLight(aqdata, deviceIndex);
 
+  if (light == NULL) {
+    LOG(PANL_LOG, LOG_ERR, "Brightness not supported for %s\n",aqdata->aqbuttons[deviceIndex].label);
+    return;
+  }
+
   if (value < 0 || value > 100) {
     LOG(PANL_LOG,LOG_ERR, "Dimmer value %d is not valid, using %d\n",value,AQ_CLAMP(value,0,100));
     value = AQ_CLAMP(value,0,100);
@@ -1765,6 +1770,11 @@ void programDeviceLightRGB(struct aqualinkdata *aqdata, int packed_rgb, int devi
 
   if (light == NULL || light->lightType != LC_JANDYINFINATE) {
     LOG(PANL_LOG, LOG_ERR, "RGB color only supported on Jandy Infinite light\n");
+    return;
+  }
+
+  if (isMASK_SET(aqdata->aqbuttons[deviceIndex].special_mask, VIRTUAL_BUTTON_ALT_LABEL) ) {
+    LOG(PANL_LOG, LOG_ERR, "RGB color not supported on virtual button\n");
     return;
   }
 

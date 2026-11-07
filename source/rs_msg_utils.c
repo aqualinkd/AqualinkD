@@ -22,6 +22,9 @@
 #include <ctype.h>
 #include <regex.h>
 #include <limits.h>
+#include <stdbool.h>
+#include <stddef.h>
+
 
 #include "utils.h"
 #include "rs_msg_utils.h"
@@ -279,6 +282,92 @@ char *rsm_strncasestr(const char *haystack, const char *needle, size_t slen)
 	return ((char *)haystack);
 }
 
+// Same as above, but also search for a number after the string match, and return that number.
+
+bool rsm_strncasehasint(const char *haystack, const char *needle_txt, const unsigned int needle_int, size_t slen)
+{
+    if (!haystack || slen == 0)
+        return false;
+
+    const char *end = haystack + slen;
+    const char *start = haystack;
+
+    // If a label was supplied, find its first case-insensitive match.
+    if (needle_txt != NULL && needle_txt[0] != '\0')
+    {
+        size_t needle_len = strlen(needle_txt);
+
+        if (needle_len > slen)
+            return false;
+
+        bool found = false;
+
+        for (size_t i = 0; i <= slen - needle_len; i++)
+        {
+            size_t j = 0;
+
+            while (j < needle_len &&
+                   tolower((unsigned char)haystack[i + j]) ==
+                   tolower((unsigned char)needle_txt[j]))
+            {
+                j++;
+            }
+
+            if (j == needle_len)
+            {
+                start = haystack + i + needle_len;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+            return false;
+    }
+
+    // Find and parse unsigned integers within the buffer.
+    for (const char *p = start; p < end; p++)
+    {
+        if (!isdigit((unsigned char)*p))
+            continue;
+
+        // Only start at the beginning of a digit sequence.
+        if (p > start && isdigit((unsigned char)p[-1]))
+            continue;
+
+        unsigned int value = 0;
+
+        while (p < end && isdigit((unsigned char)*p))
+        {
+            unsigned int digit = (unsigned int)(*p - '0');
+
+            // Reject values that overflow unsigned int.
+            if (value > (UINT_MAX - digit) / 10u)
+            {
+                // Skip the remainder of this number.
+                while (p < end && isdigit((unsigned char)*p))
+                    p++;
+
+                break;
+            }
+
+            value = value * 10u + digit;
+            p++;
+        }
+
+        // p now points at the first character after the number.
+        if (value == needle_int)
+            return true;
+
+        if (needle_txt != NULL && needle_txt[0] != '\0')
+            return false;
+
+        // Continue searching for the next number.
+        p--;
+    }
+
+    return false;
+}
 // Check s2 exists in s1
 int rsm_strcmp(const char *haystack, const char *needle)
 {
